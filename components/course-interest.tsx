@@ -1,0 +1,4 @@
+'use client';
+import {useEffect,useState} from 'react';
+import { Bell, Check } from 'lucide-react';
+export function CourseInterest({slug}:{slug:string}){const [interested,setInterested]=useState(false);const [error,setError]=useState('');useEffect(()=>{try{setInterested(localStorage.getItem(`lwr-interest-${slug}`)==='yes')}catch{}},[slug]);return <><button className="button button-orange" aria-pressed={interested} onClick={()=>{try{localStorage.setItem(`lwr-interest-${slug}`,interested?'no':'yes');setInterested(!interested);setError('')}catch{setError('Your browser could not save this preference.')}}}>{interested?<Check size={17}/>:<Bell size={17}/>} {interested?'Interest saved':'I’m interested'}</button>{interested&&<p role="status" className="interest-confirmation">Saved on this device. Notifications and enrolment are not connected yet.</p>}{error&&<p role="alert">{error}</p>}</>}

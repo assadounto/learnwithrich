@@ -1,0 +1,7 @@
+'use client';
+import Link from 'next/link';
+import { useEffect,useState } from 'react';
+import { Bookmark, ArrowRight } from 'lucide-react';
+import {resources} from '@/lib/catalog';
+import {ResourceCard} from './resource-card';
+export function SavedLibrary(){const [slugs,setSlugs]=useState<string[]>([]);const [ready,setReady]=useState(false);useEffect(()=>{function read(){try{const parsed=JSON.parse(localStorage.getItem('lwr-saved')||'[]');setSlugs(Array.isArray(parsed)?parsed:[])}catch{setSlugs([])}setReady(true)}read();window.addEventListener('lwr-saved-change',read);window.addEventListener('storage',read);return()=>{window.removeEventListener('lwr-saved-change',read);window.removeEventListener('storage',read)}},[]);const saved=resources.filter(r=>slugs.includes(r.slug));if(!ready)return <p role="status" className="results-count">Opening your saved resources…</p>;return <><div className="library-toolbar"><span className="preview-label">{saved.length} saved {saved.length===1?'resource':'resources'}</span><p>Saved in this browser. Accounts and purchase history are coming later.</p></div>{saved.length?<div className="resource-grid catalog-grid">{saved.map(r=><ResourceCard key={r.slug} resource={r}/>)}</div>:<div className="empty-state"><Bookmark size={33}/><h2>Make a little space<br/>for <i>your next idea.</i></h2><p>Tap the bookmark on any resource to keep it here.<br/>Your collection stays in this browser.</p><Link href="/resources" className="button button-orange">Find something useful <ArrowRight size={16}/></Link></div>}</>}
