@@ -24,7 +24,7 @@ The production build statically exports the site to `out/`. Deploy that director
 ## Included
 
 - Responsive editorial homepage using cream, burnt orange and olive.
-- SVG implementation of the selected LR/arrow brand concept and favicon.
+- Reference-matched serif wordmark and retained LR favicon.
 - Searchable resource catalog with intersecting type, topic and access filters.
 - Individual resource pages, planned course curricula, and an About page.
 - Browser-local bookmarks and saved library, with no account required.
@@ -35,8 +35,14 @@ The production build statically exports the site to `out/`. Deploy that director
 
 This is a foundation, not a launched course storefront. Catalog entries, book covers and course plans are examples. Photographic project imagery is AI-generated concept art; it does not document completed hardware or verified designs. The `public/images/maker-studio.webp` asset contains four photos in a 2×2 grid displayed using CSS background positions. Other covers are HTML/CSS and SVG.
 
-Only resources with a `download` field in `lib/catalog.ts` provide a file. Premium resources are labeled in preparation; no payments or simulated purchases occur. Course interest and launch interest are stored on the current device only, and the UI explicitly states that notifications and mailing-list subscriptions are not connected. Bookmarks also stay in the current browser.
+Only resources with a `download` field in `lib/catalog.ts` provide a file. Premium resources are labeled in preparation; no payments or simulated purchases occur. Course interest is stored on the current device only. Newsletter submission does not store or send email; the UI reports that subscriptions are not connected. Bookmarks also stay in the current browser.
 
 Next steps: connect a CMS or backend, authentication, durable library and purchase records, payments, verified download authorization, course video delivery and mailing-list consent/subscription handling. Replace all preview covers and content with final published materials.
 
-Google Fonts provides DM Sans and DM Serif Display; system sans-serif and Georgia remain available if fonts are blocked. All core imagery is local.
+Google Fonts provides DM Sans. Display typography uses Georgia. All core imagery is local.
+
+## Homepage reference
+
+The homepage follows the supplied maker-journal reference: two-line hero, transparent electronics/book collage, torn orange statement strip, bordered project cards, dark resource shelf, course cards, RA introduction and compact footer. `components/reference-art.tsx` uses CSS background windows to display only the artwork regions of the provided reference; text, navigation, search and actions are native HTML. The hero collage is a transparent AI-generated extraction/enhancement of the reference. The homepage switches to a stacked responsive layout below 580px.
+
+The header sign-in link opens an honest account-availability page. Newsletter submission displays a not-connected message and does not store or transmit email. See `/privacy` for the current preview behaviour.
