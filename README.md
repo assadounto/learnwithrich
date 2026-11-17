@@ -39,7 +39,9 @@ Only resources with a `download` field in `lib/catalog.ts` provide a file. Premi
 
 Next steps: connect a CMS or backend, authentication, durable library and purchase records, payments, verified download authorization, course video delivery and mailing-list consent/subscription handling. Replace all preview covers and content with final published materials.
 
-Google Fonts provides DM Sans. Display typography uses Georgia. All core imagery is local.
+Typography uses self-hosted Fraunces (roman and true italic) and DM Sans variable fonts, with Georgia/Arial fallbacks. Latin, Latin Extended and punctuation subsets are compressed as WOFF. Their SIL Open Font Licences are included in `public/fonts/`. No runtime Google Fonts requests are required. All core imagery is local.
+
+Reusable decorative SVGs in `components/decorative-marks.tsx` provide tapered underlines, accent rays and the wordmark asterisk. `public/marks/torn-edge.svg` supplies a restrained paper edge.
 
 ## Homepage reference
 

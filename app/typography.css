@@ -1,0 +1,181 @@
+/* Self-hosted, OFL-licensed variable fonts. No runtime font-provider requests. */
+@font-face {
+  font-family: 'Fraunces';
+  src: url('/fonts/fraunces-roman.woff') format('woff');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  src: url('/fonts/fraunces-italic.woff') format('woff');
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/dm-sans.woff') format('woff');
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: swap;
+}
+:root {
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'DM Sans', Arial, sans-serif;
+}
+body { font-optical-sizing: auto; }
+h1, h2, h3, .brand, .ref-manifesto {
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+}
+h1, h2 {
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 35, 'WONK' 1;
+  letter-spacing: -.045em;
+}
+h1 i, h2 i { font-weight: 600; }
+.brand > span {
+  font-family: var(--serif);
+  font-weight: 750;
+  font-variation-settings: 'opsz' 32, 'SOFT' 25, 'WONK' 1;
+  letter-spacing: -.065em;
+  display: inline-flex;
+  align-items: baseline;
+}
+.brand .wordmark-asterisk,
+.reference-footer .brand .wordmark-asterisk {
+  display: inline-block;
+  font-size: inherit;
+  position: relative;
+  top: -.28em;
+  width: .59em;
+  height: .59em;
+  margin-left: .09em;
+  color: var(--orange);
+  flex-shrink: 0;
+  vertical-align: baseline;
+}
+.reference-home h2 { letter-spacing: -.047em; }
+.ref-hero-copy h1 {
+  font-family: var(--serif);
+  font-weight: 750;
+  font-variation-settings: 'opsz' 72, 'SOFT' 35, 'WONK' 1;
+  letter-spacing: -.055em;
+  line-height: 1.045;
+  transform: none;
+}
+.ref-hero-copy h1 i {
+  font-weight: 650;
+  font-variation-settings: 'opsz' 72, 'SOFT' 35, 'WONK' 1;
+}
+.ref-section-heading h2,
+.ref-discovery h2,
+.ref-courses > h2,
+.ref-library-copy h2 {
+  transform: none;
+  font-weight: 700;
+  line-height: 1.06;
+}
+.ref-project-info h3,
+.ref-course-info h3,
+.resource-title,
+.course-card h3 {
+  font-family: var(--serif);
+  font-weight: 650;
+  font-variation-settings: 'opsz' 28, 'SOFT' 25, 'WONK' 1;
+  letter-spacing: -.045em;
+  line-height: 1.08;
+}
+.ref-hero-copy > p { letter-spacing: -.025em; }
+.ref-eyebrow { font-weight: 750; letter-spacing: .025em; }
+.ref-manifesto {
+  font-weight: 800;
+  font-variation-settings: 'opsz' 30, 'SOFT' 30, 'WONK' 1;
+  letter-spacing: -.015em;
+  clip-path: none;
+  position: relative;
+  isolation: isolate;
+}
+.ref-manifesto::before,
+.ref-manifesto::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  height: 7px;
+  background: url('/marks/torn-edge.svg') 0 0 / 700px 7px repeat-x;
+  pointer-events: none;
+}
+.ref-manifesto::before { top: -5px; }
+.ref-manifesto::after { bottom: -5px; transform: rotate(180deg); }
+.ref-about::after {
+  clip-path: polygon(0 8%, 4% 6%, 7% 8%, 11% 4%, 15% 6%, 20% 3%, 24% 6%, 28% 2%, 33% 5%, 37% 2%, 42% 4%, 48% 1%, 53% 4%, 59% 0, 64% 3%, 70% 1%, 76% 4%, 82% 0, 88% 3%, 94% 1%, 100% 3%, 100% 100%, 0 100%);
+}
+.ref-grid-paper {
+  clip-path: polygon(0 8%, 8% 6%, 14% 9%, 22% 3%, 30% 6%, 38% 2%, 46% 5%, 54% 1%, 63% 4%, 72% 0, 81% 3%, 90% 1%, 100% 3%, 100% 100%, 0 100%);
+}
+/* Tapered SVG strokes replace CSS borders and font-dependent symbols. */
+.drawn-mark {
+  position: absolute;
+  display: block;
+  height: 12px;
+  width: 150px;
+  fill: currentColor;
+  border: 0 !important;
+  border-radius: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.drawn-mark.orange-scribble { color: var(--orange); }
+.drawn-mark.olive-scribble { color: #74804b; }
+.drawn-mark.white-scribble { color: var(--paper); }
+.ref-eyebrow .drawn-mark { height: 7px; bottom: -11px; }
+.ref-discovery h2 .drawn-mark { height: 13px; bottom: -19px; }
+.ref-library-copy h2 .drawn-mark { height: 11px; bottom: -17px; }
+.ref-courses > h2 .drawn-mark { height: 12px; bottom: -15px; }
+.ref-newsletter-inner > h2 .drawn-mark { height: 11px; bottom: -2px; }
+.drawn-rays {
+  position: absolute;
+  color: var(--orange);
+  width: 51px;
+  height: 51px;
+  background: none;
+  pointer-events: none;
+  overflow: visible;
+}
+.drawn-rays.hero-rays { top: -38px; right: 18%; transform: rotate(5deg); }
+.drawn-rays.search-rays { top: -42px; right: -37px; transform: rotate(12deg) scale(.8); }
+.ref-topic-links svg { stroke-width: 1.7; }
+.text-link { text-underline-offset: .22em; }
+.ref-project-tags, .ref-course-time, .results-count {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .015em;
+}
+.ref-course-time { font-size: 10px; line-height: 1.25; }
+.ref-shelf-book > span { font-size: clamp(10px, 1vw, 14px); }
+.ref-footer-inner > span { font-size: clamp(10px, .74vw, 11px); }
+@media (min-width: 1101px) {
+  .ref-hero-copy h1 { font-size: clamp(66px, 6.1vw, 88px); }
+}
+@media (min-width: 581px) and (max-width: 1100px) {
+  .drawn-rays.hero-rays { transform: rotate(5deg) scale(.7); }
+}
+@media (max-width: 580px) {
+  .ref-hero-copy h1 { font-size: clamp(34px, 8.5vw, 49px); line-height: 1.08; }
+  .ref-eyebrow { font-size: 8px; letter-spacing: .015em; }
+  .drawn-rays.hero-rays { right: 2%; top: -32px; transform: rotate(5deg) scale(.58); }
+  .drawn-rays.search-rays { right: -6px; top: -32px; transform: rotate(12deg) scale(.5); }
+  .ref-eyebrow .drawn-mark { height: 6px; bottom: -9px; }
+  .ref-discovery h2 .drawn-mark { height: 9px; bottom: -15px; }
+  .ref-library-copy h2 .drawn-mark { height: 9px; bottom: -15px; }
+  .ref-courses > h2 .drawn-mark { height: 9px; bottom: -13px; }
+  .ref-newsletter-inner > h2 .drawn-mark { height: 9px; bottom: -2px; }
+  .ref-project-info p { font-size: 12px; line-height: 1.45; }
+  .ref-project-info { padding-bottom: 34px; }
+  .ref-course-info p { font-size: 12px; line-height: 1.45; }
+  .ref-course-time { font-size: 9px; }
+  .ref-shelf-book > span { font-size: 8px; }
+  .ref-footer-inner > span { font-size: 9px; }
+}
+/* Give the italic's left overhang room beside the preceding word. */
+.ref-hero-copy h1 i { margin-inline-start: .06em; }
