@@ -7,7 +7,7 @@ export function HomeMotion({ children }: { children: ReactNode }) {
  useEffect(() => {
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   if (motion.matches || !('IntersectionObserver' in window)) return;
-  const elements = root.current?.querySelectorAll<HTMLElement>('.ref-discovery, .ref-section-heading, .ref-project-card, .ref-library-copy, .ref-shelf-book, .ref-courses > h2, .ref-course-card, .ref-about-copy, .ref-stamp, .ref-newsletter-inner');
+  const elements = root.current?.querySelectorAll<HTMLElement>('.home-reveal, .ref-discovery, .ref-section-heading, .ref-project-card, .ref-library-copy, .ref-shelf-book, .ref-courses > h2, .ref-course-card, .ref-about-copy, .ref-stamp, .ref-newsletter-inner');
   const observer = new IntersectionObserver(entries => {
    entries.forEach(entry => {
     if (entry.isIntersecting) {
