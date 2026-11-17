@@ -60,3 +60,5 @@ The personal library includes sidebar views, actual browser-local bookmarks and 
 The shared header stays pinned during scrolling, retains its height and shows the orange LR mark beside the wordmark. Homepage motion includes a brief hero entrance, one-time scroll reveals and hover feedback. Reduced-motion preferences disable animations; all content stays available without JavaScript. Desktop and narrow-screen browser checks verified the pinned header, mobile menu and absence of horizontal overflow.
 
 The homepage also includes three maker-interest paths linked to live catalog filters, an illustrated solar-project spotlight with the existing free planning download, and three original expandable workbench notes. The sections use responsive layouts and the existing reduced-motion-aware reveals. No external content feed is required.
+
+Homepage recommendation cards are design examples, clearly labelled as sample quotes with placeholder names and roles. Replace the examples in components/home-testimonials.tsx with real, permissioned quotes and attribution before presenting them as endorsements. No ratings, review counts or real identities are invented.
