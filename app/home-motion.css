@@ -5,7 +5,7 @@
 .site-header .brand-emblem{display:grid;place-items:center;width:37px;height:37px;flex-shrink:0;line-height:1}
 .brand-emblem svg{display:block;width:100%;height:100%;color:var(--orange)}
 .header-brand-group{flex-shrink:0}
-.site-header .brand-byline{margin-left:47px}
+
 .site-header .desktop-nav{transform:none;gap:clamp(19px,2.7vw,39px)}
 .site-header .header-actions{gap:22px;flex-shrink:0}
 .mobile-nav{max-height:calc(100dvh - 80px);overflow-y:auto}
@@ -45,7 +45,7 @@
  .site-header .brand>span:not(.brand-emblem){font-size:22px}
  .site-header .brand-emblem{width:29px;height:29px}
  .site-header .header-actions{gap:12px}
- .site-header .brand-byline{margin-left:36px}
+
 }
 @media(max-width:360px){.site-header .brand>span:not(.brand-emblem){font-size:19px}.site-header .header-actions{gap:8px}}
 @media(prefers-reduced-motion:reduce){
@@ -55,3 +55,5 @@
 /* Clip decorative paper, while keeping the sticky header outside this wrapper. */
 .reference-home{overflow-x:clip}
 .reference-home .motion-pending:focus-within{opacity:1;translate:none}
+/* Reserve the scrollbar space so navigation does not shift on shorter pages. */
+html{scrollbar-gutter:stable}
