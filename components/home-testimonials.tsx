@@ -1,5 +1,5 @@
 import { Quote, MessageCircle, ArrowUpRight } from 'lucide-react';
-import Link from 'next/link';
+import Link from '@/components/navigation-link';
 import { DrawnUnderline } from './decorative-marks';
 
 // Layout examples only. Replace with permissioned, verbatim recommendations

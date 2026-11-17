@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/navigation-link';
 import {useEffect,useState} from 'react';
 import {BookOpen,Play,Bookmark,ShoppingBag,Settings,ArrowRight,Download,CheckCircle2,FileText} from 'lucide-react';
 import {resources} from '@/lib/catalog';

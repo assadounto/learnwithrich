@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/navigation-link';
 import {ChevronRight,Download,FileText,Layers,Video,Clock3,Check,ArrowRight} from 'lucide-react';
 import type {Resource} from '@/lib/catalog';
 import {ProjectGallery} from './project-gallery';

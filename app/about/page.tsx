@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/navigation-link';
 import { ArrowRight, ArrowUpRight, CircuitBoard, Code2, BookOpen, MapPin, Github } from 'lucide-react';
 import { DrawnUnderline, AccentRays } from '@/components/decorative-marks';
 export const metadata: Metadata = { title: 'Meet Richmond Adu-Kyere', description: 'Meet Richmond, a Ghanaian software and electronics engineer connecting code, hardware and everyday problems.' };

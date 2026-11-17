@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/navigation-link';
 import { PaperEdges } from './paper-edges';
 import { ArrowUpRight, Pause, Play } from 'lucide-react';
 

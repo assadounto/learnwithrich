@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import Link from '@/components/navigation-link';
 import { ArrowUpRight, Search, SlidersHorizontal, FileText } from 'lucide-react';
 import { projects } from '@/lib/projects';
 export function ProjectBrowser() {

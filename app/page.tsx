@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/navigation-link';
 import { PaperEdges } from '@/components/paper-edges';
 import { SkillsPlayground } from '@/components/skills-playground';
 import { HomeTestimonials } from '@/components/home-testimonials';

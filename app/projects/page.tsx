@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import Link from 'next/link';
+import Link from '@/components/navigation-link';
 import { ArrowRight, ArrowUpRight, CircuitBoard, Code2, FileText } from 'lucide-react';
 import { DrawnUnderline } from '@/components/decorative-marks';
 import { ProjectBrowser } from '@/components/project-browser';

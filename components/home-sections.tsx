@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/navigation-link';
 import { PaperEdges } from './paper-edges';
 import { ArrowRight, ArrowUpRight, CircuitBoard, Code2, PencilRuler, FileText, Download, Plus } from 'lucide-react';
 import { DrawnUnderline, AccentRays } from './decorative-marks';

@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/navigation-link';
 import { Bookmark, ArrowUpRight, ArrowRight, Play, Clock3 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Art } from './art';

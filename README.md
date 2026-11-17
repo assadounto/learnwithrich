@@ -72,3 +72,10 @@ The site now uses one consistent header across home and interior pages: the same
 Homepage skills marquee (/#skills-playground): two continuous rows of skill pills glide in opposite directions. A pause/resume button and hover-to-pause keep the motion controllable. Duplicate visual tracks are hidden from assistive technology; reduced motion shows the complete skill collection as a static grid. Without JavaScript, the two original rows remain horizontally scrollable. The former falling/drag physics has been removed.
 
 Homepage motion now sequences the eyebrow, two headline lines, supporting copy, calls to action and collage entrance. Underlines reveal from left to right when their headings enter view. Reusable decorative paper edges connect the spotlight, library, skills playground and newsletter without changing content layout. All effects respect reduced motion; the content remains visible without JavaScript. Browser checks confirmed staggered delays, the pen-reveal trigger, eight coloured paper edges and no horizontal overflow at desktop/phone sizes.
+
+
+### Shared styling and navigation feedback
+
+Collection cards share borders, corner radii, serif headings and readable copy. Controls use a consistent 44px minimum height; phone collections retain two columns. Mobile navigation includes the active-page state, and Discover links to the homepage.
+
+Internal links retain Next.js prefetch, keyboard/modifier behavior and native anchor semantics through a shared NavigationLink. A React transition drives the orange progress bar, accessible loading announcement and compact spinner while a route opens. Same-page hashes and download links keep their native behavior. Homepage search uses the same navigation feedback. Loading boundaries show a quiet skeleton; route failures have retry and project-navigation actions. Reduced motion keeps a static progress line and text.

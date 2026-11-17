@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/navigation-link';
 import {Download,ArrowUpRight} from 'lucide-react';
 import type {Resource} from '@/lib/catalog';
 import {WorkspaceArt,artFor} from './workspace-art';
