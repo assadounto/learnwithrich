@@ -1,0 +1,57 @@
+/* Keep the maker identity visible without changing header height on scroll. */
+.site-header{position:sticky;top:0;z-index:50;transition:box-shadow .25s ease;background:var(--paper)}
+.site-header.is-scrolled{box-shadow:0 6px 20px #30240e14}
+.site-header .brand{gap:10px}
+.site-header .brand-emblem{display:grid;place-items:center;width:37px;height:37px;flex-shrink:0;line-height:1}
+.brand-emblem svg{display:block;width:100%;height:100%;color:var(--orange)}
+.header-brand-group{flex-shrink:0}
+.site-header .brand-byline{margin-left:47px}
+.site-header .desktop-nav{transform:none;gap:clamp(19px,2.7vw,39px)}
+.site-header .header-actions{gap:22px;flex-shrink:0}
+.mobile-nav{max-height:calc(100dvh - 80px);overflow-y:auto}
+.reference-home .ref-project-card,.reference-home .ref-course-card{transition:box-shadow .25s ease,border-color .25s ease}
+.reference-home .ref-project-card>a,.reference-home .ref-course-image{overflow:hidden}
+.reference-home .reference-art{transition:scale .4s ease}
+.reference-home .ref-topic-links a,.reference-home .button{transition:background-color .2s ease,box-shadow .2s ease,translate .2s ease}
+.reference-home .text-link svg,.reference-home .ref-card-arrow svg{transition:translate .2s ease}
+.reference-home .ref-shelf-book{transition:translate .3s ease}
+@media(hover:hover){
+ .reference-home .ref-project-card:hover,.reference-home .ref-course-card:hover{border-color:#bd6b32;box-shadow:0 10px 25px #30240e16}
+ .reference-home .ref-project-card:hover .reference-art,.reference-home .ref-course-card:hover .reference-art{scale:1.035}
+ .reference-home .ref-topic-links a:hover,.reference-home .button:hover{translate:0 -2px;box-shadow:0 5px 12px #30240e16}
+ .reference-home .ref-shelf-book:hover{translate:0 -7px}
+ .reference-home .text-link:hover svg,.reference-home .ref-card-arrow:hover svg{translate:3px 0}
+}
+@media(prefers-reduced-motion:no-preference){
+ .reference-home .ref-hero-copy{animation:maker-enter .7s ease-out both}
+ .reference-home .ref-hero-art{animation:maker-collage .9s .12s ease-out both}
+ .reference-home .motion-pending{opacity:0;translate:0 22px}
+ .reference-home .motion-arrived{animation:maker-enter .6s ease-out both}
+ .reference-home .ref-project-card:nth-child(2).motion-arrived,.reference-home .ref-shelf-book:nth-child(2).motion-arrived{animation-delay:70ms}
+ .reference-home .ref-project-card:nth-child(3).motion-arrived,.reference-home .ref-shelf-book:nth-child(3).motion-arrived{animation-delay:140ms}
+}
+@keyframes maker-enter{from{opacity:0;translate:0 22px}to{opacity:1;translate:0 0}}
+@keyframes maker-collage{from{opacity:0;translate:14px 15px;rotate:1.5deg}to{opacity:1;translate:0 0;rotate:0deg}}
+@media(min-width:801px) and (max-width:1200px){
+ .site-header .header-inner{gap:17px;padding-inline:24px}
+ .site-header .brand>span:not(.brand-emblem){font-size:25px}
+ .site-header .desktop-nav{gap:20px;font-size:12px}
+ .site-header .header-actions{gap:17px}
+ .site-header .header-cta{min-width:130px;font-size:12px;padding-inline:13px}
+}
+@media(max-width:580px){
+ .site-header .header-inner{gap:10px;padding-inline:16px}
+ .site-header .brand{gap:7px}
+ .site-header .brand>span:not(.brand-emblem){font-size:22px}
+ .site-header .brand-emblem{width:29px;height:29px}
+ .site-header .header-actions{gap:12px}
+ .site-header .brand-byline{margin-left:36px}
+}
+@media(max-width:360px){.site-header .brand>span:not(.brand-emblem){font-size:19px}.site-header .header-actions{gap:8px}}
+@media(prefers-reduced-motion:reduce){
+ .site-header,.reference-home *{animation:none!important;transition:none!important}
+ .reference-home .motion-pending{opacity:1;translate:none}
+}
+/* Clip decorative paper, while keeping the sticky header outside this wrapper. */
+.reference-home{overflow-x:clip}
+.reference-home .motion-pending:focus-within{opacity:1;translate:none}
