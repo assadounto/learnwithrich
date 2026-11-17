@@ -1,5 +1,6 @@
-import type { Metadata } from 'next';
+import type {Metadata} from 'next';
 import {resources} from '@/lib/catalog';
-import {CourseCard} from '@/components/resource-card';
+import {CompactResource} from '@/components/compact-resource';
+import {DrawnUnderline} from '@/components/decorative-marks';
 export const metadata:Metadata={title:'Practical courses'};
-export default function Courses(){return <div className="container"><div className="page-top"><span className="eyebrow">THE HANDS-ON SERIES</span><h1>Less watching.<br/><i>More making.</i></h1><p>Practical learning, built around something you can actually make.<br/>A first look at the courses taking shape.</p><span className="preview-label">Courses in preparation · Enrolment is not open</span></div><div className="courses-grid section">{resources.filter(r=>r.type==='Course').map(r=><CourseCard key={r.slug} resource={r}/>)}</div></div>}
+export default function Courses(){return <div className="studio-page studio-courses-index"><header className="studio-page-heading"><h1>Less watching. <span className="marked-word">More making.<DrawnUnderline className="orange-scribble"/></span></h1><p>Practical courses built around useful projects. Explore the learning paths taking shape.</p></header><div className="studio-courses-list">{resources.filter(r=>r.type==='Course').map(r=><CompactResource resource={r} key={r.slug}/>)}</div><p className="studio-note">Course previews · Enrolment and video playback are not open yet.</p></div>}

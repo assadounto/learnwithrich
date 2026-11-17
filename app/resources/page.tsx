@@ -1,5 +1,6 @@
-import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { CatalogBrowser } from '@/components/catalog-browser';
+import type {Metadata} from 'next';
+import {Suspense} from 'react';
+import {CatalogBrowser} from '@/components/catalog-browser';
+import {DrawnUnderline} from '@/components/decorative-marks';
 export const metadata:Metadata={title:'Resource library'};
-export default function ResourcesPage(){return <div className="container"><div className="page-top"><span className="eyebrow">THE LEARNWITHRICH COLLECTION</span><h1>Useful things for<br/><i>curious minds.</i></h1><p>Projects to try. Ideas to explore. Resources to come back to.<br/>Find a little something for your next big thing.</p></div><Suspense fallback={<p className="results-count">Opening the collection…</p>}><CatalogBrowser/></Suspense></div>}
+export default function ResourcesPage(){return <div className="studio-page studio-catalog-page"><header className="studio-page-heading"><h1>Useful things for curious <span className="marked-word">minds.<DrawnUnderline className="orange-scribble"/></span></h1><p>Projects, guides, books and practical resources for makers, students and builders in Africa and beyond.</p></header><Suspense fallback={<p>Opening the collection…</p>}><CatalogBrowser/></Suspense></div>}

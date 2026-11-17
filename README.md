@@ -50,3 +50,9 @@ The homepage follows the supplied maker-journal reference: two-line hero, transp
 The header sign-in link opens an honest account-availability page. Newsletter submission displays a not-connected message and does not store or transmit email. See `/privacy` for the current preview behaviour.
 
 The final homepage alignment pass adjusts hero/discovery type scale, project grid gutters, lower-section spacing and the RA divider position. It restores resource-format icons, the yellow book-shelf accent and orange introduction strokes. Tablet labels have minimum readable sizes, and the search action becomes visible on keyboard focus. Catalog and course availability labels remain truthful to the current preview content.
+
+## Interior-page reference implementation
+
+The resource catalog, project details, course details and personal library now follow the supplied four-page maker-journal board. `components/workspace-art.tsx` displays individual artwork regions from `public/images/page-reference.webp`; no webpage is rendered as a screenshot. Catalog search, type/topic/access filters and load-more are functional. Project thumbnails, an accessible native image dialog and keyboard-navigable information tabs are implemented. Course modules expand and the preview action explains video availability.
+
+The personal library includes sidebar views, actual browser-local bookmarks and an explicitly labeled sample-data switch. Preview progress, example prices and receipt dialogs are illustrative; switching preview data off shows no fabricated purchases. Download actions point only to existing Markdown files. Accounts, enrolment, checkout and course playback remain unconnected. The interior header uses the founder's RA identity as a link to the library preview, not as an authentication indicator.
