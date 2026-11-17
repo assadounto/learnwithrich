@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PaperEdges } from './paper-edges';
 import { ArrowRight, ArrowUpRight, CircuitBoard, Code2, PencilRuler, FileText, Download, Plus } from 'lucide-react';
 import { DrawnUnderline, AccentRays } from './decorative-marks';
 
@@ -19,7 +20,7 @@ export function MakerPaths() {
 }
 
 export function ProjectSpotlight() {
- return <section className="maker-spotlight" aria-labelledby="spotlight-title"><div className="ref-container maker-spotlight-inner">
+ return <section className="maker-spotlight" aria-labelledby="spotlight-title"><PaperEdges/><div className="ref-container maker-spotlight-inner">
   <div className="spotlight-visual home-reveal"><div className="spotlight-tape" aria-hidden="true"/><div className="spotlight-project-art" role="img" aria-label="Illustrative solar controller prototype with a solar panel on a maker’s workbench"/><span className="spotlight-caption">THE CONCEPT → THE PROJECT PLAN</span><span className="spotlight-paper-label">Built to solve<br/><i>a real problem.</i></span></div>
   <div className="spotlight-copy home-reveal"><span className="maker-kicker">UNDER THE HOOD / PROJECT SPOTLIGHT</span><h2 id="spotlight-title">Sunshine, circuits<br/>and a <i>better plan.</i></h2><p>How could solar, grid and battery power work together? Explore the thinking behind a hybrid power system, from the first question to a project outline.</p>
    <ol className="spotlight-steps"><li><span>01</span><div><h3>Understand the idea</h3><p>What the system does and why each part matters.</p></div></li><li><span>02</span><div><h3>Look inside the project</h3><p>Explore the architecture and key components.</p></div></li><li><span>03</span><div><h3>Make a plan of your own</h3><p>Use the free outline to organise your next steps.</p></div></li></ol>

@@ -23,11 +23,29 @@ export function HomeMotion({ children }: { children: ReactNode }) {
     observer.observe(element);
    }
   });
+  const marks = root.current?.querySelectorAll<SVGElement>('.drawn-mark');
+  let markFrame = 0;
+  const drawVisibleMarks = () => {
+   markFrame = 0;
+   marks?.forEach(mark => {
+    if (mark.classList.contains('mark-drawn')) return;
+    const rect = (mark.parentElement || mark).getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+     mark.classList.remove('mark-pending');
+     mark.classList.add('mark-drawn');
+    }
+   });
+  };
+  marks?.forEach(mark => mark.classList.add('mark-pending'));
+  const scheduleMarks = () => { if (!markFrame) markFrame = requestAnimationFrame(drawVisibleMarks); };
+  window.addEventListener('scroll', scheduleMarks, { passive: true });
+  window.addEventListener('resize', scheduleMarks);
+  scheduleMarks();
   const revealAll = () => {
-   if (motion.matches) elements?.forEach(element => element.classList.remove('motion-pending'));
+   if (motion.matches) { elements?.forEach(element => element.classList.remove('motion-pending')); marks?.forEach(mark => mark.classList.remove('mark-pending')); }
   };
   motion.addEventListener('change', revealAll);
-  return () => { observer.disconnect(); motion.removeEventListener('change', revealAll); elements?.forEach(element => element.classList.remove('motion-pending')); };
+  return () => { observer.disconnect(); cancelAnimationFrame(markFrame); window.removeEventListener('scroll', scheduleMarks); window.removeEventListener('resize', scheduleMarks); marks?.forEach(mark => mark.classList.remove('mark-pending','mark-drawn')); motion.removeEventListener('change', revealAll); elements?.forEach(element => element.classList.remove('motion-pending')); };
  }, []);
  return <div className="reference-home" ref={root}>{children}</div>;
 }

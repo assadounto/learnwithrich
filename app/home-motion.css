@@ -23,8 +23,8 @@
  .reference-home .text-link:hover svg,.reference-home .ref-card-arrow:hover svg{translate:3px 0}
 }
 @media(prefers-reduced-motion:no-preference){
- .reference-home .ref-hero-copy{animation:maker-enter .7s ease-out both}
- .reference-home .ref-hero-art{animation:maker-collage .9s .12s ease-out both}
+ .reference-home .ref-hero-copy{animation:none}
+ .reference-home .ref-hero-art{animation:maker-collage 1s .42s cubic-bezier(.2,.7,.2,1) both}
  .reference-home .motion-pending{opacity:0;translate:0 22px}
  .reference-home .motion-arrived{animation:maker-enter .6s ease-out both}
  .reference-home .ref-project-card:nth-child(2).motion-arrived,.reference-home .ref-shelf-book:nth-child(2).motion-arrived{animation-delay:70ms}
@@ -57,3 +57,29 @@
 .reference-home .motion-pending:focus-within{opacity:1;translate:none}
 /* Reserve the scrollbar space so navigation does not shift on shorter pages. */
 html{scrollbar-gutter:stable}
+
+/* One measured entrance: eyebrow, headline, supporting copy, then the invitation. */
+.hero-title-line{display:block}
+@media(prefers-reduced-motion:no-preference){
+ .reference-home .ref-eyebrow{animation:hero-line-enter .55s .05s ease-out both}
+ .reference-home .hero-title-line{animation:hero-line-enter .75s .15s cubic-bezier(.2,.7,.2,1) both}
+ .reference-home .hero-title-line:nth-child(2){animation-delay:.32s}
+ .reference-home .ref-hero-copy>p{animation:hero-line-enter .65s .54s ease-out both}
+ .reference-home .ref-hero-actions{animation:hero-line-enter .6s .7s ease-out both}
+ .reference-home .drawn-mark.mark-pending{clip-path:inset(0 100% 0 0)}
+ .reference-home .drawn-mark.mark-drawn{animation:pen-reveal .8s .12s cubic-bezier(.2,.7,.2,1) both}
+ .reference-home .ref-eyebrow .drawn-mark.mark-drawn{animation-delay:.4s}
+}
+@keyframes hero-line-enter{from{opacity:0;translate:0 18px;clip-path:inset(0 0 100% 0)}to{opacity:1;translate:0 0;clip-path:inset(-20% -10% -20% -10%)}}
+@keyframes pen-reveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.reference-home .ref-hero-actions:focus-within{animation:none;opacity:1;translate:none;clip-path:none}
+/* Reuse the irregular paper silhouette without moving section content. */
+.reference-home .ref-library{--paper-edge-colour:#24241f;position:relative;isolation:isolate}
+.reference-home .maker-spotlight{--paper-edge-colour:#e0e2c7;isolation:isolate}
+.reference-home .skills-cinema{--paper-edge-colour:#191e17}
+.reference-home .reference-newsletter{--paper-edge-colour:#eb5704;position:relative;isolation:isolate}
+.paper-edge{position:absolute;left:0;width:100%;height:13px;background:var(--paper-edge-colour);mask:url('/marks/torn-edge.svg') 0 0/100% 100% no-repeat;-webkit-mask:url('/marks/torn-edge.svg') 0 0/100% 100% no-repeat;pointer-events:none;z-index:3}
+.paper-edge-top{top:-9px}
+.paper-edge-bottom{bottom:-9px;rotate:180deg}
+@media(max-width:580px){.paper-edge{height:9px}.paper-edge-top{top:-6px}.paper-edge-bottom{bottom:-6px}}
+@media(prefers-reduced-motion:reduce){.reference-home .drawn-mark.mark-pending{clip-path:none}.reference-home .hero-title-line{opacity:1;translate:none;clip-path:none}}

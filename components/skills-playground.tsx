@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import Link from 'next/link';
+import { PaperEdges } from './paper-edges';
 import { ArrowUpRight, Pause, Play, RotateCcw, MoveUpRight, Code2, CircuitBoard, Database, Layers, Box, GitBranch } from 'lucide-react';
 
 const skills = [
@@ -95,7 +96,7 @@ export function SkillsPlayground() {
  };
  const pointerUp=(event:PointerEvent<HTMLButtonElement>)=>{if(!drag.current)return;suppressClick.current=drag.current.moved;drag.current=null;if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId)};
  const chosen=selected===null?null:skills[selected];
- return <section id="skills-playground" className="skills-cinema" aria-labelledby="skills-cinema-title"><div className="ref-container">
+ return <section id="skills-playground" className="skills-cinema" aria-labelledby="skills-cinema-title"><PaperEdges/><div className="ref-container">
   <div className="skills-cinema-heading"><div><span className="maker-kicker">THE TOOLS BEHIND THE MAKING</span><h2 id="skills-cinema-title">A little skill.<br/><i>A lot of possibility.</i></h2></div><div className="skills-cinema-intro"><p>Different tools. Endless ways to bring an idea to life.</p><span id="skills-instructions">{reduced?'Choose a skill to explore it.':'Grab a bubble. Give it a little momentum. Or tap to explore.'}</span></div></div>
   <div className="skills-stage-shell"><div className="skills-stage-top"><span><i aria-hidden="true"/>THE SKILLS PLAYGROUND</span><div className="skills-stage-controls"><button type="button" disabled={reduced} onClick={()=>setPaused(value=>!value)} aria-label={paused?'Resume skill animation':'Pause skill animation'}>{paused?<Play size={15}/>:<Pause size={15}/>}<span>{paused?'Play':'Pause'}</span></button><button type="button" disabled={reduced} onClick={()=>{setPaused(false);setReplay(value=>value+1)}} aria-label="Replay falling skills"><RotateCcw size={15}/><span>Replay</span></button></div></div>
   <div ref={stage} className={`skills-stage ${motion&&!reduced?'skills-physics':''}`} aria-describedby="skills-instructions"><span className="skills-backdrop-word" aria-hidden="true">MAKE<br/><i>it happen.</i></span>{skills.map((skill,i)=><button type="button" key={skill.name} ref={element=>{buttons.current[i]=element}} className={`skill-bubble skill-${skill.tone}`} aria-pressed={selected===i} aria-label={`Explore ${skill.name}`} onPointerDown={event=>pointerDown(event,i)} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={()=>{drag.current=null}} onLostPointerCapture={()=>{drag.current=null}} onClick={()=>{if(suppressClick.current){suppressClick.current=false;return}setSelected(i)}} onFocus={()=>{if(motion&&!drag.current){setPaused(true);setSelected(i);const body=bodies.current[i];if(body){body.y=clamp(body.y,body.r,bounds.current.height-body.r);const button=buttons.current[i];if(button)button.style.transform=`translate3d(${body.x-body.r}px,${body.y-body.r}px,0)`}}}}><skill.icon size={22} strokeWidth={1.5} aria-hidden="true"/><strong>{skill.name}</strong><span>{skill.category}</span></button>)}</div>
