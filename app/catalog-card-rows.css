@@ -103,7 +103,7 @@
 .folio-project-card-foot > a { min-height: 44px; }
 .folio-tool-list { flex-wrap: wrap; padding-bottom: 12px; }
 .folio-project-meta { flex-wrap: wrap; gap: 8px 18px; margin-bottom: 0; }
-.folio-image-label { top: 12px; left: 12px; }
+.folio-image-label { top: 12px; bottom: auto; left: 12px; max-width: calc(100% - 24px); }
 .folio-image-arrow { display: none; }
 .ref-project-info { position: relative; padding-bottom: 42px; }
 .ref-card-arrow { right: 18px; bottom: 10px; }
