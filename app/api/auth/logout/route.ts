@@ -1,0 +1,3 @@
+import {NextResponse} from 'next/server';
+import {assertOrigin,SESSION,token,upstream,cookieOptions,ServiceError} from '@/lib/xonbay/server';
+export async function POST(request:Request){try{assertOrigin(request)}catch{return NextResponse.json({error:'Invalid request.'},{status:403})}const value=await token();try{if(value)await upstream('/v1/users/logout',value,undefined,'DELETE')}catch(e){if(!(e instanceof ServiceError)||![401,403].includes(e.status))return NextResponse.json({error:'Could not sign out securely. Please try again.'},{status:503})}const res=NextResponse.json({signedOut:true});res.cookies.set(SESSION,'',cookieOptions(0));return res}

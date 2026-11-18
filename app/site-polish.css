@@ -1,0 +1,78 @@
+/* Shared finishing rules for the maker collection. */
+:root { --card-border: #b9ae8c88; --card-radius: 8px; --control-radius: 6px; }
+.site-content { min-width: 0; }
+.ref-project-card, .ref-course-card, .folio-project-card, .compact-resource,
+.resource-card, .course-card { border-color: var(--card-border); border-radius: var(--card-radius); }
+.ref-project-card, .ref-course-card, .folio-project-card, .compact-resource {
+  transition: border-color .2s, box-shadow .2s;
+}
+.ref-project-card:focus-within, .ref-course-card:focus-within,
+.folio-project-card:focus-within, .compact-resource:focus-within { border-color: #9a693e; }
+.ref-project-info h3, .ref-course-info h3, .folio-project-copy h3,
+.studio-catalog-grid .compact-resource h3, .studio-courses-list .compact-resource h3 {
+  font-family: var(--serif); font-weight: 700; line-height: 1.13; letter-spacing: -.035em;
+}
+.studio-catalog-grid .compact-resource h3, .studio-courses-list .compact-resource h3 { font-size: 22px; }
+.ref-project-info p, .ref-course-info p, .folio-project-copy > p,
+.compact-resource-copy > p { color: #4b493c; line-height: 1.55; }
+.compact-resource-copy { gap: 0; }
+.compact-resource-bottom { padding-top: 8px; }
+.ref-project-tags span, .format-tag, .access-badge { border-radius: 4px; line-height: 1.25; }
+.button, .studio-page .button {
+  min-height: 44px; border-radius: var(--control-radius); padding: 10px 17px;
+  font-family: var(--sans); font-size: 12px; line-height: 1.4; font-weight: 600;
+  display: inline-flex; justify-content: center; align-items: center; gap: 8px;
+}
+.button svg { flex-shrink: 0; width: 17px; height: 17px; }
+.button:disabled { cursor: default; opacity: .55; }
+.button:active:not(:disabled) { translate: 0 1px; }
+.studio-page .button-orange { background: var(--orange); }
+.studio-page { max-width: 1368px; }
+.studio-page-heading { margin-bottom: 30px; }
+.studio-page-heading > p { max-width: 780px; }
+.studio-filter-tabs button, .project-topic-tabs button, .studio-detail-tabs button { min-height: 44px; }
+.save-button { border-radius: var(--control-radius); }
+.mobile-nav a.active { background: #e5e5cf; color: #6b733e; font-weight: 700; }
+.navigation-progress { position: fixed; inset: 0 0 auto; height: 3px; z-index: 1000; overflow: hidden; background: #efcc9a88; pointer-events: none; }
+.navigation-progress > span { display: block; width: 40%; height: 100%; background: var(--orange); box-shadow: 0 0 8px #e75d1666; animation: route-progress 1.1s ease-in-out infinite; }
+.navigation-notice { position: fixed; z-index: 1000; right: 24px; top: 92px; display: inline-flex; align-items: center; gap: 9px; padding: 10px 15px; background: #191e17; color: #fbf2dc; border: 1px solid #eee3c544; border-radius: 999px; box-shadow: 0 5px 20px #0002; font-size: 12px; pointer-events: none; animation: route-notice .15s .12s both; }
+.navigation-notice svg { animation: route-spin .8s linear infinite; }
+.route-loading { padding: 60px 0; min-height: 60vh; }
+.route-loading-label { display: flex; gap: 10px; align-items: center; font-size: 14px; margin-bottom: 30px; }
+.route-loading-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 24px; }
+.route-loading-card { border: 1px solid var(--card-border); border-radius: var(--card-radius); padding: 14px; }
+.route-loading-card span { display: block; background: #d4cbb680; border-radius: 4px; min-height: 12px; margin-bottom: 12px; }
+.route-loading-card span:first-child { aspect-ratio: 1.5; margin-bottom: 20px; }
+.route-loading-card span:last-child { width: 65%; }
+.route-error { min-height: 60vh; padding-block: 70px; max-width: 700px; }
+.route-error h1 { font-family: var(--serif); font-size: clamp(32px,5vw,52px); line-height: 1.1; margin-bottom: 20px; }
+.route-error p { line-height: 1.7; margin-bottom: 25px; }
+.route-error-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+@keyframes route-progress { from { transform: translateX(-100%); } to { transform: translateX(350%); } }
+@keyframes route-spin { to { rotate: 360deg; } }
+@keyframes route-notice { from { opacity: 0; } to { opacity: 1; } }
+@media (hover: hover) {
+  .ref-project-card:hover, .ref-course-card:hover, .folio-project-card:hover,
+  .compact-resource:hover { border-color: #a89871; box-shadow: 0 5px 18px #44361c0c; }
+}
+@media (max-width: 1000px) {
+  .studio-catalog-grid .compact-resource h3, .studio-courses-list .compact-resource h3 { font-size: 20px; }
+}
+@media (max-width: 800px) {
+  .site-header .header-cta { display: none; }
+}
+@media (max-width: 580px) {
+  .studio-page-heading { margin-bottom: 25px; }
+  .ref-project-info h3, .ref-course-info h3, .folio-project-copy h3,
+  .studio-catalog-grid .compact-resource h3, .studio-courses-list .compact-resource h3 { font-size: 18px; }
+  .button, .studio-page .button { padding: 10px 14px; font-size: 12px; min-width: 0; }
+  .navigation-notice { top: 78px; right: 15px; font-size: 11px; padding: 9px 12px; }
+  .route-loading-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+  .route-loading { padding-top: 35px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .navigation-progress > span { animation: none; width: 100%; }
+  .navigation-notice, .navigation-notice svg { animation: none; }
+  .ref-project-card, .ref-course-card, .folio-project-card, .compact-resource { transition: none; }
+  .button:active:not(:disabled) { translate: none; }
+}
