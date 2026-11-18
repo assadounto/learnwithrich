@@ -21,7 +21,7 @@
  display: grid;
  grid-template-columns: 35% minmax(0, 1fr);
  grid-template-rows: auto;
- min-height: 230px;
+ min-height: 0;
  width: 100%;
  margin: 0;
  overflow: hidden;
@@ -43,7 +43,7 @@
  display: flex;
  flex-direction: column;
  align-items: flex-start;
- justify-content: center;
+ justify-content: flex-start;
 }
 .live-product-cover,
 .folio-project-image-link,
@@ -56,11 +56,12 @@
  align-items: stretch;
  min-width: 0;
  min-height: 0;
- height: 100%;
- aspect-ratio: auto;
+ height: auto;
+ aspect-ratio: 1;
+ align-self: start;
  overflow: hidden;
  border-radius: 0;
- border-right: 1px solid var(--card-border);
+ border-right: 0;
 }
 .live-product-cover { align-items: center; justify-content: center; }
 .live-product-cover, .folio-project-image-link { position: relative; }
@@ -116,7 +117,7 @@
  .live-product-card, .folio-project-card, .ref-project-card, .ref-course-card,
  .studio-catalog-grid > .compact-resource, .studio-courses-list > .compact-resource {
   grid-template-columns: 35% minmax(0, 1fr);
-  min-height: 196px;
+  min-height: 0;
   border-radius: 8px;
  }
  .live-product-card > div, .folio-project-copy, .live-catalog-browser .folio-project-copy,
@@ -125,7 +126,7 @@
  .live-product-card h3, .folio-project-copy h3, .live-catalog-browser .folio-project-copy h3,
  .ref-project-info h3, .ref-course-info h3, .compact-resource h3,
  .studio-catalog-grid .compact-resource h3, .studio-courses-list .compact-resource h3 {
-  font-size: 21px; line-height: 1.12; letter-spacing: -.035em; margin: 9px 0;
+  font-size: clamp(18px, 5vw, 21px); line-height: 1.12; letter-spacing: -.035em; margin: 9px 0;
  }
  .live-product-card p, .folio-project-copy > p, .live-catalog-browser .folio-project-copy > p,
  .ref-project-info p, .ref-course-info p, .compact-resource-copy > p {
@@ -151,4 +152,9 @@
  .ref-course-time { font-size: 9px; }
  .ref-course-info .text-link { font-size: 11px; min-height: 40px; }
  .ref-section-heading > .text-link { flex-shrink: 0; }
+ /* Editorial phone rows keep the title and action beside the square thumbnail. */
+ .live-product-card p, .folio-project-copy > p, .live-catalog-browser .folio-project-copy > p,
+ .ref-project-info p, .ref-course-info p, .compact-resource-copy > p,
+ .folio-tool-list, .live-catalog-browser .folio-tool-list { display: none; }
+
 }
