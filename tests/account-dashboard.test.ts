@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {accountSummary,initials,imageUrl} from '../lib/account.ts';
+import {courseProgress,dashboardStats,libraryView} from '../lib/dashboard.ts';
+import type {Entitlement} from '../lib/xonbay/contracts.ts';
+const course={id:1,title:'Course',digital_product_public_id:'abc',content_type:'course',accessible:true,files:[],course_progress:{completed_lessons:3,total_lessons:10}} as Entitlement;
+test('account responses expose only name, ID and safe avatar',()=>{assert.deepEqual(accountSummary({id:12,name:' Richmond Adu-Kyere ',image:'https://images.example/avatar.jpg',email:'private@example.com',token:'secret',is_admin:true}),{id:12,name:'Richmond Adu-Kyere',avatar_url:'https://images.example/avatar.jpg'});assert.equal(accountSummary({name:' ',image:'javascript:alert(1)'}).avatar_url,null);assert.equal(imageUrl('https://secret@images.example/avatar.jpg'),null)});
+test('profile initials are usable with missing and multi-part names',()=>{assert.equal(initials('Richmond Adu-Kyere'),'RA');assert.equal(initials('Richmond'),'R');assert.equal(initials(' '),'M')});
+test('dashboard totals reflect accessible library input and actual progress',()=>{assert.deepEqual(dashboardStats([course,{...course,id:2,content_type:'download',course_progress:undefined}]),{courses:1,resources:1,completedLessons:3});assert.deepEqual(dashboardStats([]),{courses:0,resources:0,completedLessons:0});assert.deepEqual(courseProgress(course),{completed:3,total:10,percent:30})});
+test('progress handles missing and out-of-range values without fake percentages',()=>{assert.deepEqual(courseProgress({...course,course_progress:undefined}),{completed:0,total:0,percent:0});assert.deepEqual(courseProgress({...course,course_progress:{completed_lessons:50,total_lessons:10}}),{completed:10,total:10,percent:100});assert.equal(libraryView('courses'),'courses');assert.equal(libraryView('unknown'),'all')});
