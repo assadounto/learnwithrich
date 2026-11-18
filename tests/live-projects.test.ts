@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {categoryOf,categoryLabel,filterListings,isProject,productHref,topicTags,projectDetails} from '../lib/live-catalog.ts';
+import {categoryOf,categoryLabel,isFreeArticle,xonbayItemUrl,filterListings,isProject,productHref,topicTags,projectDetails} from '../lib/live-catalog.ts';
 import type {Listing} from '../lib/xonbay/contracts.ts';
 const base={id:5,public_id:'21ed1c12-cc41-413e-bde2-261ec6d50c0b',title:'First LED',description:'Build a useful light',content_type:'article',price_minor:0,currency:'GHS',cover_url:null,shop:{id:46,name:'LearnWithRich',handle:'learnwithrich'},checkout_pricing:{subtotal_minor:0,network_fee_minor:0,total_minor:0}} satisfies Listing;
 const project:Listing={...base,tags:['Project','ESP32','Sensors'],project_details:{difficulty:'Beginner',tools:['Arduino IDE']}};
@@ -16,3 +16,6 @@ test('legacy free component lists are shown without inventing quantities or leak
 });
 
 test('public cards show discovery categories instead of delivery formats',()=>{assert.equal(categoryLabel(project),'Project');assert.equal(categoryLabel({...base,category:'project'}),'Project');assert.equal(categoryLabel({...base,category:'book'}),'Book');assert.equal(categoryLabel(base),'Guide');});
+
+test('free article reading is independent of account claims and category',()=>{assert.ok(isFreeArticle(base));assert.ok(isFreeArticle(project));assert.equal(isFreeArticle({...base,price_minor:100}),false);assert.equal(isFreeArticle({...base,content_type:'download'}),false);});
+test('component shopping links use only validated product and collection IDs',()=>{assert.equal(xonbayItemUrl('product',42),'https://www.xonbay.com/products/42');assert.equal(xonbayItemUrl('collection','12'),'https://www.xonbay.com/collections/12');for(const id of ['../x','javascript:alert(1)','1?token=x',0,-1])assert.equal(xonbayItemUrl('product',id),null);});
