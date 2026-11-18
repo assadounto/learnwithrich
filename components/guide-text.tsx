@@ -2,7 +2,7 @@ import type {ReactNode} from 'react';
 /** Render guide headings, lists and code as React text; never interpret embedded HTML. */
 export function GuideText({text}:{text:string}){
  const chunks=text.split(/(```[\s\S]*?```)/g);
- return <div className="guide-rich-text">{chunks.flatMap((chunk,index)=>{
+ return <div className="guide-rich-text">{chunks.flatMap<ReactNode>((chunk,index)=>{
   if(chunk.startsWith('```')){const lines=chunk.slice(3,-3).split('\n');const language=lines.shift()?.trim();return [<pre key={index} aria-label={language?`${language} code`:'Code'}><code>{lines.join('\n').trimEnd()}</code></pre>]}
   const lines=chunk.split('\n');const blocks:ReactNode[]=[];let i=0;
   while(i<lines.length){
