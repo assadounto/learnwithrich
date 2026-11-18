@@ -1,0 +1,147 @@
+/* One complete card per row: reading on the left, cover on the right. */
+.live-product-grid,
+.folio-project-grid,
+.live-catalog-browser .folio-project-grid,
+.ref-project-grid,
+.ref-course-grid,
+.studio-catalog-grid,
+.studio-courses-list {
+ display: grid;
+ grid-template-columns: minmax(0, 1fr);
+ columns: auto;
+ gap: 18px;
+}
+.live-product-card,
+.folio-project-card,
+.ref-project-card,
+.ref-course-card,
+.studio-catalog-grid > .compact-resource,
+.studio-courses-list > .compact-resource {
+ display: grid;
+ grid-template-columns: minmax(0, 1fr) minmax(190px, 34%);
+ grid-template-rows: auto;
+ min-height: 225px;
+ width: 100%;
+ margin: 0;
+ overflow: hidden;
+ border: 1px solid var(--card-border);
+ border-radius: 10px;
+ background: #fff8e64d;
+ padding: 0;
+ gap: 0;
+}
+.live-product-card > div,
+.folio-project-copy,
+.ref-project-info,
+.ref-course-info,
+.compact-resource-copy {
+ grid-column: 1;
+ grid-row: 1;
+ min-width: 0;
+ padding: 25px 28px;
+ display: flex;
+ flex-direction: column;
+ align-items: flex-start;
+ justify-content: center;
+}
+.live-product-cover,
+.folio-project-image-link,
+.ref-project-card > a,
+.ref-course-image,
+.compact-cover {
+ grid-column: 2;
+ grid-row: 1;
+ display: flex;
+ align-items: stretch;
+ min-width: 0;
+ min-height: 0;
+ height: 100%;
+ aspect-ratio: auto;
+ overflow: hidden;
+ border-radius: 0;
+ border-left: 1px solid var(--card-border);
+}
+.live-product-cover { align-items: center; justify-content: center; }
+.live-product-cover, .folio-project-image-link { position: relative; }
+.live-product-cover > img, .folio-project-image-link > .live-project-cover { position: absolute; inset: 0; }
+.live-project-cover,
+.folio-project-image,
+.ref-project-card .reference-art,
+.ref-course-image .reference-art,
+.compact-cover .workspace-art {
+ width: 100%;
+ height: 100%;
+ min-height: 0;
+ max-height: none;
+ aspect-ratio: auto;
+ flex: 1;
+ border-radius: 0;
+}
+.live-product-cover img,
+.live-project-cover > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.live-product-cover > span { padding: 18px; text-align: center; font-size: 25px; overflow-wrap: anywhere; }
+.live-product-card h3,
+.folio-project-copy h3,
+.ref-project-info h3,
+.ref-course-info h3,
+.compact-resource h3 { font-size: clamp(23px, 2.4vw, 34px); line-height: 1.12; margin: 12px 0; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.live-product-card p,
+.folio-project-copy > p,
+.ref-project-info p,
+.ref-course-info p,
+.compact-resource-copy > p { font-size: 13px; line-height: 1.65; max-width: 65ch; margin-bottom: 16px; }
+.live-product-bottom,
+.folio-project-card-foot,
+.compact-resource-bottom { width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 18px; margin-top: auto; }
+.live-product-bottom > a,
+.folio-project-card-foot > a { min-height: 44px; }
+.folio-tool-list { flex-wrap: wrap; padding-bottom: 12px; }
+.folio-project-meta { flex-wrap: wrap; gap: 8px 18px; margin-bottom: 0; }
+.folio-image-label { top: 12px; left: 12px; }
+.folio-image-arrow { display: none; }
+.ref-project-info { position: relative; padding-bottom: 42px; }
+.ref-card-arrow { right: 18px; bottom: 10px; }
+.studio-catalog-grid .compact-resource > .save-button,
+.studio-courses-list .compact-resource > .save-button { top: 9px; right: 9px; background: var(--paper); border-radius: 5px; }
+@media (max-width: 580px) {
+ .live-product-grid, .folio-project-grid, .live-catalog-browser .folio-project-grid,
+ .ref-project-grid, .ref-course-grid, .studio-catalog-grid, .studio-courses-list { gap: 13px; }
+ .live-product-card, .folio-project-card, .ref-project-card, .ref-course-card,
+ .studio-catalog-grid > .compact-resource, .studio-courses-list > .compact-resource {
+  grid-template-columns: minmax(0, 1fr) 35%;
+  min-height: 196px;
+  border-radius: 8px;
+ }
+ .live-product-card > div, .folio-project-copy, .live-catalog-browser .folio-project-copy,
+ .ref-project-info, .ref-course-info, .compact-resource-copy,
+ .studio-catalog-grid .compact-resource-copy, .studio-courses-list .compact-resource-copy { padding: 15px 13px; }
+ .live-product-card h3, .folio-project-copy h3, .live-catalog-browser .folio-project-copy h3,
+ .ref-project-info h3, .ref-course-info h3, .compact-resource h3,
+ .studio-catalog-grid .compact-resource h3, .studio-courses-list .compact-resource h3 {
+  font-size: 21px; line-height: 1.12; letter-spacing: -.035em; margin: 9px 0;
+ }
+ .live-product-card p, .folio-project-copy > p, .live-catalog-browser .folio-project-copy > p,
+ .ref-project-info p, .ref-course-info p, .compact-resource-copy > p {
+  font-size: 11px; line-height: 1.55; margin-bottom: 10px;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+ }
+ .live-product-bottom { font-size: 11px; gap: 3px 8px; }
+ .live-product-bottom .text-link { font-size: 10px; }
+ .live-product-cover > span { font-size: 16px; padding: 10px; }
+ .live-product-cover > span > span { font-size: 10px; }
+ .live-project-cover > span { font-size: 14px; text-align: center; padding: 8px; }
+ .live-project-cover > svg { width: 32px; height: 32px; }
+ .folio-project-meta, .live-catalog-browser .folio-project-meta { font-size: 9px; gap: 4px 8px; }
+ .folio-image-label { top: 7px; left: 7px; padding: 4px 6px; font-size: 8px; }
+ .folio-tool-list, .live-catalog-browser .folio-tool-list { gap: 4px; padding-bottom: 7px; }
+ .folio-tool-list > :nth-child(n+4) { display: none; }
+ .live-catalog-browser .folio-tool-list button { font-size: 9px; padding: 3px 6px; }
+ .folio-project-card-foot, .live-catalog-browser .folio-project-card-foot { flex-direction: row; align-items: center; gap: 4px; }
+ .folio-project-card-foot > span { display: none; }
+ .folio-project-card-foot > a { font-size: 11px; }
+ .ref-project-info { padding-bottom: 40px; }
+ .ref-project-tags { flex-wrap: wrap; gap: 5px; font-size: 8px; }
+ .ref-course-time { font-size: 9px; }
+ .ref-course-info .text-link { font-size: 11px; min-height: 40px; }
+ .ref-section-heading > .text-link { flex-shrink: 0; }
+}
