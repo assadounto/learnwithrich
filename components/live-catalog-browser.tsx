@@ -1,11 +1,13 @@
 'use client';
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import Link from '@/components/navigation-link';
 import {ArrowUpRight,CircuitBoard,Search} from 'lucide-react';
 import {categories,categoryOf,categoryLabel,isFreeArticle,filterListings,productHref,topicTags} from '@/lib/live-catalog';
 import {money,type Listing} from '@/lib/xonbay/contracts';
-export function LiveCatalogBrowser({items,projectsOnly=false}:{items:Listing[];projectsOnly?:boolean}){
- const [query,setQuery]=useState('');const [category,setCategory]=useState(projectsOnly?'project':'all');const [tag,setTag]=useState('all');const [level,setLevel]=useState('all');const [price,setPrice]=useState('all');
+export type CatalogInitialFilters={query?:string;category?:string;tag?:string};
+export function LiveCatalogBrowser({items,projectsOnly=false,initialFilters={}}:{items:Listing[];projectsOnly?:boolean;initialFilters?:CatalogInitialFilters}){
+ const [query,setQuery]=useState(initialFilters.query||'');const [category,setCategory]=useState(projectsOnly?'project':initialFilters.category||'all');const [tag,setTag]=useState(initialFilters.tag||'all');const [level,setLevel]=useState('all');const [price,setPrice]=useState('all');
+ useEffect(()=>{setQuery(initialFilters.query||'');setCategory(projectsOnly?'project':initialFilters.category||'all');setTag(initialFilters.tag||'all');},[initialFilters.query,initialFilters.category,initialFilters.tag,projectsOnly]);
  const shown=filterListings(items,query,category,tag,level,price);const tags=topicTags(projectsOnly?items.filter(i=>categoryOf(i)==='project'):items);
  return <section id="project-collection" className="project-collection live-catalog-browser" aria-label={projectsOnly?'Published projects':'Published resources'}>
  <div className="folio-section-heading"><div><span className="maker-kicker">PUBLISHED BY LEARNWITHRICH</span><h2>{projectsOnly?'Choose something to build.':'Find your next idea.'}</h2></div><span role="status">{shown.length} {projectsOnly?(shown.length===1?'project':'projects'):(shown.length===1?'resource':'resources')}</span></div>

@@ -4,9 +4,9 @@ import { ArrowRight, ArrowUpRight, CircuitBoard, Code2, PencilRuler, FileText, D
 import { DrawnUnderline, AccentRays } from './decorative-marks';
 
 const paths = [
- { icon: CircuitBoard, number: '01', title: 'Make something light up.', text: 'Start with a board, a few wires and a little curiosity. Explore electronics you can build on.', label: 'Explore electronics', href: '/resources?topic=Electronics%20%26%20IoT', className: 'path-hardware' },
- { icon: Code2, number: '02', title: 'Turn an idea into an app.', text: 'Connect the dots between an interface, an API and something useful on the other side.', label: 'Build with code', href: '/resources?topic=Software', className: 'path-software' },
- { icon: PencilRuler, number: '03', title: 'Explain it beautifully.', text: 'Find visual ideas, project outlines and resources that make a complicated idea clearer.', label: 'Find creative resources', href: '/resources?topic=Illustration', className: 'path-creative' },
+ { icon: CircuitBoard, number: '01', title: 'Make something light up.', text: 'Start with a board, a few wires and a little curiosity. Explore electronics you can build on.', label: 'Explore electronics', href: '/resources?q=Electronics', className: 'path-hardware' },
+ { icon: Code2, number: '02', title: 'Turn an idea into an app.', text: 'Connect the dots between an interface, an API and something useful on the other side.', label: 'Build with code', href: '/resources?q=Software', className: 'path-software' },
+ { icon: PencilRuler, number: '03', title: 'Share the process.', text: 'Turn your thinking into useful notes, clear project guides and a process others can follow.', label: 'Explore documentation', href: '/resources?q=Documentation', className: 'path-creative' },
 ];
 
 export function MakerPaths() {
