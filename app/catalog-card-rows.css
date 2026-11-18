@@ -1,4 +1,4 @@
-/* One complete card per row: reading on the left, cover on the right. */
+/* Responsive horizontal cards: cover on the left, reading on the right. */
 .live-product-grid,
 .folio-project-grid,
 .live-catalog-browser .folio-project-grid,
@@ -7,7 +7,7 @@
 .studio-catalog-grid,
 .studio-courses-list {
  display: grid;
- grid-template-columns: minmax(0, 1fr);
+ grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
  columns: auto;
  gap: 18px;
 }
@@ -18,9 +18,9 @@
 .studio-catalog-grid > .compact-resource,
 .studio-courses-list > .compact-resource {
  display: grid;
- grid-template-columns: minmax(0, 1fr) minmax(190px, 34%);
+ grid-template-columns: 35% minmax(0, 1fr);
  grid-template-rows: auto;
- min-height: 225px;
+ min-height: 230px;
  width: 100%;
  margin: 0;
  overflow: hidden;
@@ -35,10 +35,10 @@
 .ref-project-info,
 .ref-course-info,
 .compact-resource-copy {
- grid-column: 1;
+ grid-column: 2;
  grid-row: 1;
  min-width: 0;
- padding: 25px 28px;
+ padding: 16px 14px;
  display: flex;
  flex-direction: column;
  align-items: flex-start;
@@ -49,7 +49,7 @@
 .ref-project-card > a,
 .ref-course-image,
 .compact-cover {
- grid-column: 2;
+ grid-column: 1;
  grid-row: 1;
  display: flex;
  align-items: stretch;
@@ -59,7 +59,7 @@
  aspect-ratio: auto;
  overflow: hidden;
  border-radius: 0;
- border-left: 1px solid var(--card-border);
+ border-right: 1px solid var(--card-border);
 }
 .live-product-cover { align-items: center; justify-content: center; }
 .live-product-cover, .folio-project-image-link { position: relative; }
@@ -79,17 +79,23 @@
 }
 .live-product-cover img,
 .live-project-cover > img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.live-product-cover > span { padding: 18px; text-align: center; font-size: 25px; overflow-wrap: anywhere; }
+.live-product-cover > span { padding: 18px; text-align: center; font-size: 17px; overflow-wrap: anywhere; }
 .live-product-card h3,
 .folio-project-copy h3,
 .ref-project-info h3,
 .ref-course-info h3,
-.compact-resource h3 { font-size: clamp(23px, 2.4vw, 34px); line-height: 1.12; margin: 12px 0; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.compact-resource h3 { font-size: 20px; line-height: 1.12; margin: 12px 0; letter-spacing: -.035em; overflow-wrap: anywhere; }
 .live-product-card p,
 .folio-project-copy > p,
 .ref-project-info p,
 .ref-course-info p,
-.compact-resource-copy > p { font-size: 13px; line-height: 1.65; max-width: 65ch; margin-bottom: 16px; }
+.compact-resource-copy > p { font-size: 11px; line-height: 1.55; max-width: 65ch; margin-bottom: 16px; }
+.live-product-card p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.live-product-bottom { font-size: 11px; }
+.live-product-bottom .text-link { font-size: 10px; }
+.folio-project-copy > p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.folio-project-copy .folio-project-card-foot > span { display: none; }
+.folio-project-copy .folio-project-card-foot > a { font-size: 11px; }
 .live-product-bottom,
 .folio-project-card-foot,
 .compact-resource-bottom { width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 18px; margin-top: auto; }
@@ -105,10 +111,10 @@
 .studio-courses-list .compact-resource > .save-button { top: 9px; right: 9px; background: var(--paper); border-radius: 5px; }
 @media (max-width: 580px) {
  .live-product-grid, .folio-project-grid, .live-catalog-browser .folio-project-grid,
- .ref-project-grid, .ref-course-grid, .studio-catalog-grid, .studio-courses-list { gap: 13px; }
+ .ref-project-grid, .ref-course-grid, .studio-catalog-grid, .studio-courses-list { grid-template-columns: minmax(0, 1fr); gap: 13px; }
  .live-product-card, .folio-project-card, .ref-project-card, .ref-course-card,
  .studio-catalog-grid > .compact-resource, .studio-courses-list > .compact-resource {
-  grid-template-columns: minmax(0, 1fr) 35%;
+  grid-template-columns: 35% minmax(0, 1fr);
   min-height: 196px;
   border-radius: 8px;
  }
