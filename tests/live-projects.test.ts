@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {categoryOf,filterListings,isProject,productHref,topicTags,projectDetails} from '../lib/live-catalog.ts';
+import {categoryOf,categoryLabel,filterListings,isProject,productHref,topicTags,projectDetails} from '../lib/live-catalog.ts';
 import type {Listing} from '../lib/xonbay/contracts.ts';
 const base={id:5,public_id:'21ed1c12-cc41-413e-bde2-261ec6d50c0b',title:'First LED',description:'Build a useful light',content_type:'article',price_minor:0,currency:'GHS',cover_url:null,shop:{id:46,name:'LearnWithRich',handle:'learnwithrich'},checkout_pricing:{subtotal_minor:0,network_fee_minor:0,total_minor:0}} satisfies Listing;
 const project:Listing={...base,tags:['Project','ESP32','Sensors'],project_details:{difficulty:'Beginner',tools:['Arduino IDE']}};
@@ -14,3 +14,5 @@ test('legacy free component lists are shown without inventing quantities or leak
  assert.equal(projectDetails(project).components,undefined);
  const components=[{name:'Confirmed board',quantity:'1'}];assert.deepEqual(projectDetails({...older,project_details:{components}}).components,components);
 });
+
+test('public cards show discovery categories instead of delivery formats',()=>{assert.equal(categoryLabel(project),'Project');assert.equal(categoryLabel({...base,category:'project'}),'Project');assert.equal(categoryLabel({...base,category:'book'}),'Book');assert.equal(categoryLabel(base),'Guide');});
