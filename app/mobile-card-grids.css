@@ -1,10 +1,19 @@
-/* Compact, image-first collections on phones. */
+/* Two-column, image-first masonry collections on phones. Native columns also work without JavaScript. */
 @media (max-width: 580px) {
   .ref-project-grid, .ref-course-grid, .folio-project-grid,
   .studio-catalog-grid, .studio-courses-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    align-items: stretch;
+    display: block;
+    columns: 2;
+    column-gap: 12px;
+  }
+  .ref-project-grid > article, .ref-course-grid > article,
+  .folio-project-grid > article, .studio-catalog-grid > article,
+  .studio-courses-list > article {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    width: 100%;
+    margin: 0 0 12px;
+    vertical-align: top;
   }
   .ref-project-card, .ref-course-card {
     display: flex;
