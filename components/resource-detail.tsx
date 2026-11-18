@@ -1,3 +1,4 @@
+import {CreatorPortrait} from './creator-portrait';
 import Link from '@/components/navigation-link';
 import {ChevronRight,Download,FileText,Layers,Video,Clock3,Check,ArrowRight} from 'lucide-react';
 import type {Resource} from '@/lib/catalog';
@@ -12,7 +13,7 @@ import {CourseInterest} from './course-interest';
 import {projects} from '@/lib/projects';
 import {projectGuides} from '@/lib/project-guides';
 import type {WorkspaceArtKind} from './workspace-art';
-export function Creator(){return <Link className="studio-creator" href="/about"><span className="avatar">RA</span><span>by <strong>Richmond Adu-Kyere</strong></span></Link>}
+export function Creator(){return <Link className="studio-creator" href="/about"><CreatorPortrait/><span>by <strong>Richmond Adu-Kyere</strong></span></Link>}
 export function ResourceDetail({resource:r}:{resource:Resource}){
  const project=projects.find(item=>item.slug===r.slug);
  const guide=projectGuides[r.slug];

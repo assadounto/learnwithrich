@@ -1,7 +1,7 @@
 import Link from '@/components/navigation-link';
 import {ArrowLeft, ArrowUpRight, BookOpen, FolderOpen, GraduationCap, LockKeyhole, Sparkles} from 'lucide-react';
 import {GoogleSignin} from '@/components/google-signin';
-import {BrandAsterisk, DrawnUnderline} from '@/components/decorative-marks';
+import {DrawnUnderline} from '@/components/decorative-marks';
 import {currentUser} from '@/lib/xonbay/server';
 import {safeNext} from '@/lib/xonbay/contracts';
 import {redirect} from 'next/navigation';
@@ -24,7 +24,7 @@ export default async function SignIn({searchParams}: {searchParams: Promise<{nex
           <p>Big ideas start with small steps. Make this one yours.</p>
           <div className={styles.workbench}>
             <div className={styles.photo} role="img" aria-label="An electronics project and solar panel on a sunlit maker’s workbench"/>
-            <div className={styles.note}><BrandAsterisk/><span>Learn it. Build it.<br/><strong>Make it real.</strong></span></div>
+            <div className={styles.note}><span>Learn it. Build it.<br/><strong>Make it real.</strong></span></div>
             <span className={styles.caption}>A LITTLE LEARNING. SOMETHING REAL.</span>
           </div>
           <div className={styles.signature}><span className={styles.signatureLine}/> Made for the learner. And the maker in you.</div>

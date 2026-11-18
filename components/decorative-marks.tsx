@@ -5,6 +5,3 @@ export function DrawnUnderline({className=''}:{className?:string}) {
 export function AccentRays({className=''}:{className?:string}) {
  return <svg className={`drawn-rays ${className}`} viewBox="0 0 60 60" fill="none" aria-hidden="true" focusable="false"><path d="m10 3-2 18M34 14 24 29m29 10-19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg>;
 }
-export function BrandAsterisk(){
- return <svg className="wordmark-asterisk" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="m14 1 5 1-1 11 10-6 3 5-11 5 10 6-3 5-10-8 1 12h-5l1-12-10 7-3-5 11-5L1 11l3-4 10 6Z" fill="currentColor"/></svg>;
-}

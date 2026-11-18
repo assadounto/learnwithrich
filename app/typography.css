@@ -43,19 +43,7 @@ h1 i, h2 i { font-weight: 600; }
   display: inline-flex;
   align-items: baseline;
 }
-.brand .wordmark-asterisk,
-.reference-footer .brand .wordmark-asterisk {
-  display: inline-block;
-  font-size: inherit;
-  position: relative;
-  top: -.28em;
-  width: .59em;
-  height: .59em;
-  margin-left: .09em;
-  color: var(--orange);
-  flex-shrink: 0;
-  vertical-align: baseline;
-}
+
 .reference-home h2 { letter-spacing: -.047em; }
 .ref-hero-copy h1 {
   font-family: var(--serif);
