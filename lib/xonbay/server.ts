@@ -3,7 +3,7 @@ import {cookies} from 'next/headers';
 import {redirect} from 'next/navigation';
 import {belongsToShop,isIdentifier,type Listing,type Entitlement} from './contracts';
 export const SESSION='lwr_session';
-export const shopId=()=>process.env.XONBAY_SHOP_ID?.trim()||'';
+export const shopId=()=>process.env.XONBAY_SHOP_ID?.trim()||'46';
 export const shopHandle=()=>process.env.XONBAY_SHOP_HANDLE?.trim()||'learnwithrich';
 export class ServiceError extends Error{constructor(message:string,public status=502){super(message)}}
 export async function upstream(path:string,token?:string,body?:unknown,method?:string){

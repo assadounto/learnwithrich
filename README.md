@@ -37,7 +37,7 @@ This is a foundation, not a launched course storefront. Catalog entries, book co
 
 The local concept catalog remains a preview: only resources with a `download` field in `lib/catalog.ts` provide a sample file. Separately, live LearnWithRich shop listings support real checkout and account access once configured. Course interest is stored on the current device only. Newsletter submission does not store or send email; the UI reports that subscriptions are not connected. Bookmarks also stay in the current browser.
 
-The Xonbay integration implements Google sign-in, secure sessions, live products, checkout/verification, account entitlements, private downloads and course progress. Production acceptance is pending the new shop, Google origin configuration and deployment of backend PR #135. Newsletter subscription handling remains unconnected. Replace all preview covers and content with final published materials.
+The Xonbay integration implements Google sign-in, secure sessions, live products, checkout/verification, account entitlements, private downloads and course progress. Production acceptance is pending Google origin configuration and deployment of backend PR #135. Shop 46 (Learn With Rich / learnwithrich) is verified and configured. Newsletter subscription handling remains unconnected. Replace all preview covers and content with final published materials.
 
 Typography uses self-hosted Fraunces (roman and true italic) and DM Sans variable fonts, with Georgia/Arial fallbacks. Latin, Latin Extended and punctuation subsets are compressed as WOFF. Their SIL Open Font Licences are included in `public/fonts/`. No runtime Google Fonts requests are required. All core imagery is local.
 

@@ -5,3 +5,10 @@ test('catalog and ownership fail closed without exact shop identity',()=>{assert
 test('sign-in destinations cannot leave the learning site',()=>{for(const value of ['https://evil.test','//evil.test','/\\evil.test','/signin','/dashboard\nLocation: elsewhere'])assert.equal(safeNext(value),'/dashboard');assert.equal(safeNext('/shop/123'),'/shop/123');assert.equal(safeNext('/checkout/return?reference=x'),'/checkout/return?reference=x')});
 test('checkout redirects allow only the payment provider origin',()=>{for(const value of ['http://checkout.paystack.com/x','https://checkout.paystack.com.evil.test/x','https://checkout.paystack.com@evil.test/x','https://evil@checkout.paystack.com/x','https://checkout.paystack.com:444/x','javascript:alert(1)'])assert.equal(safePaymentUrl(value),null);assert.equal(safePaymentUrl('https://checkout.paystack.com/example'),'https://checkout.paystack.com/example')});
 test('remote product identifiers cannot inject paths or query parameters',()=>{assert.equal(isIdentifier('12'),true);assert.equal(isIdentifier('5a583140-e648-4c83-9bb3-3a649cae4341'),true);for(const id of ['../me','12?shop_id=8','0','12/files','foo'])assert.equal(isIdentifier(id),false)});
+
+test('a shop without a storefront subdomain uses its canonical handle',()=>{
+ assert.equal(belongsToShop({shop:{id:46,handle:'learnwithrich',subdomain:null}},'46'),true);
+ assert.equal(belongsToShop({shop:{id:8,handle:'learnwithrich',subdomain:null}},'46'),false);
+ assert.equal(belongsToShop({shop:{id:46,handle:'richmade',subdomain:null}},'46'),false);
+ assert.equal(belongsToShop({shop:{id:46,subdomain:null}},'46'),false);
+});
