@@ -1,0 +1,14 @@
+.root { min-height: 44px; width: 100%; }
+.button { display: flex; justify-content: center; min-width: 0; }
+.pending { pointer-events: none; opacity: .5; }
+.preparing { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px; border: 1px solid #d5d4c5; border-radius: 4px; background: #fffdf7; color: #6c6b58; font-size: 12px; }
+.preparing > svg, .status > svg { flex-shrink: 0; animation: spin 1s linear infinite; }
+.status { display: flex; align-items: center; justify-content: center; gap: 7px; color: #5f6d43; font-size: 11px; margin: 12px 0 0; }
+.notice { padding: 14px; background: #f8ede0; border: 1px solid #d6b595; border-radius: 6px; color: #7b3e20; }
+.notice p { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.6; margin: 0; overflow-wrap: anywhere; }
+.notice p > svg { margin-top: 2px; flex-shrink: 0; }
+.notice button { display: inline-flex; align-items: center; gap: 7px; background: transparent; border: 0; border-bottom: 1px solid #9f6847; color: inherit; font-size: 11px; font-weight: 650; min-height: 44px; margin-top: 5px; padding: 8px 0 5px; }
+.notice button:hover { color: #a14e22; }
+.noscript { font-size: 12px; line-height: 1.6; color: #7b3e20; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .preparing > svg, .status > svg { animation: none; } }
