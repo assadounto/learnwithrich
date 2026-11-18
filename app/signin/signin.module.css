@@ -15,7 +15,6 @@
 .photo { height: 196px; background: url('/images/maker-studio.webp') top left / 200% auto no-repeat; }
 .caption { position: absolute; left: 14px; bottom: 11px; font-size: 7px; color: #5e614c; letter-spacing: .14em; font-weight: 650; }
 .note { position: absolute; right: -26px; bottom: 29px; display: flex; align-items: flex-start; gap: 10px; padding: 19px 21px; background: #dce0bf; color: #35422d; transform: rotate(8deg); box-shadow: 0 5px 12px #18241b26; }
-.note > svg { position: static; width: 28px; height: 28px; margin: 0; color: #9f4d24; }
 .note > span { font-family: var(--serif); font-size: 20px; line-height: 1.15; letter-spacing: -.04em; }
 .note strong { font-weight: 650; }
 .signature { display: flex; align-items: center; gap: 10px; margin-top: 31px; color: #c5cdb5; font-size: 10px; line-height: 1.5; }
