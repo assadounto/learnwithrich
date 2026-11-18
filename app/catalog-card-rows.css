@@ -1,4 +1,5 @@
-/* Responsive horizontal cards: cover on the left, reading on the right. */
+/* Keep desktop cards unchanged; phones use stacked image-left rows. */
+@media (max-width: 580px) {
 .live-product-grid,
 .folio-project-grid,
 .live-catalog-browser .folio-project-grid,
@@ -109,7 +110,7 @@
 .ref-card-arrow { right: 18px; bottom: 10px; }
 .studio-catalog-grid .compact-resource > .save-button,
 .studio-courses-list .compact-resource > .save-button { top: 9px; right: 9px; background: var(--paper); border-radius: 5px; }
-@media (max-width: 580px) {
+
  .live-product-grid, .folio-project-grid, .live-catalog-browser .folio-project-grid,
  .ref-project-grid, .ref-course-grid, .studio-catalog-grid, .studio-courses-list { grid-template-columns: minmax(0, 1fr); gap: 13px; }
  .live-product-card, .folio-project-card, .ref-project-card, .ref-course-card,
