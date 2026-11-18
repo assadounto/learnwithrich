@@ -19,7 +19,7 @@ npm run typecheck
 npm run build
 ```
 
-The production build now requires a Next.js server (`npm run build`, then `npm start`). Static export was removed for secure account and commerce endpoints. See [Xonbay setup](docs/xonbay-integration.md) for shop, Google OAuth and deployment configuration.
+The production build now includes a standalone Next.js server. Use the supplied Docker deployment for production (see [deployment instructions](deploy/README.md)); `npm run dev` remains available locally. Static export was removed for secure account and commerce endpoints. See [Xonbay setup](docs/xonbay-integration.md) for shop, Google OAuth and deployment configuration.
 
 ## Included
 

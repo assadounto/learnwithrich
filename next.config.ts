@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
+ output: 'standalone',
  images: { unoptimized: true }, poweredByHeader: false,
  async headers(){return [{source:'/:path*',headers:[
   {key:'Cross-Origin-Opener-Policy',value:'same-origin-allow-popups'},

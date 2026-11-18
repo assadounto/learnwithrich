@@ -2,7 +2,7 @@
 
 ## Deployment
 
-This is now a **server-backed Next.js application**, not a static export. Run `npm run build` then `npm start` on a Node-capable host. Keep existing styling and homepage assets. No new database or commerce admin is needed for this phase.
+This is now a **server-backed Next.js application**, not a static export. Use the supplied Dockerfile and Compose deployment, which run the standalone Next.js server on a Node-capable host. Keep existing styling and homepage assets. No new database or commerce admin is needed for this phase.
 
 Set `.env.example` values in deployment:
 - `XONBAY_SHOP_ID`: verified numeric shop ID **46** (Learn With Rich). Never use RichMade’s ID 8.
@@ -37,4 +37,6 @@ Run `npm test`, `npm run typecheck`, `npm run build`. Rails callback tests are i
 
 Existing password-only Xonbay accounts follow Xonbay’s provider-linking policy; this integration does not silently link a Google identity to a different sign-in method.
 
-Confirmed shop setup: `XONBAY_SHOP_ID=46`, `XONBAY_SHOP_HANDLE=learnwithrich`. On Rails use `LEARNWITHRICH_SHOP_ID=46`; set the HTTPS frontend origin once the final website domain is selected. Google’s live public client configuration was read from Xonbay’s `/api/auth/google-config` endpoint. No client secret is required or stored in this repository.
+Confirmed shop setup: `XONBAY_SHOP_ID=46`, `XONBAY_SHOP_HANDLE=learnwithrich`. On Rails use `LEARNWITHRICH_SHOP_ID=46`; set the HTTPS frontend origin as `https://learnwithrich.com`. Google’s live public client configuration was read from Xonbay’s `/api/auth/google-config` endpoint. No client secret is required or stored in this repository.
+
+The chosen production domain is **learnwithrich.com**. Use the deployment files in `deploy/` for the existing `app_edge` Docker network.
