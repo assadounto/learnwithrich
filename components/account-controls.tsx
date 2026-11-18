@@ -1,0 +1,6 @@
+'use client';
+import Link from '@/components/navigation-link';
+import {usePathname,useRouter} from 'next/navigation';
+import {useEffect,useState} from 'react';
+export function AccountLink(){const [signed,setSigned]=useState(false);const path=usePathname();useEffect(()=>{let active=true;const read=()=>fetch('/api/auth/session',{cache:'no-store'}).then(r=>r.json()).then(d=>{if(active)setSigned(!!d.user)}).catch(()=>{});read();window.addEventListener('lwr-account-change',read);return()=>{active=false;window.removeEventListener('lwr-account-change',read)}},[path]);return <Link href={signed?'/dashboard':'/signin'} className="sign-in-link">{signed?'My dashboard':'Sign in'}</Link>}
+export function SignOut(){const [busy,setBusy]=useState(false);const [error,setError]=useState('');const router=useRouter();return <div><button className="button button-outline" disabled={busy} onClick={async()=>{setBusy(true);try{const r=await fetch('/api/auth/logout',{method:'POST'});if(!r.ok)throw Error('Could not sign out. Try again.');window.dispatchEvent(new Event('lwr-account-change'));router.replace('/signin');router.refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}}>{busy?'Signing out…':'Sign out'}</button>{error&&<p role="alert">{error}</p>}</div>}

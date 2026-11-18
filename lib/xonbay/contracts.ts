@@ -1,0 +1,7 @@
+export type Listing={id:number;public_id:string;title:string;description:string;content_type:'course'|'article'|'download'|'bundle';price_minor:number;currency:string;cover_url:string|null;shop:{id:number;name:string;subdomain:string};checkout_pricing:{subtotal_minor:number;network_fee_minor:number;total_minor:number};course_modules?:{id:string;title:string;lessons:{id:string;title:string}[]}[]};
+export type Entitlement={id:number;digital_product_public_id:string;title:string;content_type:string;accessible:boolean;shop?:{id:number;subdomain:string};files:{id:number;filename:string}[];course_progress?:{completed_lessons:number;total_lessons:number}};
+export function belongsToShop(item:{shop?:{id?:number|string;subdomain?:string}},shopId:string,handle='learnwithrich'){return /^[1-9]\d*$/.test(shopId)&&String(item.shop?.id)===shopId&&item.shop?.subdomain===handle}
+export function safeNext(value:string){return /^\/(dashboard|shop|checkout)(?:\/|\?|$)/.test(value)&&!/[\\\r\n]/.test(value)?value:'/dashboard'}
+export function safePaymentUrl(value:unknown){try{const u=new URL(String(value));return u.protocol==='https:'&&u.hostname==='checkout.paystack.com'&&!u.username&&!u.password&&u.port===''?u.href:null}catch{return null}}
+export function isIdentifier(id:string){return /^(?:[1-9]\d*|[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12})$/i.test(id)}
+export function money(minor:number,currency='GHS'){return new Intl.NumberFormat('en-GH',{style:'currency',currency}).format(minor/100)}
