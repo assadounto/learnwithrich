@@ -3,6 +3,15 @@
 .site-content { min-width: 0; }
 .ref-project-card, .ref-course-card, .folio-project-card, .compact-resource,
 .resource-card, .course-card { border-color: var(--card-border); border-radius: var(--card-radius); }
+.ref-project-card, .ref-course-card, .folio-project-card, .compact-resource,
+.resource-card, .course-card, .live-product-card, .business-home-library .live-product-card,
+.testimonial-card, .testimonial-card.testimonial-featured {
+  background: #fff; color: var(--ink);
+}
+.testimonial-featured .testimonial-top { color: #b9551c; }
+.testimonial-featured .testimonial-label { color: #717449; }
+.testimonial-card.testimonial-featured figcaption { border-color: #8d825a40; }
+.testimonial-featured figcaption small { color: #726c59; }
 .ref-project-card, .ref-course-card, .folio-project-card, .compact-resource {
   transition: border-color .2s, box-shadow .2s;
 }
