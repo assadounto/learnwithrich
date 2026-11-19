@@ -43,5 +43,8 @@
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
+  },
+  "overrides": {
+    "postcss": "8.5.23"
   }
 }
