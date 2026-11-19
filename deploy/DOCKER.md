@@ -14,7 +14,9 @@ docker compose --env-file .env.production -f docker-compose.prod.yml run --rm to
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --wait web
 ```
 
-5. Check process health at `/api/health` and database/schema readiness at `/api/ready`. Both must return 200 before routing traffic. The database has no published host port.
+5. The container rejects missing/placeholder credentials and mismatched non-HTTPS origins. This release deploys with `LWR_ADMIN_ENABLED=false`: the public admin and owned identity endpoints stay locked until MFA is implemented. The public website and read-only catalog remain available.
+
+Check process health at `/api/health` and database/schema readiness at `/api/ready`. Both must return 200 before routing traffic. The database has no published host port.
 6. Sign in at `/admin/signin`, obtain your account ID, then run:
 
 ```sh

@@ -5,6 +5,7 @@ import {identity, identityReady} from './index';
 import {database} from '../database';
 import {assertOwner, OwnerAccessError} from './owner';
 export async function requireOwner() {
+  if (process.env.LWR_ADMIN_ENABLED === 'false') redirect('/admin/signin');
   if (!identityReady()) redirect('/admin/signin');
   const session = await identity().api.getSession({headers: await headers(), query: {disableCookieCache: true}});
   if (!session) redirect('/admin/signin');
