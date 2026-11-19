@@ -1,0 +1,135 @@
+/* Shared white theme. Route-specific layouts keep their own spacing and imagery. */
+:root {
+  --paper: #ffffff;
+  --ink: #1e2923;
+  --orange: #b74720;
+  --olive: #47664e;
+  --muted: #69746d;
+  --line: #e2e8e3;
+  --card-border: #dfe6e0;
+  --card-radius: 12px;
+  --control-radius: 7px;
+  --surface: #ffffff;
+  --surface-soft: #f6f8f6;
+  --surface-green: #edf3ed;
+  --accent-green: #3d6247;
+  --card-shadow: 0 3px 16px #20302806;
+}
+html, body, main { background: var(--paper); }
+body { color: var(--ink); font-family: var(--sans); line-height: 1.65; }
+h1, h2, h3 { font-family: var(--sans); font-variation-settings: normal; font-optical-sizing: auto; }
+h1, h2 { font-weight: 650; letter-spacing: -.045em; }
+h3 { font-weight: 650; letter-spacing: -.025em; }
+h1 i, h2 i, h3 i { font-style: normal; font-weight: inherit; }
+.brand > span { font-family: var(--sans); font-variation-settings: normal; font-weight: 800; letter-spacing: -.055em; }
+.brand > .brand-emblem { letter-spacing: 0; }
+::selection { background: #dceadb; color: #183522; }
+.site-header, .site-header.is-scrolled { background: #fff; border-bottom-color: var(--line); }
+.site-header.is-scrolled { box-shadow: 0 3px 18px #24332908; }
+.desktop-nav a, .sign-in-link { color: #49564d; }
+.desktop-nav a.active { color: var(--ink); }
+.reference-footer { background: #fff; color: var(--ink); border-top: 1px solid var(--line); }
+.ref-footer-inner nav, .ref-footer-inner > span { border-color: var(--line); color: #6a756c; }
+.mobile-nav { background: #fff; border-color: var(--line); }
+.mobile-nav a.active { background: var(--surface-green); color: var(--accent-green); }
+.button, .studio-page .button { box-shadow: none; font-weight: 650; }
+.button-dark { background: #263c2d; color: #fff; }
+.button-dark:hover { background: #36533f; }
+.button-orange, .studio-page .button-orange { background: var(--orange); color: #fff; border-color: transparent; }
+.button-orange:hover, .studio-page .button-orange:hover { background: #983b1b; }
+.button-cream, .button-outline { background: #fff; border-color: #d5dfd6; color: var(--ink); }
+.button-cream:hover, .button-outline:hover { background: var(--surface-soft); border-color: #a7bba9; }
+.button:hover { transform: none; }
+.icon-button, .save-button { background: #fff; border-color: var(--card-border); color: var(--accent-green); }
+/* White cards, with depth supplied by the border and a quiet shadow. */
+.ref-project-card, .ref-course-card, .folio-project-card, .compact-resource,
+.resource-card, .course-card, .live-product-card, .business-home-library .live-product-card,
+.testimonial-card, .testimonial-card.testimonial-featured, .maker-path,
+.maker-path.path-software, .maker-path.path-creative, .about-practice-grid article,
+.dashboard-resource-card, .customer-library article, .learner-stats > div {
+  background: #fff; color: var(--ink); border: 1px solid var(--card-border);
+  border-radius: var(--card-radius); box-shadow: var(--card-shadow);
+}
+.ref-project-info h3, .ref-course-info h3, .folio-project-copy h3,
+.studio-catalog-grid .compact-resource h3, .studio-courses-list .compact-resource h3,
+.live-product-card h3, .dashboard-resource-body h3 { font-family: var(--sans); font-weight: 650; letter-spacing: -.035em; line-height: 1.2; }
+.ref-project-info p, .ref-course-info p, .folio-project-copy > p,
+.compact-resource-copy > p, .live-product-card p, .maker-path p,
+.testimonial-card p, .about-practice-grid p { color: #647067; }
+.ref-project-tags span:last-child, .format-tag, .access-badge,
+.folio-project-meta > span, .testimonials-preview { background: var(--surface-soft); border-color: var(--card-border); color: #5f7062; }
+.ref-project-tags span:first-child { background: #edf3ed; color: #43614b; }
+.folio-project-card-foot, .compact-resource-bottom, .testimonial-card figcaption,
+.about-practice-grid article > a { border-color: var(--line); }
+.testimonial-featured .testimonial-top { color: var(--orange); }
+.testimonial-featured .testimonial-label, .testimonial-featured figcaption small { color: var(--muted); }
+.testimonial-avatar, .testimonial-featured .testimonial-avatar { background: var(--surface-green); color: var(--accent-green); font-style: normal; }
+.live-product-cover, .live-project-cover, .dashboard-resource-cover,
+.dashboard-resource-cover.resource-course, .dashboard-resource-cover.resource-article { background-color: var(--surface-soft); color: #65816a; }
+/* Bring the homepage's section surfaces into the same white palette. */
+.ref-about, .ref-library, .maker-spotlight, .maker-testimonials,
+.reference-newsletter, .ref-manifesto { background: #fff; color: var(--ink); border-color: var(--line); }
+.ref-library { border-block: 1px solid var(--line); }
+.ref-library-copy p, .ref-newsletter-form > p, .ref-about-copy p { color: #657068; }
+.ref-library-copy .button { background: #fff; border-color: #d3ded5; color: var(--accent-green); }
+.ref-manifesto { border-block: 1px solid var(--line); font-weight: 600; }
+.ref-manifesto::before, .ref-manifesto::after { display: none; }
+.ref-about::after { background: var(--surface-soft); }
+.ref-newsletter-form { border-color: var(--line); }
+.ref-newsletter-inner > h2 .white-scribble { color: var(--olive); }
+.maker-kicker, .tiny-label { color: #637b68; }
+.spotlight-visual, .about-notebook { background: #fff; box-shadow: 0 8px 28px #2133290d; border: 1px solid var(--line); }
+.spotlight-paper-label { background: var(--surface-green); color: var(--accent-green); box-shadow: 0 4px 12px #233c2510; }
+.workbench-note { background: #fff; border-bottom-color: var(--line); border-top-color: #729179; }
+.folio-bottom-callout, .learner-start, .customer-empty, .learner-profile-note { background: var(--surface-soft); border-color: var(--card-border); }
+.about-principles { background: var(--surface-soft); color: var(--ink); border: 1px solid var(--card-border); border-radius: var(--card-radius); }
+.about-principles .maker-kicker { color: #6c806f; }
+.about-principles h2 i { color: var(--accent-green); }
+/* Controls and account surfaces use neutral backgrounds too. */
+.search-form, .ref-search-wrap .search-form, .project-search, .project-level,
+.studio-search, .studio-filter-select, .live-topic-filter select,
+.ref-newsletter-form input { background: #fff; border-color: #d7e0d8; color: var(--ink); }
+.ref-topic-links a { background: #fff; border-color: var(--card-border); color: #3f5745; }
+.ref-topic-links a:hover { background: var(--surface-soft); }
+.studio-filter-tabs button, .project-topic-tabs button { color: #637067; border-color: var(--line); }
+.studio-filter-tabs button[aria-pressed=true], .project-topic-tabs button[aria-pressed=true],
+.learner-sidebar nav a[aria-current=page], .player-module button.active { background: var(--surface-green); color: var(--accent-green); border-color: #cbdccd; }
+.account-dropdown, .player-curriculum, .player-stage, .account-signin-card { background: #fff; border-color: var(--card-border); box-shadow: 0 8px 30px #2434280e; }
+.account-dropdown-identity, .account-signout { border-color: var(--line); }
+.account-dropdown nav a:hover, .account-trigger:hover, .account-trigger[aria-expanded=true],
+.learner-sidebar nav a:hover { background: var(--surface-soft); border-color: var(--line); }
+.account-avatar, .testimonial-avatar { background: var(--surface-green); color: var(--accent-green); }
+.learner-stat-icon, .dashboard-empty-icon { background: var(--surface-green); color: #66816a; }
+.dashboard-empty { background: #fff; border-color: #c9d8cb; }
+.account-notice { background: #fff6ee; border-color: #edd8c9; color: #8e482b; }
+.live-detail-art, .live-module { border-color: var(--card-border); background-color: var(--surface-soft); }
+.route-loading-card { border-color: var(--line); background: #fff; }
+.route-loading-card span { background: #edf1ed; }
+.navigation-progress { background: #eef3ed; }
+@media (hover: hover) {
+ .ref-project-card:hover, .ref-course-card:hover, .folio-project-card:hover,
+ .compact-resource:hover, .live-product-card:hover, .maker-path:hover,
+ .about-practice-grid article:hover { border-color: #b3c7b7; box-shadow: 0 9px 25px #243c2b0c; }
+}
+@media (prefers-reduced-motion: reduce) {
+ .ref-project-card, .ref-course-card, .folio-project-card, .compact-resource,
+ .maker-path { transition: none; }
+}
+/* Remove the old colored paper seams from the white section backgrounds. */
+.ref-library, .maker-spotlight, .reference-newsletter, .skills-cinema { --paper-edge-colour: #fff; }
+.business-home-library .maker-kicker { color: #637b68; }
+.skills-cinema { background: #fff; color: var(--ink); border-color: var(--line); }
+.skills-cinema::before { background: none; }
+.skills-cinema .maker-kicker, .skills-cinema-intro > span { color: #697b6d; }
+.skills-cinema h2 i { color: var(--accent-green); }
+.skills-cinema-intro > p { color: #5e6d63; }
+.skills-marquee-shell { background: #fff; border-color: var(--card-border); box-shadow: var(--card-shadow); }
+.skills-marquee-top, .skills-marquee-bottom { background: var(--surface-soft); border-color: var(--line); }
+.skills-marquee-top > span { color: #627368; }
+.skills-marquee-top > span > i { background: var(--accent-green); box-shadow: none; }
+.skills-marquee-top > button { background: #fff; border-color: #cfdad1; color: #405b47; }
+.skills-marquee-canvas { background: #fff; }
+.skills-marquee-bottom > a { color: var(--accent-green); }
+.skill-pill, .skill-pill.skill-cream, .skill-pill.skill-glass { background: var(--surface-soft); color: #38543f; border-color: #dce5dd; box-shadow: none; }
+.skill-pill.skill-orange { background: #fff3eb; color: #8d4527; border-color: #efdacc; }
+.skill-pill.skill-olive { background: var(--surface-green); color: #3e6046; border-color: #d2e0d3; }
