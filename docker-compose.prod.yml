@@ -12,7 +12,11 @@ services:
       - .env.production
     expose:
       - "3000"
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
+      internal:
       edge:
         aliases:
           - learnwithrich-web
@@ -27,7 +31,37 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+  db:
+    image: postgres:18-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}
+      POSTGRES_USER: learnwithrich
+      POSTGRES_DB: learnwithrich
+    volumes:
+      - database:/var/lib/postgresql
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learnwithrich -d learnwithrich"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  tools:
+    profiles: [operations]
+    image: learnwithrich:tools
+    build:
+      context: .
+      target: tools
+    env_file: [.env.production]
+    networks: [internal]
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  database:
 networks:
+  internal:
+    internal: true
   edge:
     external: true
     name: app_edge
