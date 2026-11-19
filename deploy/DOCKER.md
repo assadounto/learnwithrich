@@ -17,7 +17,7 @@ docker compose --env-file .env.production -f docker-compose.prod.yml up -d --wai
 5. The container rejects missing/placeholder credentials and mismatched non-HTTPS origins. This release deploys with `LWR_ADMIN_ENABLED=false`: the public admin and owned identity endpoints stay locked until MFA is implemented. The public website and read-only catalog remain available.
 
 Check process health at `/api/health` and database/schema readiness at `/api/ready`. Both must return 200 before routing traffic. The database has no published host port.
-6. Sign in at `/admin/signin`, obtain your account ID, then run:
+6. Owner onboarding is deferred until the MFA-enabled release. After that release enables sign-in, obtain your verified account ID and run:
 
 ```sh
 docker compose --env-file .env.production -f docker-compose.prod.yml run --rm tools owner:bootstrap -- YOUR_ACCOUNT_ID
@@ -42,3 +42,11 @@ Tag and retain the previous web/tools images before building updates. Roll back 
 ## Remaining launch verification
 
 Supply real credentials, test Google login/sign-out, configure trusted-proxy rate limiting, and complete owner MFA/step-up protection before exposing admin publicly. Until then restrict `/admin*` and `/api/identity*` at your reverse proxy to your trusted access network. These deployment files do not configure DNS, Caddy, Google, or MFA automatically. The old deploy/README.md describes the historical Xonbay-only rollout; use this procedure for the owned database/studio.
+
+## Reproducible isolated verification
+
+Run `bash deploy/test-containers.sh` with Docker Desktop/Engine running. It builds both images and starts a disposable network/database/web stack using random local test secrets, without production env files. It verifies migrations, non-root startup, static assets, catalog, locked admin identity, rejection of missing production configuration, and readiness failure when PostgreSQL stops. Its cleanup removes only its own test containers/volumes/network. Cached images remain available.
+
+Verified locally on 2026-11-19 with Docker Desktop, Node 22 and PostgreSQL 18: both image builds and the full smoke test passed. This does not verify real OAuth credentials, DNS, TLS, backups or owner MFA.
+
+The base image includes OpenSSL and CA certificates before Prisma installation. The lockfile overrides PostCSS to the audited patched release; rerun `npm audit --omit=dev` when preparing a release rather than treating an old audit result as permanent.
