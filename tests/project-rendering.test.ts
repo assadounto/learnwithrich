@@ -58,7 +58,7 @@ test('resource route displays free reading directly while paid guides keep check
  const {PublicArticle}=compile('../components/public-article.tsx',{'./guide-text':{GuideText},'@/lib/live-catalog':{isFreeArticle}});
  let item:any={id:5,public_id:'guide',title:'Public guide',description:'Useful reading',category:'guide',content_type:'article',price_minor:0,currency:'GHS',free_article:{body:'Complete public text'},checkout_pricing:{network_fee_minor:0,total_minor:0}};
  class ServiceError extends Error{}
- const {default:Page}=compile('../app/shop/[id]/page.tsx',{
+ const {default:Page}=compile('../app/(site)/shop/[id]/page.tsx',{
   '@/components/navigation-link':{default:({children,...props}:any)=>createElement('a',props,children)},
   'next/navigation':{notFound:()=>{throw Error('not found')},redirect:()=>{throw Error('redirect')}},
   '@/lib/xonbay/server':{listing:async()=>item,ServiceError},

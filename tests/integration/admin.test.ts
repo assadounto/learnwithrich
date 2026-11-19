@@ -18,11 +18,11 @@ const auth = createIdentity(db, config);
 const admin = adminRepository(db, ownerId);
 let sequence = 0;
 async function draft(type = 'ARTICLE', overrides: Record<string, unknown> = {}) {
-  const row = await admin.save({title: `Admin resource ${++sequence}`, slug: `${prefix}-${sequence}`, type, bodyMarkdown: 'Owner body', ...overrides});
+  const row = await admin.save({title: `Admin resource ${++sequence}`, slug: `${prefix}-${sequence}`, type, summary: 'A useful resource for learners.', bodyMarkdown: 'Owner body', ...overrides});
   ids.push(row.id); return row;
 }
 function document(row: Awaited<ReturnType<typeof draft>>) {
-  return {...row, updatedAt: row.updatedAt.toISOString(), bodyMarkdown: row.content?.bodyMarkdown ?? '', tags: row.tags.map(link => link.tag.name), sections: row.sections.map(section => ({key: section.id, title: section.title})), items: row.items.map(item => ({resourceId: item.resourceId, sectionKey: item.sectionId}))};
+  return {...row, updatedAt: row.updatedAt.toISOString(), bodyMarkdown: row.content?.bodyMarkdown ?? '', details: row.content?.details ?? {}, tags: row.tags.map(link => link.tag.name), sections: row.sections.map(section => ({key: section.id, title: section.title})), items: row.items.map(item => ({resourceId: item.resourceId, sectionKey: item.sectionId}))};
 }
 async function session(userId: string) {
   const token = randomBytes(32).toString('hex');
@@ -132,4 +132,34 @@ test('trusted CLI collection edits also invalidate an already-open admin editor'
   await resourceRepository(db).replaceItems(course.id, [{resourceId: lesson.id}]);
   await assert.rejects(admin.save({...document(course), title: 'Would overwrite CLI edit'}), /another tab/);
   assert.equal((await admin.get(course.id))?.items[0].resourceId, lesson.id);
+});
+
+test('type-specific fields persist with audit snapshots and private file links stay out of public projections', async () => {
+  const project = await draft('PROJECT', {details: {difficulty: 'Beginner', materials: ['ESP32 board'], repositoryUrl: 'https://github.com/example/build'}});
+  assert.deepEqual(project.content?.details, {difficulty: 'Beginner', materials: ['ESP32 board'], repositoryUrl: 'https://github.com/example/build'});
+  const edited = await admin.save({...document(project), details: {...project.content?.details as object, durationMinutes: 60}});
+  assert.equal((edited.content?.details as {durationMinutes: number}).durationMinutes, 60);
+  const asset = await draft('DOWNLOAD', {access: 'PAID', priceMinor: 1500, details: {fileUrl: 'https://files.example.test/private-source.zip', fileFormat: 'ZIP'}});
+  await admin.transition(asset.id, asset.version, asset.updatedAt.toISOString(), 'PUBLISH');
+  const publicAsset = await resourceRepository(db).getPublic(asset.slug);
+  assert.equal(publicAsset?.details, null);
+  assert.doesNotMatch(JSON.stringify(publicAsset), /private-source/);
+  assert.doesNotMatch(JSON.stringify(await resourceRepository(db).listPublic(new URLSearchParams(`q=${asset.slug}`))), /private-source/);
+  const snapshot = await db.resourceAudit.findFirstOrThrow({where: {resourceId: edited.id, version: edited.version}});
+  assert.match(JSON.stringify(snapshot.snapshot), /durationMinutes/);
+  const filtered = await admin.list('', {type: 'DOWNLOAD', status: 'PUBLISHED'});
+  assert.ok(filtered.some(row => row.id === asset.id));
+  assert.ok(filtered.every(row => row.type === 'DOWNLOAD' && row.status === 'PUBLISHED'));
+});
+
+test('publishing and live edits enforce the selected type requirements on the server', async () => {
+  const asset = await draft('DOWNLOAD', {bodyMarkdown: ''});
+  await assert.rejects(admin.transition(asset.id, asset.version, asset.updatedAt.toISOString(), 'PUBLISH'), /file URL/);
+  const complete = await admin.save({...document(asset), details: {fileUrl: 'https://files.example.test/worksheet.pdf'}});
+  const live = await admin.transition(complete.id, complete.version, complete.updatedAt.toISOString(), 'PUBLISH');
+  await assert.rejects(admin.save({...document(live), details: {}}), /file URL/);
+  const publicFile = await resourceRepository(db).getPublic(live.slug);
+  assert.deepEqual(publicFile?.details, {fileUrl: 'https://files.example.test/worksheet.pdf'});
+  const emptyCourse = await draft('COURSE');
+  await assert.rejects(admin.transition(emptyCourse.id, emptyCourse.version, emptyCourse.updatedAt.toISOString(), 'PUBLISH'), /lesson/);
 });

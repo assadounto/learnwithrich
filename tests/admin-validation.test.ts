@@ -32,3 +32,17 @@ test('identity configuration requires separate credentials and a trusted origin'
   assert.throws(() => identityConfig({...base, LWR_AUTH_SECRET: 'short'}));
   assert.throws(() => identityConfig({}));
 });
+
+test('type-specific details reject misplaced fields, unsafe links and invalid measurements', async () => {
+  const {normalizeDetails} = await import('../lib/server/resources/validation.ts');
+  const {publishingIssues, slugFromTitle} = await import('../lib/resource-types.ts');
+  assert.deepEqual(normalizeDetails('PROJECT', {difficulty: 'Beginner', durationMinutes: 45, materials: ['1 × ESP32'], repositoryUrl: 'https://github.com/example/project'}), {difficulty: 'Beginner', durationMinutes: 45, materials: ['1 × ESP32'], repositoryUrl: 'https://github.com/example/project'});
+  for (const input of [{fileUrl: 'javascript:alert(1)'}, {fileUrl: 'http://example.test/file'}, {fileUrl: 'https://user:secret@example.test/file'}, {width: -1}, {width: 1.5}, {unknown: 'value'}]) assert.throws(() => normalizeDetails('ILLUSTRATION', input));
+  assert.throws(() => normalizeDetails('ARTICLE', {materials: ['wrong type']}));
+  assert.throws(() => normalizeDetails('PROJECT', {difficulty: 'Expert-ish'}));
+  assert.throws(() => normalizeDetails('PROJECT', {materials: ['x'.repeat(501)]}));
+  assert.equal(slugFromTitle('Build a Solar Monitor!'), 'build-a-solar-monitor');
+  assert.ok(publishingIssues({type: 'DOWNLOAD', summary: 'A download', bodyMarkdown: '', details: {}, itemCount: 0}).some(issue => issue.includes('file URL')));
+  assert.deepEqual(publishingIssues({type: 'LESSON', summary: 'A video lesson', bodyMarkdown: '', details: {videoUrl: 'https://video.example.test/lesson'}, itemCount: 0}), []);
+  assert.ok(publishingIssues({type: 'COURSE', summary: 'A course', bodyMarkdown: '', details: {}, itemCount: 0}).length);
+});

@@ -17,9 +17,9 @@ function card<T extends {tags: {tag: {name: string}}[]}>(record: T) {
 export function resourceRepository(db: Database) {
   return {
     async createDraft(input: unknown) {
-      const {bodyMarkdown, tags, ...data} = validateDraft(input);
+      const {bodyMarkdown, details, tags, ...data} = validateDraft(input);
       return db.resource.create({data: {
-        ...data, status: 'DRAFT', content: {create: {bodyMarkdown}},
+        ...data, status: 'DRAFT', content: {create: {bodyMarkdown, details}},
         tags: {create: tags.map(name => ({tag: {connectOrCreate: {where: {name}, create: {name}}}}))},
       }});
     },
@@ -78,10 +78,10 @@ export function resourceRepository(db: Database) {
       }});
       if (!row) return null;
       // Access is checked again in the body query. A public parent never unlocks a paid child.
-      const readable = await db.resource.findFirst({where: {...published(), id: row.id, access: 'PUBLIC'}, select: {content: {select: {bodyMarkdown: true}}}});
+      const readable = await db.resource.findFirst({where: {...published(), id: row.id, access: 'PUBLIC'}, select: {content: {select: {bodyMarkdown: true, details: true}}}});
       return {
         ...card(row), items: row.items.map(item => ({position: item.position, sectionId: item.sectionId, resource: card(item.resource)})),
-        bodyMarkdown: readable?.content?.bodyMarkdown ?? null, requiresAccess: row.access !== 'PUBLIC',
+        bodyMarkdown: readable?.content?.bodyMarkdown ?? null, details: readable?.content?.details ?? null, requiresAccess: row.access !== 'PUBLIC',
       };
     },
   };

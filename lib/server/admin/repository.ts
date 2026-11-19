@@ -1,10 +1,11 @@
 import {randomUUID} from 'node:crypto';
+import {publishingIssues, type ResourceDetails} from '../../resource-types';
 import type {Database} from '../database-client';
 import type {Prisma} from '../../generated/prisma/client';
 import {assertOwner} from '../identity/owner';
 import {assertSessionMfa} from '../identity/mfa';
 import {adminDraft, editToken} from './input';
-import {ResourceInputError, resourceId, text} from '../resources/validation';
+import {ResourceInputError, resourceId, text, enumValue, resourceTypes} from '../resources/validation';
 export class EditConflictError extends Error {}
 const fullResource = {
   content: true, tags: {include: {tag: true}},
@@ -23,10 +24,17 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
     if (sessionId) await assertSessionMfa(target, {userId: actorId, sessionId});
   }
   return {
-    async list(query = '') {
+    async summary() {
+      await authorize(db);
+      const groups = await db.resource.groupBy({by: ['status'], _count: true});
+      return {total: groups.reduce((total, group) => total + group._count, 0), drafts: groups.find(group => group.status === 'DRAFT')?._count ?? 0, published: groups.find(group => group.status === 'PUBLISHED')?._count ?? 0};
+    },
+    async list(query = '', filters: {type?: string; status?: string} = {}) {
       await authorize(db);
       const q = text(query, 'search', 200, false);
-      return db.resource.findMany({where: q ? {OR: [{title: {contains: q, mode: 'insensitive'}}, {slug: {contains: q, mode: 'insensitive'}}]} : {}, select: {id: true, title: true, type: true, slug: true, status: true, access: true, updatedAt: true, _count: {select: {items: true}}}, orderBy: {updatedAt: 'desc'}, take: 100});
+      const type = filters.type ? enumValue(filters.type, resourceTypes, 'resource type') : undefined;
+      const status = filters.status ? enumValue(filters.status, ['DRAFT', 'PUBLISHED', 'ARCHIVED'], 'status') : undefined;
+      return db.resource.findMany({where: {type, status, ...(q ? {OR: [{title: {contains: q, mode: 'insensitive' as const}}, {slug: {contains: q, mode: 'insensitive' as const}}]} : {})}, select: {id: true, title: true, type: true, slug: true, status: true, access: true, updatedAt: true, _count: {select: {items: true}}}, orderBy: {updatedAt: 'desc'}, take: 100});
     },
     async get(id: string) {
       await authorize(db);
@@ -39,20 +47,26 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
     async save(input: unknown) {
       // Authorization before parsing ensures non-owners cannot probe private mutations.
       await authorize(db);
-      const {id, token, bodyMarkdown, tags, sections, items, ...data} = adminDraft(input);
+      const {id, token, bodyMarkdown, details, tags, sections, items, ...data} = adminDraft(input);
       return db.$transaction(async tx => {
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(18427651)`;
         if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
         await authorize(tx);
         let targetId: string;
         if (id && token) {
+          const current = await tx.resource.findUniqueOrThrow({where: {id}, select: {status: true, version: true, updatedAt: true}});
+          if (current.version !== token.version || current.updatedAt.getTime() !== token.updatedAt.getTime()) throw new EditConflictError('This resource changed in another tab. Reload before saving.');
+          if (current.status === 'PUBLISHED') {
+            const issues = publishingIssues({type: data.type, summary: data.summary, bodyMarkdown, details, itemCount: items.length});
+            if (issues.length) throw new ResourceInputError(issues.join(' '));
+          }
           const changed = await tx.resource.updateMany({where: {id, ...token}, data: {...data, version: {increment: 1}}});
           if (changed.count !== 1) throw new EditConflictError('This resource changed in another tab. Reload before saving.');
           targetId = id;
-          await tx.resourceContent.upsert({where: {resourceId: id}, create: {resourceId: id, bodyMarkdown}, update: {bodyMarkdown}});
+          await tx.resourceContent.upsert({where: {resourceId: id}, create: {resourceId: id, bodyMarkdown, details}, update: {bodyMarkdown, details}});
           await tx.resourceTag.deleteMany({where: {resourceId: id}});
         } else {
-          const row = await tx.resource.create({data: {...data, version: 1, content: {create: {bodyMarkdown}}}});
+          const row = await tx.resource.create({data: {...data, version: 1, content: {create: {bodyMarkdown, details}}}});
           targetId = row.id;
         }
         for (const name of tags) {
@@ -79,6 +93,12 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(18427651)`;
         if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
         await authorize(tx);
+        const current = await tx.resource.findUniqueOrThrow({where: {id}, include: {content: true, _count: {select: {items: true}}}});
+        if (current.version !== token.version || current.updatedAt.getTime() !== token.updatedAt.getTime()) throw new EditConflictError('This resource changed in another tab. Reload before publishing.');
+        if (action === 'PUBLISH') {
+          const issues = publishingIssues({type: current.type, summary: current.summary, bodyMarkdown: current.content?.bodyMarkdown ?? '', details: (current.content?.details ?? {}) as ResourceDetails, itemCount: current._count.items});
+          if (issues.length) throw new ResourceInputError(issues.join(' '));
+        }
         const changed = await tx.resource.updateMany({where: {id, ...token}, data: {status: action === 'PUBLISH' ? 'PUBLISHED' : action === 'UNPUBLISH' ? 'DRAFT' : 'ARCHIVED', ...(action === 'PUBLISH' ? {publishedAt: new Date()} : {}), version: {increment: 1}}});
         if (changed.count !== 1) throw new EditConflictError('This resource changed in another tab. Reload before publishing.');
         return snapshot(tx, id, actorId, action);
