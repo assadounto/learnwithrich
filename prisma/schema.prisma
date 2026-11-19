@@ -31,6 +31,13 @@ enum ResourceAccess {
   PAID
 }
 
+enum PurchaseStatus {
+  PENDING
+  PAID
+  FAILED
+  @@map("purchase_status")
+}
+
 model Resource {
   id          String         @id @default(uuid()) @db.Uuid
   slug        String         @unique @db.VarChar(120)
@@ -52,6 +59,9 @@ model Resource {
   sections    ResourceSection[]
   items       ResourceItem[] @relation("Collection")
   includedIn  ResourceItem[] @relation("Child")
+  media       ResourceMedia[]
+  purchases   Purchase[]
+  savedBy     SavedResource[]
 
   @@index([status, publishedAt, id])
   @@index([type, status, publishedAt])
@@ -136,6 +146,8 @@ model User {
   sessions      Session[]
   accounts      Account[]
   audits        ResourceAudit[]
+  purchases     Purchase[]
+  savedResources SavedResource[]
 
   @@map("users")
 }
@@ -250,12 +262,65 @@ model MediaAsset {
   id           String       @id @default(uuid()) @db.Uuid
   folderId     String?      @map("folder_id") @db.Uuid
   originalName String       @map("original_name") @db.VarChar(180)
-  storageKey   String       @unique @map("storage_key") @db.VarChar(100)
+  storageKey   String       @unique @map("storage_key") @db.VarChar(255)
   mimeType     String       @map("mime_type") @db.VarChar(120)
   sizeBytes    Int          @map("size_bytes")
   createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
   folder       MediaFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  resources    ResourceMedia[]
 
   @@index([folderId, createdAt])
   @@map("media_assets")
+}
+
+model ResourceMedia {
+  id           String     @id @default(uuid()) @db.Uuid
+  resourceId   String     @map("resource_id") @db.Uuid
+  mediaAssetId String     @map("media_asset_id") @db.Uuid
+  title        String     @db.VarChar(180)
+  priceMinor   Int        @default(0) @map("price_minor")
+  position     Int
+  resource     Resource   @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  mediaAsset   MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
+  purchases    Purchase[]
+
+  @@unique([resourceId, mediaAssetId])
+  @@unique([resourceId, position])
+  @@index([mediaAssetId])
+  @@map("resource_media")
+}
+
+model SavedResource {
+  userId     String   @map("user_id")
+  resourceId String   @map("resource_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@id([userId, resourceId])
+  @@index([resourceId])
+  @@map("saved_resources")
+}
+
+model Purchase {
+  id             String         @id @default(uuid()) @db.Uuid
+  userId         String         @map("user_id")
+  resourceId     String?        @map("resource_id") @db.Uuid
+  resourceMediaId String?       @map("resource_media_id") @db.Uuid
+  reference      String         @unique @db.VarChar(100)
+  checkoutUrl    String?        @map("checkout_url") @db.Text
+  amountMinor    Int            @map("amount_minor")
+  currency       String         @db.VarChar(3)
+  status         PurchaseStatus @default(PENDING)
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  paidAt         DateTime?      @map("paid_at") @db.Timestamptz(3)
+  paystackId     String?        @map("paystack_id") @db.VarChar(80)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  resource       Resource?      @relation(fields: [resourceId], references: [id], onDelete: Restrict)
+  resourceMedia  ResourceMedia? @relation(fields: [resourceMediaId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status, createdAt])
+  @@index([resourceId, userId, status])
+  @@index([resourceMediaId, userId, status])
+  @@map("purchases")
 }

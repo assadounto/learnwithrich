@@ -21,8 +21,10 @@ export function resourceId(value: unknown) {
   return value;
 }
 function safeResourceUrl(value: string) {
-  if (/^\/api\/media\/[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12}$/i.test(value)) return true;
   try { const url = new URL(value); return url.protocol === 'https:' && !url.username && !url.password; } catch { return false; }
+}
+function safeCoverUrl(value: string) {
+  return /^\/api\/public-media\/[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12}$/i.test(value) || safeResourceUrl(value);
 }
 export function enumValue<T extends string>(value: unknown, allowed: readonly T[], name: string): T {
   if (typeof value !== 'string' || !allowed.includes(value as T)) throw new ResourceInputError(`Invalid ${name}.`);
@@ -51,7 +53,7 @@ export function validateDraft(input: unknown): ResourceDraft {
   let coverUrl: string | null = null;
   if (value.coverUrl != null && value.coverUrl !== '') {
     coverUrl = text(value.coverUrl, 'cover URL', 2048);
-    if (!safeResourceUrl(coverUrl)) throw new ResourceInputError('Use a public HTTPS URL or a media library file.');
+    if (!safeCoverUrl(coverUrl)) throw new ResourceInputError('Use a public HTTPS URL or a published media library image.');
   }
   return {
     slug: resourceSlug(value.slug), type, title: text(value.title, 'title', 180),

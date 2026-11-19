@@ -2,6 +2,7 @@ import Link from '@/components/navigation-link';
 import {ArrowUpRight, BookOpen, CircuitBoard, FileText, Layers3, Image, Download, GraduationCap, Library, FolderOpen, Clock3, Gauge} from 'lucide-react';
 import type {ResourceKind} from '@/lib/server/resources/validation';
 import {money} from '@/lib/money';
+import {SaveButton} from '@/components/resource-card';
 
 type ResourceCardData = {id: string; slug: string; type: ResourceKind; title: string; summary: string; coverUrl: string | null; access: 'PUBLIC' | 'FREE_ACCOUNT' | 'PAID'; priceMinor: number; currency: string; tags: string[]};
 const labels: Record<ResourceKind, string> = {PROJECT: 'Project', ARTICLE: 'Article', COURSE: 'Course', PATH: 'Learning path', LESSON: 'Lesson', DOWNLOAD: 'Download', BOOK: 'Book', GUIDE: 'Guide', ILLUSTRATION: 'Illustration'};
@@ -13,7 +14,7 @@ export function OwnedResourceCard({item, featured = false}: {item: ResourceCardD
       {item.coverUrl ? <img src={item.coverUrl} alt="" loading="lazy"/> : <span className="owned-resource-art"><Icon size={featured ? 48 : 35} strokeWidth={1.15}/><small>LEARNWITHRICH</small></span>}
       <span className="owned-resource-type">{labels[item.type]}</span><span className="owned-resource-arrow"><ArrowUpRight size={19}/></span>
     </Link>
-    <div className="owned-resource-copy"><div className="owned-resource-meta"><span>{item.access === 'PUBLIC' ? 'Open resource' : item.access === 'PAID' ? 'Premium access' : 'Free account'}</span>{item.type === 'PROJECT' && <span>Build & learn</span>}</div><h3><Link href={`/resources/${item.slug}`}>{item.title}</Link></h3><p>{item.summary || 'A new resource from the LearnWithRich collection.'}</p>
+    <div className="owned-resource-copy"><div className="owned-resource-meta"><span>{item.access === 'PUBLIC' ? 'Open resource' : item.access === 'PAID' ? 'Premium access' : 'Free account'}</span>{item.type === 'PROJECT' && <span>Build & learn</span>}<SaveButton slug={item.slug}/></div><h3><Link href={`/resources/${item.slug}`}>{item.title}</Link></h3><p>{item.summary || 'A new resource from the LearnWithRich collection.'}</p>
       {!!item.tags.length && <div className="owned-resource-tags">{item.tags.slice(0, 3).map(tag => <span key={tag}>{tag}</span>)}</div>}
       <div className="owned-resource-bottom"><span>{item.access === 'PAID' ? money(item.priceMinor, item.currency) : item.access === 'FREE_ACCOUNT' ? 'Free with an account' : 'Free to explore'}</span><Link href={`/resources/${item.slug}`} aria-label={`Explore ${item.title}`}>Explore <ArrowUpRight size={15}/></Link></div>
     </div>

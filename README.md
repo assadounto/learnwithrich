@@ -10,7 +10,7 @@ LearnWithRich is Richmond Adu-Kyere's learning and maker-resource site. Its publ
 - Local browser bookmarks for visitors.
 - Google OAuth through the app's Better Auth identity setup for the creator studio.
 
-Learner accounts, purchases, payment processing and course progress are not part of this release. The owner studio includes a media library for public images, PDF/Word documents and audio. Uploaded files are public to anyone with their link; private or paid-only media delivery is not available.
+The site includes learner Google accounts, saved resources, purchase history, Paystack checkout, and an owner-managed media library. Media is stored privately in S3; downloads are granted through short-lived, access-checked links. Resource-level purchases unlock a bundle, while free resources can offer selected attachments individually.
 
 ## Development
 

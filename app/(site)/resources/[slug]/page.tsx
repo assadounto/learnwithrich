@@ -5,6 +5,7 @@ import {resources as legacyResources} from '@/lib/catalog';
 import {ResourceDetail, CourseDetail} from '@/components/resource-detail';
 import {OwnedResourceDetail} from '@/components/owned-resource-detail';
 import type {ResourceDetails} from '@/lib/resource-types';
+import {currentUser} from '@/lib/server/identity/current-user';
 
 export const dynamic = 'force-dynamic';
 export async function generateMetadata({params}: {params: Promise<{slug: string}>}): Promise<Metadata> {
@@ -16,7 +17,8 @@ export async function generateMetadata({params}: {params: Promise<{slug: string}
 }
 export default async function ResourcePage({params}: {params: Promise<{slug: string}>}) {
   const {slug} = await params;
-  const resource = await publicResources().getPublic(slug);
+  const user = await currentUser();
+  const resource = await publicResources().getPublic(slug, user?.id);
   if (resource) {
     const details = resource.details && typeof resource.details === 'object' && !Array.isArray(resource.details) ? resource.details as ResourceDetails : null;
     return <OwnedResourceDetail resource={{...resource, details}}/>;

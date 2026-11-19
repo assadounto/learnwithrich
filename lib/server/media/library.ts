@@ -1,17 +1,47 @@
 import 'server-only';
-import {mkdir, readFile, unlink, writeFile} from 'node:fs/promises';
-import path from 'node:path';
 import {randomUUID} from 'node:crypto';
+import path from 'node:path';
+import {DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
+import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
 import type {Database} from '../database-client';
 
 export const MAX_MEDIA_BYTES = 50 * 1024 * 1024;
-const storageRoot = () => path.resolve(process.env.MEDIA_STORAGE_DIR || '.media');
 const extForMime: Record<string, string> = {
   'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif',
   'application/pdf': '.pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
   'application/msword': '.doc', 'audio/mpeg': '.mp3', 'audio/mp4': '.m4a', 'audio/wav': '.wav',
   'audio/ogg': '.ogg', 'audio/webm': '.webm',
 };
+
+let client: S3Client | undefined;
+export function mediaBucket() {
+  const bucket = process.env.S3_BUCKET?.trim();
+  if (!bucket || bucket.length < 3 || bucket.length > 63 || !/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(bucket)) throw new Error('S3_BUCKET must be a valid bucket name.');
+  return bucket;
+}
+export function mediaS3Client() {
+  const {S3_REGION, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_ENDPOINT_URL, S3_FORCE_PATH_STYLE} = process.env;
+  const region = S3_REGION?.trim();
+  if (!region || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY) throw new Error('Configure S3_REGION, S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY.');
+  if (S3_ENDPOINT_URL) {
+    const endpoint = new URL(S3_ENDPOINT_URL);
+    if ((endpoint.protocol !== 'https:' && !(endpoint.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(endpoint.hostname))) || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) throw new Error('S3_ENDPOINT_URL must be a clean HTTPS endpoint.');
+  }
+  return client ??= new S3Client({region, ...(S3_ENDPOINT_URL ? {endpoint: S3_ENDPOINT_URL} : {}), forcePathStyle: S3_FORCE_PATH_STYLE === 'true', credentials: {accessKeyId: S3_ACCESS_KEY_ID, secretAccessKey: S3_SECRET_ACCESS_KEY}});
+}
+export async function putMediaObject(key: string, body: Buffer, mimeType: string) {
+  await mediaS3Client().send(new PutObjectCommand({Bucket: mediaBucket(), Key: key, Body: body, ContentLength: body.byteLength, ContentType: mimeType}));
+}
+export async function deleteMediaObject(key: string) {
+  await mediaS3Client().send(new DeleteObjectCommand({Bucket: mediaBucket(), Key: key}));
+}
+export async function signedMediaUrl(key: string, filename: string, mimeType: string, disposition: 'inline' | 'attachment', expiresIn = 60) {
+  return getSignedUrl(mediaS3Client(), new GetObjectCommand({Bucket: mediaBucket(), Key: key, ResponseContentType: mimeType, ResponseContentDisposition: `${disposition}; filename*=UTF-8''${encodeURIComponent(filename).replace(/[']/g, '%27')}`, ResponseCacheControl: 'private, no-store'}), {expiresIn});
+}
+export async function checkMediaStorage() {
+  mediaBucket();
+  mediaS3Client();
+}
 
 export function detectMediaMime(bytes: Uint8Array, name: string) {
   const b = Buffer.from(bytes);
@@ -47,16 +77,9 @@ export async function saveMedia(db: Database, file: File, folderId: string | nul
   const mimeType = detectMediaMime(bytes, originalName);
   if (!mimeType || !extForMime[mimeType]) throw new Error('Use an image (JPG, PNG, WebP, GIF, AVIF), PDF, Word document, or audio file (MP3, M4A, WAV, OGG, WebM).');
   if (folderId && !await db.mediaFolder.findUnique({where: {id: folderId}, select: {id: true}})) throw new Error('That folder no longer exists.');
-  await mkdir(storageRoot(), {recursive: true});
-  const id = randomUUID(), storageKey = `${id}${extForMime[mimeType]}`;
-  const fullPath = path.join(storageRoot(), storageKey);
-  await writeFile(fullPath, bytes, {flag: 'wx', mode: 0o640});
+  const id = randomUUID(), storageKey = `assets/${id}${extForMime[mimeType]}`;
+  await putMediaObject(storageKey, bytes, mimeType);
   try {
     return await db.mediaAsset.create({data: {id, folderId, originalName, storageKey, mimeType, sizeBytes: bytes.byteLength}, select: {id: true, folderId: true, originalName: true, mimeType: true, sizeBytes: true, createdAt: true}});
-  } catch (error) { await unlink(fullPath).catch(() => undefined); throw error; }
-}
-
-export async function readMedia(storageKey: string) {
-  if (!/^[a-f\d-]{36}\.(jpg|png|webp|gif|avif|pdf|docx|doc|mp3|m4a|wav|ogg|webm)$/.test(storageKey)) throw new Error('Invalid storage key.');
-  return readFile(path.join(storageRoot(), storageKey));
+  } catch (error) { await deleteMediaObject(storageKey).catch(() => undefined); throw error; }
 }
