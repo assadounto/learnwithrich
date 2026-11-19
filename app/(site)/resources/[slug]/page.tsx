@@ -1,7 +1,27 @@
 import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
-import {resources} from '@/lib/catalog';
-import {ResourceDetail,CourseDetail} from '@/components/resource-detail';
-export function generateStaticParams(){return resources.map(r=>({slug:r.slug}))}
-export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const {slug}=await params;const r=resources.find(r=>r.slug===slug);return{title:r?.title||'Resource not found',description:r?.description}}
-export default async function ResourcePage({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const resource=resources.find(r=>r.slug===slug);if(!resource)notFound();return resource.type==='Course'?<CourseDetail resource={resource}/>:<ResourceDetail resource={resource}/>}
+import {resources as publicResources} from '@/lib/server/resources';
+import {resources as legacyResources} from '@/lib/catalog';
+import {ResourceDetail, CourseDetail} from '@/components/resource-detail';
+import {OwnedResourceDetail} from '@/components/owned-resource-detail';
+import type {ResourceDetails} from '@/lib/resource-types';
+
+export const dynamic = 'force-dynamic';
+export async function generateMetadata({params}: {params: Promise<{slug: string}>}): Promise<Metadata> {
+  const {slug} = await params;
+  const resource = await publicResources().getPublic(slug);
+  if (resource) return {title: resource.title, description: resource.summary || undefined};
+  const legacy = legacyResources.find(item => item.slug === slug);
+  return {title: legacy?.title || 'Resource not found', description: legacy?.description};
+}
+export default async function ResourcePage({params}: {params: Promise<{slug: string}>}) {
+  const {slug} = await params;
+  const resource = await publicResources().getPublic(slug);
+  if (resource) {
+    const details = resource.details && typeof resource.details === 'object' && !Array.isArray(resource.details) ? resource.details as ResourceDetails : null;
+    return <OwnedResourceDetail resource={{...resource, details}}/>;
+  }
+  const legacy = legacyResources.find(item => item.slug === slug);
+  if (!legacy) notFound();
+  return legacy.type === 'Course' ? <CourseDetail resource={legacy}/> : <ResourceDetail resource={legacy}/>;
+}

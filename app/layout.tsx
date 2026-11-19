@@ -12,6 +12,7 @@ import './site-polish.css';
 import './commerce.css';
 import './account-dashboard.css';
 import './live-projects.css';
+import './owned-resources.css';
 import './catalog-card-rows.css';
 import './white-theme.css';
 import { NavigationFeedback } from '@/components/navigation-feedback';

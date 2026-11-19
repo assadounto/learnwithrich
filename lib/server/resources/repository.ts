@@ -1,6 +1,7 @@
 import type {Prisma} from '../../generated/prisma/client';
 import type {Database} from '../database-client';
 import {catalogQuery, ResourceInputError, resourceId, resourceSlug, text, validateDraft} from './validation';
+import {defaultHomepageSections, validateHomepageSections} from '../admin/homepage';
 
 const cardSelect = {
   id: true, slug: true, type: true, title: true, summary: true, coverUrl: true,
@@ -70,11 +71,30 @@ export function resourceRepository(db: Database) {
       ], {isolationLevel: 'RepeatableRead'});
       return {items: rows.map(card), total, page, limit};
     },
+    async homepage() {
+      const settings = await db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true}});
+      const sections = validateHomepageSections(settings?.sections ?? defaultHomepageSections);
+      return Promise.all(sections.map(async section => {
+        const rows = await db.resource.findMany({
+          where: {
+            ...published(),
+            ...(section.type === 'ALL' ? {} : {type: section.type}),
+            ...(section.source === 'SELECTED' ? {id: {in: section.resourceIds}} : {}),
+          },
+          select: cardSelect,
+          orderBy: [{publishedAt: 'desc'}, {id: 'desc'}],
+          take: section.limit,
+        });
+        const byId = new Map(rows.map(row => [row.id, row]));
+        const ordered = section.source === 'SELECTED' ? section.resourceIds.map(id => byId.get(id)).filter((row): row is (typeof rows)[number] => Boolean(row)).slice(0, section.limit) : rows;
+        return {...section, items: ordered.map(card)};
+      }));
+    },
     async getPublic(slug: string) {
       const row = await db.resource.findFirst({where: {...published(), slug: resourceSlug(slug)}, select: {
         ...cardSelect,
         sections: {select: {id: true, title: true, position: true}, orderBy: {position: 'asc'}},
-        items: {where: {resource: published()}, orderBy: {position: 'asc'}, select: {position: true, sectionId: true, resource: {select: cardSelect}}},
+        items: {where: {resource: {...published(), access: 'PUBLIC'}}, orderBy: {position: 'asc'}, select: {position: true, sectionId: true, resource: {select: cardSelect}}},
       }});
       if (!row) return null;
       // Access is checked again in the body query. A public parent never unlocks a paid child.

@@ -1,6 +1,6 @@
 # Docker release procedure
 
-This branch includes the owner studio. Public resource pages still use Xonbay.
+This release includes the owner studio, homepage builder and database-backed homepage/resource/project/course pages. Shop checkout and legacy project detail routes still use Xonbay.
 
 1. Copy `deploy/production.env.example` to `.env.production`. Replace every placeholder. Generate independent auth/database secrets with `openssl rand -hex 32`. Match the database password in DATABASE_URL; hex avoids URL-encoding ambiguity. Never commit the filled file. Set permissions with `chmod 600 .env.production`.
 2. Register `https://learnwithrich.com/api/identity/callback/google` on your owned Google OAuth client.

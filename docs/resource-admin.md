@@ -1,6 +1,6 @@
 # Owner login and resource studio
 
-This milestone adds `/admin` to the owned resource backend. The resource editor creates/edits all resource types, previews Markdown safely, publishes/unpublishes/archives resources, and assembles courses and paths from existing resources. It does not switch the public resource browser or learner commerce to the owned backend yet.
+The owned `/admin` studio manages all nine resource types, safely previews Markdown, publishes/unpublishes/archives resources, assembles courses and paths, and arranges homepage sections. The public homepage, resource library, project/course listings and resource details read published content from the owned PostgreSQL catalog. Legacy checkout/shop integrations remain separate.
 
 ## Before opening the studio
 
@@ -49,7 +49,7 @@ The initial limiter is deliberately configured not to trust incoming forwarded-I
 - Preview is inside the protected editor and uses the existing escaped Markdown renderer. It never publishes a draft or opens an unguarded preview URL.
 - Public/published resource edits become visible when saved. The editor explicitly says so. To work privately, first return the resource to draft. Draft staging/release approval for an already-published revision is not implemented.
 - Public/free-account prices must be zero; paid resources require a positive minor-unit amount. The UI accepts a decimal string and converts it to minor units without floating-point multiplication.
-- Public resource visibility is handled by the owned catalog APIs. The existing public frontend is still connected to Xonbay, so these newly published resources do not appear there until the catalog adapter/cutover milestone.
+- Published resources flow into the homepage and public catalog. See **Homepage and public catalog** below for selection rules and rollout steps.
 
 ### Courses and paths
 
@@ -106,3 +106,13 @@ Resource creation supports all nine types. Each type has its own fields and cont
 Type-specific fields live in `resource_content.details` and are validated against the selected type. Apply the resource-details migration before starting this release. Metadata and file links for paid/account-only resources are omitted from public detail and outline projections, like their content bodies. File URLs point to storage you operate; their storage permissions must match your intended access. This release links hosted files and images and does not implement media uploads or signed private-file delivery.
 
 Publishing requires a summary and usable content for the selected type (including file URLs for downloadable types, lesson content/video, and items for collections). The same checks apply when editing already-published resources. Invalid or empty drafts remain saveable. The editor includes automatic slugs, Markdown tools, a preview, starter outlines, cover previews, save-state feedback and a readiness checklist. Type changes warn before clearing type-specific fields and collection items.
+
+## Homepage and public catalog
+
+- `/admin/homepage` is the protected homepage builder. It starts with one automatic section showing the newest published resources across all nine types.
+- Add up to 12 sections, move them up or down, set each section's label/title/description, choose one type or all types, and set its card count.
+- Automatic sections read the newest matching published resources on each request. Selected sections let you curate up to 24 published resource IDs, in the order selected. Drafts and archived resources never appear.
+- `/resources` supports type and title/summary/tag search. `/projects` and `/courses` are database-backed collections. Resource detail pages render type-specific metadata, body Markdown, course/path contents and public file links.
+- Paid and free-account pages may show catalog cards and summaries. Their body, type-specific details, child-resource outlines and file URLs remain hidden until an access/grant flow is implemented. Paid checkout is not yet connected to owned resources.
+- The homepage builder requires the `homepage_settings` migration (`20261121000000_homepage_composition`). Readiness checks this table, so deploy the full migration set with `npm run db:deploy` before starting the new web image.
+- The public `/shop`, checkout/payment and historical project detail routes still use the Xonbay integration. The owned resource catalog does not import or delete that legacy catalog data.
