@@ -94,7 +94,7 @@ export function resourceRepository(db: Database) {
       const row = await db.resource.findFirst({where: {...published(), slug: resourceSlug(slug)}, select: {
         ...cardSelect,
         sections: {select: {id: true, title: true, position: true}, orderBy: {position: 'asc'}},
-        items: {where: {resource: {...published(), access: 'PUBLIC'}}, orderBy: {position: 'asc'}, select: {position: true, sectionId: true, resource: {select: cardSelect}}},
+        items: {where: {resource: published()}, orderBy: {position: 'asc'}, select: {position: true, sectionId: true, resource: {select: cardSelect}}},
       }});
       if (!row) return null;
       // Access is checked again in the body query. A public parent never unlocks a paid child.
