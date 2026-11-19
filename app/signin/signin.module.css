@@ -1,8 +1,8 @@
 .page { max-width: 1180px; padding-block: 28px 40px; }
 .back { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; margin-bottom: 19px; font-size: 12px; color: #65634f; }
 .back:hover { color: var(--orange); }
-.layout { display: grid; grid-template-columns: 1.06fr 1fr; border: 1px solid #bdbca7; border-radius: 14px; overflow: hidden; box-shadow: 0 12px 44px #32331c08; }
-.story { position: relative; overflow: hidden; padding: 46px 44px 32px; background: #293b2c; color: #f8f2df; }
+.layout { display: grid; grid-template-columns: 1.06fr 1fr; border: 1px solid var(--card-border); border-radius: 14px; overflow: hidden; box-shadow: 0 12px 44px #32331c08; }
+.story { position: relative; overflow: hidden; padding: 46px 44px 32px; background: #293b2c; color: #ffffff; }
 .eyebrow { display: flex; align-items: center; gap: 9px; font-size: 9px; font-weight: 700; letter-spacing: .15em; line-height: 1.6; }
 .story > .eyebrow { color: #d1d8b8; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: #d8bb79; box-shadow: 0 0 0 4px #d8bb7914; }
@@ -10,31 +10,31 @@
 .story h1 i { position: relative; display: inline-block; color: #e7b37b; font-weight: 550; }
 .story h1 i svg { color: #b5bf8b; left: 0; bottom: -11px; width: 100%; height: 10px; }
 .story > p { max-width: 320px; font-size: 13px; color: #d2d7c5; line-height: 1.75; margin-bottom: 31px; }
-.workbench { position: relative; padding: 8px 8px 31px; margin: 0 14px 0 0; background: #f0ead9; transform: rotate(-3deg); box-shadow: 0 10px 24px #111e2455; }
+.workbench { position: relative; padding: 8px 8px 31px; margin: 0 14px 0 0; background: #ffffff; transform: rotate(-3deg); box-shadow: 0 10px 24px #111e2455; }
 .workbench::before { content: ''; position: absolute; z-index: 1; width: 83px; height: 24px; background: #d6c7a0c9; left: 38%; top: -12px; transform: rotate(7deg); }
 .photo { height: 196px; background: url('/images/maker-studio.webp') top left / 200% auto no-repeat; }
 .caption { position: absolute; left: 14px; bottom: 11px; font-size: 7px; color: #5e614c; letter-spacing: .14em; font-weight: 650; }
-.note { position: absolute; right: -26px; bottom: 29px; display: flex; align-items: flex-start; gap: 10px; padding: 19px 21px; background: #dce0bf; color: #35422d; transform: rotate(8deg); box-shadow: 0 5px 12px #18241b26; }
+.note { position: absolute; right: -26px; bottom: 29px; display: flex; align-items: flex-start; gap: 10px; padding: 19px 21px; background: var(--surface-green); color: #35422d; transform: rotate(8deg); box-shadow: 0 5px 12px #18241b26; }
 .note > span { font-family: var(--serif); font-size: 20px; line-height: 1.15; letter-spacing: -.04em; }
 .note strong { font-weight: 650; }
 .signature { display: flex; align-items: center; gap: 10px; margin-top: 31px; color: #c5cdb5; font-size: 10px; line-height: 1.5; }
 .signatureLine { height: 1px; width: 24px; background: #c6a678; flex-shrink: 0; }
-.panel { display: flex; flex-direction: column; justify-content: center; padding: 40px 48px 30px; background: #fcf9f0; min-width: 0; }
+.panel { display: flex; flex-direction: column; justify-content: center; padding: 40px 48px 30px; background: var(--surface); min-width: 0; }
 .panelIntro { text-align: center; }
-.welcomeIcon { display: grid; place-items: center; margin: 0 auto 17px; width: 43px; height: 43px; border: 1px solid #d9d8bd; border-radius: 50%; color: #737c4e; background: #edf0df; }
+.welcomeIcon { display: grid; place-items: center; margin: 0 auto 17px; width: 43px; height: 43px; border: 1px solid #d9d8bd; border-radius: 50%; color: #737c4e; background: var(--surface-green); }
 .panelIntro > .eyebrow { justify-content: center; color: #77765d; font-size: 8px; }
 .panelIntro h2 { font-size: 45px; line-height: 1.05; margin: 15px 0 15px; letter-spacing: -.05em; }
 .panelIntro h2 i { color: #a65329; }
 .panelIntro > p { font-size: 12px; line-height: 1.7; color: #6c6b58; margin-bottom: 24px; }
 .auth { width: 100%; max-width: 360px; margin-inline: auto; }
 .newAccount { font-size: 10px; line-height: 1.7; text-align: center; color: #6c6b58; margin: 13px 0 23px; }
-.benefits { border-top: 1px solid #dedcca; padding-top: 21px; }
+.benefits { border-top: 1px solid var(--line); padding-top: 21px; }
 .benefitsLabel { display: block; color: #7b7963; font-size: 8px; font-weight: 700; letter-spacing: .12em; }
 .benefits ul { list-style: none; display: grid; gap: 17px; padding: 0; margin: 20px 0 24px; }
 .benefits li { display: flex; align-items: flex-start; gap: 12px; font-size: 12px; font-weight: 600; line-height: 1.4; }
 .benefits li > svg { color: #778154; margin-top: 2px; flex-shrink: 0; }
 .benefits small { display: block; font-size: 10px; font-weight: 400; color: #77735f; margin-top: 4px; line-height: 1.5; }
-.privacy { border-top: 1px solid #dedcca; padding-top: 17px; margin: 0; display: flex; justify-content: center; align-items: flex-start; gap: 7px; font-size: 9px; color: #77735f; line-height: 1.8; }
+.privacy { border-top: 1px solid var(--line); padding-top: 17px; margin: 0; display: flex; justify-content: center; align-items: flex-start; gap: 7px; font-size: 9px; color: #77735f; line-height: 1.8; }
 .privacy > svg { flex-shrink: 0; margin-top: 2px; color: #758057; }
 .privacy a { display: inline-flex; align-items: center; gap: 3px; text-decoration: underline; text-underline-offset: 3px; }
 .privacy a:hover { color: var(--orange); }

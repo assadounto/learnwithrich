@@ -1,19 +1,5 @@
 /* Self-hosted, OFL-licensed variable fonts. No runtime font-provider requests. */
 @font-face {
-  font-family: 'Fraunces';
-  src: url('/fonts/fraunces-roman.woff') format('woff');
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Fraunces';
-  src: url('/fonts/fraunces-italic.woff') format('woff');
-  font-style: italic;
-  font-weight: 100 900;
-  font-display: swap;
-}
-@font-face {
   font-family: 'DM Sans';
   src: url('/fonts/dm-sans.woff') format('woff');
   font-style: normal;
@@ -21,7 +7,8 @@
   font-display: swap;
 }
 :root {
-  --serif: 'Fraunces', Georgia, serif;
+  /* Keep legacy display-font consumers aligned with the modern sans theme. */
+  --serif: 'DM Sans', Arial, sans-serif;
   --sans: 'DM Sans', Arial, sans-serif;
 }
 body { font-optical-sizing: auto; }
