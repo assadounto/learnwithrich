@@ -11,9 +11,10 @@ export function OwnerSignin({enabled = true}: {enabled?: boolean}) {
     } catch { setError('Could not start Google sign-in. Please try again.'); setBusy(false); }
   }}>{busy ? 'Opening Google…' : 'Continue with Google'}</button>{error && <p role="alert" className="account-notice">{error}</p>}</>;
 }
-export function OwnerSignout() {
+export function OwnerSignout({beforeSignout}: {beforeSignout?: () => boolean} = {}) {
   const [busy, setBusy] = useState(false); const [error, setError] = useState('');
   return <span><button className="button button-outline" disabled={busy} onClick={async () => {
+    if (beforeSignout && !beforeSignout()) return;
     setBusy(true); setError('');
     try { const result = await identityClient.signOut(); if (result.error) throw new Error(); window.location.assign('/admin/signin'); }
     catch { setBusy(false); setError('Sign-out failed. Try again.'); }

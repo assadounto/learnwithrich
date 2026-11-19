@@ -1,3 +1,4 @@
+import type {ResourceDetails} from '@/lib/resource-types';
 import {notFound} from 'next/navigation';
 import {requireOwner} from '@/lib/server/identity/access';
 import {database} from '@/lib/server/database';
@@ -13,6 +14,7 @@ export default async function EditResource({params}: {params: Promise<{id: strin
     id: row.id, version: row.version, updatedAt: row.updatedAt.toISOString(), status: row.status,
     slug: row.slug, type: row.type, title: row.title, summary: row.summary, coverUrl: row.coverUrl ?? '',
     access: row.access, priceMinor: row.priceMinor, currency: row.currency,
+    details: (row.content?.details ?? {}) as ResourceDetails,
     bodyMarkdown: row.content?.bodyMarkdown ?? '', tags: row.tags.map(link => link.tag.name),
     sections: row.sections.map(section => ({key: section.id, title: section.title})),
     items: row.items.map(item => ({resourceId: item.resourceId, sectionKey: item.sectionId})),

@@ -1,3 +1,4 @@
+import {resourceDefinitions, type ResourceDetails} from '../../resource-types.ts';
 export const resourceTypes = ['PROJECT', 'ARTICLE', 'COURSE', 'PATH', 'LESSON', 'DOWNLOAD', 'BOOK', 'GUIDE', 'ILLUSTRATION'] as const;
 export const resourceAccess = ['PUBLIC', 'FREE_ACCOUNT', 'PAID'] as const;
 export type ResourceKind = typeof resourceTypes[number];
@@ -30,7 +31,7 @@ export function normalizeTags(value: unknown): string[] {
 export type ResourceDraft = {
   slug: string; type: ResourceKind; title: string; summary: string;
   coverUrl: string | null; access: AccessMode; priceMinor: number; currency: string;
-  bodyMarkdown: string; tags: string[];
+  bodyMarkdown: string; tags: string[]; details: ResourceDetails;
 };
 export function validateDraft(input: unknown): ResourceDraft {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new ResourceInputError('Invalid resource.');
@@ -53,6 +54,7 @@ export function validateDraft(input: unknown): ResourceDraft {
   return {
     slug: resourceSlug(value.slug), type, title: text(value.title, 'title', 180),
     summary: text(value.summary ?? '', 'summary', 2000, false), coverUrl, access, priceMinor, currency,
+    details: normalizeDetails(type, value.details ?? {}),
     bodyMarkdown: text(value.bodyMarkdown ?? '', 'body', 200000, false), tags: normalizeTags(value.tags ?? []),
   };
 }
@@ -66,4 +68,31 @@ export function catalogQuery(params: URLSearchParams) {
   const query = text(params.get('q') ?? '', 'search', 200, false);
   const tag = params.has('tag') ? text(params.get('tag'), 'tag', 60).toLowerCase() : undefined;
   return {type: type ? enumValue(type.toUpperCase(), resourceTypes, 'resource type') : undefined, query, tag, page, limit};
+}
+
+export function normalizeDetails(type: ResourceKind, input: unknown): ResourceDetails {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new ResourceInputError('Invalid resource details.');
+  const fields = resourceDefinitions[type].fields;
+  const result: ResourceDetails = {};
+  for (const [key, raw] of Object.entries(input)) {
+    const field = fields.find(field => field.key === key);
+    if (!field) throw new ResourceInputError('This detail does not belong to the selected resource type.');
+    if (raw === '' || raw == null) continue;
+    if (field.kind === 'number') {
+      if (typeof raw !== 'number' || !Number.isSafeInteger(raw) || raw < 1 || raw > (field.max ?? 100000)) throw new ResourceInputError(`Invalid ${field.label.toLowerCase()}.`);
+      result[key] = raw;
+    } else if (field.kind === 'list') {
+      if (!Array.isArray(raw) || raw.length > 30) throw new ResourceInputError(`Use at most 30 entries for ${field.label.toLowerCase()}.`);
+      result[key] = raw.map(value => text(value, field.label, 500));
+    } else {
+      const value = text(raw, field.label, field.kind === 'url' ? 2048 : 1000);
+      if (field.kind === 'select' && !field.options?.includes(value)) throw new ResourceInputError(`Invalid ${field.label.toLowerCase()}.`);
+      if (field.kind === 'url') {
+        let url: URL; try { url = new URL(value); } catch { throw new ResourceInputError(`Invalid ${field.label.toLowerCase()}.`); }
+        if (url.protocol !== 'https:' || url.username || url.password) throw new ResourceInputError('Resource links must use HTTPS without embedded credentials.');
+      }
+      result[key] = value;
+    }
+  }
+  return result;
 }
