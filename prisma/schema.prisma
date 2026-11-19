@@ -45,6 +45,8 @@ model Resource {
   publishedAt DateTime?      @map("published_at") @db.Timestamptz(3)
   createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version     Int            @default(0)
+  audits      ResourceAudit[]
   content     ResourceContent?
   tags        ResourceTag[]
   sections    ResourceSection[]
@@ -113,4 +115,98 @@ model ResourceItem {
   @@index([resourceId])
   @@index([sectionId, collectionId])
   @@map("resource_items")
+}
+
+enum UserRole {
+  LEARNER
+  OWNER
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false) @map("email_verified")
+  image         String?
+  role          UserRole  @default(LEARNER)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  sessions      Session[]
+  accounts      Account[]
+  audits        ResourceAudit[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id
+  token     String   @unique
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String   @id
+  accountId             String   @map("account_id")
+  providerId            String   @map("provider_id")
+  userId                String   @map("user_id")
+  accessToken           String?  @map("access_token")
+  refreshToken          String?  @map("refresh_token")
+  idToken               String?  @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
+  scope                 String?
+  password              String?
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt @map("last_request")
+
+  @@map("rate_limits")
+}
+
+model ResourceAudit {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String   @map("actor_id")
+  resourceId String   @map("resource_id") @db.Uuid
+  action     String   @db.VarChar(30)
+  version    Int
+  snapshot   Json
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Restrict)
+
+  @@unique([resourceId, version])
+  @@index([actorId, createdAt])
+  @@map("resource_audits")
 }

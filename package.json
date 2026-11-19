@@ -16,11 +16,14 @@
     "db:up": "docker compose -f docker-compose.dev.yml up -d --wait",
     "db:down": "docker compose -f docker-compose.dev.yml down",
     "test:db": "node scripts/test-database.mjs",
-    "resources": "tsx scripts/resources.ts"
+    "resources": "tsx scripts/resources.ts",
+    "owner:bootstrap": "tsx scripts/bootstrap-owner.ts",
+    "test:admin-http": "tsx scripts/test-admin-http.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
+    "better-auth": "1.7.26",
     "dotenv": "18.0.10",
     "lucide-react": "^0.468.0",
     "next": "^15.5.0",

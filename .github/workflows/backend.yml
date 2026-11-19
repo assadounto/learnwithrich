@@ -36,3 +36,4 @@ jobs:
       - run: npm test
       - run: npm run test:db
       - run: npm run build
+      - run: npm run test:admin-http
