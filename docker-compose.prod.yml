@@ -10,6 +10,10 @@ services:
     init: true
     env_file:
       - .env.production
+    environment:
+      MEDIA_STORAGE_DIR: /var/lib/learnwithrich/media
+    volumes:
+      - media:/var/lib/learnwithrich/media
     expose:
       - "3000"
     depends_on:
@@ -59,6 +63,7 @@ services:
         condition: service_healthy
 volumes:
   database:
+  media:
 networks:
   internal:
     internal: true

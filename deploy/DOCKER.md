@@ -1,6 +1,6 @@
 # Docker release procedure
 
-This release includes the owner studio, homepage builder and database-backed homepage/resource/project/course pages. The application uses its own PostgreSQL catalog and Google identity configuration.
+This release includes the owner studio, homepage builder and database-backed homepage/resource/project/course pages. The application uses its own PostgreSQL catalog and Google identity configuration. The media library stores uploaded files on a separate persistent Docker volume.
 
 1. Copy `deploy/production.env.example` to `.env.production`. Replace every placeholder. Generate independent auth/database secrets with `openssl rand -hex 32`. Match the database password in DATABASE_URL; hex avoids URL-encoding ambiguity. Never commit the filled file. Set permissions with `chmod 600 .env.production`.
 2. Register `https://learnwithrich.com/api/identity/callback/google` on your owned Google OAuth client.
@@ -37,7 +37,9 @@ chmod 700 backups
 docker compose --env-file .env.production -f docker-compose.prod.yml exec -T db pg_dump -U learnwithrich -d learnwithrich -Fc > backups/pre-release.dump
 ```
 
-Check command success and archive backups encrypted off-host. Test restores into an isolated database before relying on backups. Preserve `.env.production`, especially LWR_AUTH_SECRET: it encrypts OAuth tokens. Never use `down -v` on production. Database volumes survive image replacement, but are not backups.
+Check command success and archive backups encrypted off-host. Test restores into an isolated database before relying on backups. Preserve `.env.production`, especially LWR_AUTH_SECRET: it encrypts OAuth tokens. Back up the `media` Docker volume along with the database; media records and their files must be restored together. Never use `down -v` on production. Database and media volumes survive image replacement, but are not backups.
+
+The creator studio media picker accepts JPG, PNG, WebP, GIF and AVIF images; PDF and Word documents; and MP3, M4A, WAV, OGG and WebM audio up to 50 MB. Files are delivered publicly by opaque URL. Do not upload private learner data or files intended to be restricted to paying learners. This single-host volume works with the current single web service; use shared object storage before scaling the web service across multiple hosts or replicas.
 
 Tag and retain the previous web/tools images before building updates. Roll back application images only when the applied schema is backward-compatible; otherwise restore a tested backup with an explicit maintenance plan. This procedure has a brief restart window, not zero downtime.
 

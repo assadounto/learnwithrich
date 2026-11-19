@@ -8,3 +8,4 @@ out/
 
 # Generated Prisma client (npm install/build regenerates it).
 lib/generated/prisma/
+.media/

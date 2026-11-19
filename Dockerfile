@@ -29,6 +29,8 @@ COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --chown=node:node scripts/production-start.mjs ./scripts/production-start.mjs
 COPY --chown=node:node lib/server/deployment/environment.mjs ./scripts/production-environment.mjs
+RUN mkdir -p /var/lib/learnwithrich/media && chown node:node /var/lib/learnwithrich/media
+ENV MEDIA_STORAGE_DIR=/var/lib/learnwithrich/media
 USER node
 EXPOSE 3000
 CMD ["node", "scripts/production-start.mjs"]

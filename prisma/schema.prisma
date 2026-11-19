@@ -236,3 +236,26 @@ model HomepageSettings {
 
   @@map("homepage_settings")
 }
+
+model MediaFolder {
+  id        String       @id @default(uuid()) @db.Uuid
+  name      String       @unique @db.VarChar(80)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  assets    MediaAsset[]
+
+  @@map("media_folders")
+}
+
+model MediaAsset {
+  id           String       @id @default(uuid()) @db.Uuid
+  folderId     String?      @map("folder_id") @db.Uuid
+  originalName String       @map("original_name") @db.VarChar(180)
+  storageKey   String       @unique @map("storage_key") @db.VarChar(100)
+  mimeType     String       @map("mime_type") @db.VarChar(120)
+  sizeBytes    Int          @map("size_bytes")
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  folder       MediaFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  @@index([folderId, createdAt])
+  @@map("media_assets")
+}
