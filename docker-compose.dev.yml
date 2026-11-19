@@ -1,0 +1,20 @@
+name: learnwithrich-dev
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: learnwithrich
+      POSTGRES_PASSWORD: local-development-only
+      POSTGRES_DB: learnwithrich
+    ports:
+      - "127.0.0.1:54329:5432"
+    volumes:
+      - resource-db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learnwithrich -d learnwithrich"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  resource-db:
