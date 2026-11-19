@@ -25,7 +25,7 @@ node --input-type=module - "$scratch/runtime.env" "$db" <<'JS'
 import {randomBytes} from 'node:crypto';
 import {writeFileSync} from 'node:fs';
 const password=randomBytes(24).toString('hex');
-writeFileSync(process.argv[2], `LWR_AUTH_URL=https://learnwithrich.test\nLWR_AUTH_SECRET=${randomBytes(32).toString('hex')}\nLWR_GOOGLE_CLIENT_ID=container-test-client\nLWR_GOOGLE_CLIENT_SECRET=container-test-secret\nLWR_ADMIN_ENABLED=false\nPOSTGRES_PASSWORD=${password}\nDATABASE_URL=postgresql://learnwithrich:${password}@${process.argv[3]}:5432/learnwithrich_test\n`,{mode:0o600});
+writeFileSync(process.argv[2], `LWR_AUTH_URL=https://learnwithrich.test\nLWR_AUTH_SECRET=${randomBytes(32).toString('hex')}\nLWR_GOOGLE_CLIENT_ID=container-test-client\nLWR_GOOGLE_CLIENT_SECRET=container-test-secret\nLWR_ADMIN_ENABLED=false\nPOSTGRES_PASSWORD=${password}\nDATABASE_URL=postgresql://learnwithrich:${password}@${process.argv[3]}:5432/learnwithrich_test\nS3_REGION=us-east-1\nS3_BUCKET=learnwithrich-test\nS3_ACCESS_KEY_ID=test-access-key\nS3_SECRET_ACCESS_KEY=test-secret-key\nPAYSTACK_SECRET_KEY=sk_test_container-check\nPAYSTACK_WEBHOOK_SECRET=whsec_container-check\n`,{mode:0o600});
 JS
 docker network create "$network" >/dev/null
 docker run -d --name "$db" --network "$network" --env-file "$scratch/runtime.env" -e POSTGRES_USER=learnwithrich -e POSTGRES_DB=learnwithrich_test postgres:18-bookworm >/dev/null
@@ -42,7 +42,7 @@ for attempt in $(seq 1 60); do
   sleep 1
 done
 [[ "$(docker inspect --format '{{.Config.User}}' "$web")" == node ]]
-docker exec "$web" node --input-type=module -e "for(const [path,status] of [['/api/health',200],['/api/ready',200],['/api/catalog',200],['/icon.svg',200],['/fonts/dm-sans.woff',200],['/api/identity/get-session',503]]){const r=await fetch('http://127.0.0.1:3000'+path);if(r.status!==status)throw Error(path+': '+r.status);console.log(path,status)}"
+docker exec "$web" node --input-type=module -e "for(const [path,status] of [['/api/health',200],['/api/ready',200],['/api/catalog',200],['/icon.svg',200],['/fonts/dm-sans.woff',200],['/api/identity/get-session',200]]){const r=await fetch('http://127.0.0.1:3000'+path);if(r.status!==status)throw Error(path+': '+r.status);console.log(path,status)}"
 if docker run --rm "$web_image" >"$scratch/rejected.log" 2>&1; then echo 'Unconfigured production startup unexpectedly succeeded' >&2; exit 1; fi
 grep -q 'Production configuration rejected' "$scratch/rejected.log"
 # The opt-in admin mode must also start with the MFA release. Anonymous users

@@ -11,6 +11,7 @@ export class EditConflictError extends Error {}
 const fullResource = {
   content: true, tags: {include: {tag: true}},
   sections: {orderBy: {position: 'asc' as const}}, items: {orderBy: {position: 'asc' as const}},
+  media: {include: {mediaAsset: {select: {id: true, originalName: true, mimeType: true, sizeBytes: true}}}, orderBy: {position: 'asc' as const}},
 };
 async function snapshot(tx: Prisma.TransactionClient, id: string, actorId: string, action: string) {
   const row = await tx.resource.findUniqueOrThrow({where: {id}, include: fullResource});
@@ -75,7 +76,7 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
     async save(input: unknown) {
       // Authorization before parsing ensures non-owners cannot probe private mutations.
       await authorize(db);
-      const {id, token, bodyMarkdown, details, tags, sections, items, ...data} = adminDraft(input);
+      const {id, token, bodyMarkdown, details, tags, sections, items, media, ...data} = adminDraft(input);
       return db.$transaction(async tx => {
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(18427651)`;
         if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
@@ -104,11 +105,13 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
         // This complete replacement is atomic. Only this collection's rows change.
         await tx.resourceItem.deleteMany({where: {collectionId: targetId}});
         await tx.resourceSection.deleteMany({where: {resourceId: targetId}});
+        await tx.resourceMedia.deleteMany({where: {resourceId: targetId}});
         const sectionIds = new Map<string, string>();
         for (const [position, section] of sections.entries()) {
           const sectionId = randomUUID(); sectionIds.set(section.key, sectionId);
           await tx.resourceSection.create({data: {id: sectionId, resourceId: targetId, title: section.title, position}});
         }
+        if (media.length) await tx.resourceMedia.createMany({data: media.map((item, position) => ({resourceId: targetId, mediaAssetId: item.mediaAssetId, title: item.title, priceMinor: item.priceMinor, position}))});
         if (items.length) await tx.resourceItem.createMany({data: items.map((item, position) => ({collectionId: targetId, resourceId: item.resourceId, position, sectionId: item.sectionKey ? sectionIds.get(item.sectionKey)! : null}))});
         return snapshot(tx, targetId, actorId, id ? 'UPDATED' : 'CREATED');
       }, {timeout: 15000});

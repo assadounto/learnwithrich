@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {validateProductionEnvironment} from '../lib/server/deployment/environment.mjs';
-const env = {DATABASE_URL:'postgresql://app:strong-password@db:5432/app',LWR_AUTH_URL:'https://learn.example',LWR_AUTH_SECRET:'x'.repeat(64),LWR_GOOGLE_CLIENT_ID:'client',LWR_GOOGLE_CLIENT_SECRET:'secret',LWR_ADMIN_ENABLED:'false'};
+const env = {DATABASE_URL:'postgresql://app:strong-password@db:5432/app',LWR_AUTH_URL:'https://learn.example',LWR_AUTH_SECRET:'x'.repeat(64),LWR_GOOGLE_CLIENT_ID:'client',LWR_GOOGLE_CLIENT_SECRET:'secret',LWR_ADMIN_ENABLED:'false',S3_REGION:'us-east-1',S3_BUCKET:'learnwithrich-media',S3_ACCESS_KEY_ID:'access-key',S3_SECRET_ACCESS_KEY:'scoped-secret',PAYSTACK_SECRET_KEY:'sk_test_abc',PAYSTACK_WEBHOOK_SECRET:'whsec_abc'};
 test('production configuration rejects placeholders, insecure origins and invalid admin flags',()=>{
  assert.deepEqual(validateProductionEnvironment(env),[]);
  assert.deepEqual(validateProductionEnvironment({...env,LWR_ADMIN_ENABLED:'true'}),[]);
