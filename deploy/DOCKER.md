@@ -14,14 +14,16 @@ docker compose --env-file .env.production -f docker-compose.prod.yml run --rm to
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --wait web
 ```
 
-5. The container rejects missing/placeholder credentials and mismatched non-HTTPS origins. This release deploys with `LWR_ADMIN_ENABLED=false`: the public admin and owned identity endpoints stay locked until MFA is implemented. The public website and read-only catalog remain available.
+5. The container rejects missing/placeholder credentials and mismatched non-HTTPS origins. Keep `LWR_ADMIN_ENABLED=false` to leave the studio offline, or set it to `true` after migrations and Google OAuth configuration. With admin enabled, a Google session alone cannot open the studio: authenticator enrollment and verification are mandatory. The public website and read-only catalog remain available in either mode.
 
 Check process health at `/api/health` and database/schema readiness at `/api/ready`. Both must return 200 before routing traffic. The database has no published host port.
-6. Owner onboarding is deferred until the MFA-enabled release. After that release enables sign-in, obtain your verified account ID and run:
+6. With admin enabled, sign in at `/admin/signin`. The access-denied page shows your account ID. Bootstrap that verified Google account once:
 
 ```sh
 docker compose --env-file .env.production -f docker-compose.prod.yml run --rm tools owner:bootstrap -- YOUR_ACCOUNT_ID
 ```
+
+7. Open `/admin` again. Enroll your authenticator at `/admin/security`, verify a six-digit code and securely save the ten single-use recovery codes. Enrollment requires a Google session created within the last 10 minutes; sign out/in if needed. MFA verification lasts 15 minutes per session and is required for private pages, saves and publishing. The MFA migration revokes existing owner sessions.
 
 The tools image contains Prisma and operator scripts; the web image remains a non-root standalone server. Migrations are an explicit release step, not a race between restarting web replicas. Do not deploy if migration fails.
 
@@ -41,12 +43,12 @@ Tag and retain the previous web/tools images before building updates. Roll back 
 
 ## Remaining launch verification
 
-Supply real credentials, test Google login/sign-out, configure trusted-proxy rate limiting, and complete owner MFA/step-up protection before exposing admin publicly. Until then restrict `/admin*` and `/api/identity*` at your reverse proxy to your trusted access network. These deployment files do not configure DNS, Caddy, Google, or MFA automatically. The old deploy/README.md describes the historical Xonbay-only rollout; use this procedure for the owned database/studio.
+Supply real credentials, test Google login/sign-out and owner enrollment on the real domain, verify backup restores, and configure trusted-proxy rate limiting. Authenticator setup is completed by the owner after deployment; it is never silently enabled by an environment flag. Keep the studio disabled or restricted to your trusted access network until those server checks pass. These deployment files do not configure DNS, Caddy or Google automatically. The old deploy/README.md describes the historical Xonbay-only rollout; use this procedure for the owned database/studio.
 
 ## Reproducible isolated verification
 
 Run `bash deploy/test-containers.sh` with Docker Desktop/Engine running. It builds both images and starts a disposable network/database/web stack using random local test secrets, without production env files. It verifies migrations, non-root startup, static assets, catalog, locked admin identity, rejection of missing production configuration, and readiness failure when PostgreSQL stops. Its cleanup removes only its own test containers/volumes/network. Cached images remain available.
 
-Verified locally on 2026-11-19 with Docker Desktop, Node 22 and PostgreSQL 18: both image builds and the full smoke test passed. This does not verify real OAuth credentials, DNS, TLS, backups or owner MFA.
+Verified locally on 2026-11-19 with Docker Desktop, Node 22 and PostgreSQL 18: both image builds and the full smoke test passed. The MFA release additionally has database and production-server regression coverage for enrollment, recovery, expiry and publishing gates; real OAuth credentials, owner-device enrollment, DNS, TLS and backups still require server verification.
 
 The base image includes OpenSSL and CA certificates before Prisma installation. The lockfile overrides PostCSS to the audited patched release; rerun `npm audit --omit=dev` when preparing a release rather than treating an old audit result as permanent.

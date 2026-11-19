@@ -12,7 +12,7 @@ function failure(error: unknown) {
 export async function saveResource(input: unknown) {
   const owner = await requireOwner();
   try {
-    const row = await adminRepository(database(), owner.id).save(input);
+    const row = await adminRepository(database(), owner.id, owner.sessionId).save(input);
     revalidatePath('/admin'); revalidatePath(`/admin/resources/${row.id}`);
     return {ok: true as const, id: row.id};
   } catch (error) { return failure(error); }
@@ -20,7 +20,7 @@ export async function saveResource(input: unknown) {
 export async function changeResourceStatus(id: string, version: number, updatedAt: string, action: string) {
   const owner = await requireOwner();
   try {
-    await adminRepository(database(), owner.id).transition(id, version, updatedAt, action);
+    await adminRepository(database(), owner.id, owner.sessionId).transition(id, version, updatedAt, action);
     revalidatePath('/admin'); revalidatePath(`/admin/resources/${id}`);
     return {ok: true as const, id};
   } catch (error) { return failure(error); }
