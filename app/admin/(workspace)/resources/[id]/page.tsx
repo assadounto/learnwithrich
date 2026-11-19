@@ -18,6 +18,7 @@ export default async function EditResource({params}: {params: Promise<{id: strin
     bodyMarkdown: row.content?.bodyMarkdown ?? '', tags: row.tags.map(link => link.tag.name),
     sections: row.sections.map(section => ({key: section.id, title: section.title})),
     items: row.items.map(item => ({resourceId: item.resourceId, sectionKey: item.sectionId})),
+    media: row.media.map(item => ({mediaAssetId: item.mediaAssetId, title: item.title, priceMinor: item.priceMinor, originalName: item.mediaAsset.originalName, mimeType: item.mediaAsset.mimeType, sizeBytes: item.mediaAsset.sizeBytes})),
     history: row.audits.map(event => ({action: event.action, version: event.version, createdAt: event.createdAt.toISOString(), name: event.actor.name})),
   }}/>;
 }
