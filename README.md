@@ -81,3 +81,7 @@ Collection cards share borders, corner radii, serif headings and readable copy. 
 Internal links retain Next.js prefetch, keyboard/modifier behavior and native anchor semantics through a shared NavigationLink. A React transition drives the orange progress bar, accessible loading announcement and compact spinner while a route opens. Same-page hashes and download links keep their native behavior. Homepage search uses the same navigation feedback. Loading boundaries show a quiet skeleton; route failures have retry and project-navigation actions. Reduced motion keeps a static progress line and text.
 
 Mobile collection cards now use native two-column masonry: cards retain their natural height with 12px gutters and cannot split between columns. Desktop grids stay unchanged; the layout works without JavaScript.
+
+## Owned unified resource backend
+
+The PostgreSQL resource foundation supports projects, articles, courses, paths, lessons and downloads in one catalog. See [local setup, CLI, schema rules, API and integration tests](docs/resource-backend.md). The existing frontend integration is retained until the owner editor is ready.

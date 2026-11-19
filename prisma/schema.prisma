@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ResourceType {
+  PROJECT
+  ARTICLE
+  COURSE
+  PATH
+  LESSON
+  DOWNLOAD
+  BOOK
+  GUIDE
+  ILLUSTRATION
+}
+
+enum ResourceStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ResourceAccess {
+  PUBLIC
+  FREE_ACCOUNT
+  PAID
+}
+
+model Resource {
+  id          String         @id @default(uuid()) @db.Uuid
+  slug        String         @unique @db.VarChar(120)
+  type        ResourceType
+  title       String         @db.VarChar(180)
+  summary     String         @default("") @db.VarChar(2000)
+  coverUrl    String?        @map("cover_url") @db.VarChar(2048)
+  status      ResourceStatus @default(DRAFT)
+  access      ResourceAccess @default(PUBLIC)
+  priceMinor  Int            @default(0) @map("price_minor")
+  currency    String         @default("GHS") @db.VarChar(3)
+  publishedAt DateTime?      @map("published_at") @db.Timestamptz(3)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  content     ResourceContent?
+  tags        ResourceTag[]
+  sections    ResourceSection[]
+  items       ResourceItem[] @relation("Collection")
+  includedIn  ResourceItem[] @relation("Child")
+
+  @@index([status, publishedAt, id])
+  @@index([type, status, publishedAt])
+  @@map("resources")
+}
+
+// Private by default: catalog projections never automatically include this row.
+model ResourceContent {
+  resourceId   String   @id @map("resource_id") @db.Uuid
+  bodyMarkdown String   @default("") @map("body_markdown") @db.Text
+  resource     Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@map("resource_content")
+}
+
+model Tag {
+  id        String        @id @default(uuid()) @db.Uuid
+  name      String        @unique @db.VarChar(60)
+  resources ResourceTag[]
+
+  @@map("tags")
+}
+
+model ResourceTag {
+  resourceId String   @map("resource_id") @db.Uuid
+  tagId      String   @map("tag_id") @db.Uuid
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([resourceId, tagId])
+  @@index([tagId, resourceId])
+  @@map("resource_tags")
+}
+
+model ResourceSection {
+  id         String         @id @default(uuid()) @db.Uuid
+  resourceId String         @map("resource_id") @db.Uuid
+  title      String         @db.VarChar(180)
+  position   Int
+  resource   Resource       @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  items      ResourceItem[]
+
+  @@unique([id, resourceId])
+  @@unique([resourceId, position])
+  @@map("resource_sections")
+}
+
+// A shared resource can appear in many collections; order belongs to the link.
+model ResourceItem {
+  id           String           @id @default(uuid()) @db.Uuid
+  collectionId String           @map("collection_id") @db.Uuid
+  resourceId   String           @map("resource_id") @db.Uuid
+  sectionId    String?          @map("section_id") @db.Uuid
+  position     Int
+  collection   Resource         @relation("Collection", fields: [collectionId], references: [id], onDelete: Cascade)
+  resource     Resource         @relation("Child", fields: [resourceId], references: [id], onDelete: Restrict)
+  section      ResourceSection? @relation(fields: [sectionId, collectionId], references: [id, resourceId], onDelete: NoAction)
+
+  @@unique([collectionId, resourceId])
+  @@unique([collectionId, position])
+  @@index([resourceId])
+  @@index([sectionId, collectionId])
+  @@map("resource_items")
+}
