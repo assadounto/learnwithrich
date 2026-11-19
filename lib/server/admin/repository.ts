@@ -6,6 +6,7 @@ import {assertOwner} from '../identity/owner';
 import {assertSessionMfa} from '../identity/mfa';
 import {adminDraft, editToken} from './input';
 import {ResourceInputError, resourceId, text, enumValue, resourceTypes} from '../resources/validation';
+import {defaultHomepageSections, validateHomepageSections} from './homepage';
 export class EditConflictError extends Error {}
 const fullResource = {
   content: true, tags: {include: {tag: true}},
@@ -43,6 +44,33 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
     async choices() {
       await authorize(db);
       return db.resource.findMany({select: {id: true, title: true, type: true, status: true}, orderBy: {title: 'asc'}, take: 500});
+    },
+    async homepageSettings() {
+      await authorize(db);
+      const [settings, resources] = await Promise.all([
+        db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true}}),
+        db.resource.findMany({where: {status: 'PUBLISHED', publishedAt: {lte: new Date()}}, select: {id: true, title: true, type: true, coverUrl: true, summary: true}, orderBy: [{publishedAt: 'desc'}, {title: 'asc'}], take: 500}),
+      ]);
+      return {sections: validateHomepageSections(settings?.sections ?? defaultHomepageSections), resources};
+    },
+    async saveHomepage(input: unknown) {
+      await authorize(db);
+      const sections = validateHomepageSections(input);
+      return db.$transaction(async tx => {
+        if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
+        await authorize(tx);
+        const selectedIds = [...new Set(sections.filter(section => section.source === 'SELECTED').flatMap(section => section.resourceIds))];
+        if (selectedIds.length) {
+          const rows = await tx.resource.findMany({where: {id: {in: selectedIds}, status: 'PUBLISHED', publishedAt: {lte: new Date()}}, select: {id: true, type: true}});
+          const valid = new Map(rows.map(row => [row.id, row.type]));
+          for (const section of sections) if (section.source === 'SELECTED') for (const id of section.resourceIds) {
+            const type = valid.get(id);
+            if (!type || (section.type !== 'ALL' && section.type !== type)) throw new ResourceInputError('Selected resources must be published and match their section type.');
+          }
+        }
+        await tx.homepageSettings.upsert({where: {id: 1}, create: {id: 1, sections: sections as Prisma.InputJsonValue}, update: {sections: sections as Prisma.InputJsonValue}});
+        return sections;
+      });
     },
     async save(input: unknown) {
       // Authorization before parsing ensures non-owners cannot probe private mutations.

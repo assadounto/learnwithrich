@@ -1,6 +1,6 @@
 # Docker release procedure
 
-This branch includes the owner studio. Public resource pages still use Xonbay.
+This release includes the owner studio, homepage builder and database-backed homepage/resource/project/course pages. The application uses its own PostgreSQL catalog and Google identity configuration.
 
 1. Copy `deploy/production.env.example` to `.env.production`. Replace every placeholder. Generate independent auth/database secrets with `openssl rand -hex 32`. Match the database password in DATABASE_URL; hex avoids URL-encoding ambiguity. Never commit the filled file. Set permissions with `chmod 600 .env.production`.
 2. Register `https://learnwithrich.com/api/identity/callback/google` on your owned Google OAuth client.
@@ -43,7 +43,7 @@ Tag and retain the previous web/tools images before building updates. Roll back 
 
 ## Remaining launch verification
 
-Supply real credentials, test Google login/sign-out and owner enrollment on the real domain, verify backup restores, and configure trusted-proxy rate limiting. Authenticator setup is completed by the owner after deployment; it is never silently enabled by an environment flag. Keep the studio disabled or restricted to your trusted access network until those server checks pass. These deployment files do not configure DNS, Caddy or Google automatically. The old deploy/README.md describes the historical Xonbay-only rollout; use this procedure for the owned database/studio.
+Supply real credentials, test Google login/sign-out and owner enrollment on the real domain, verify backup restores, and configure trusted-proxy rate limiting. Authenticator setup is completed by the owner after deployment; it is never silently enabled by an environment flag. Keep the studio disabled or restricted to your trusted access network until those server checks pass. These deployment files do not configure DNS, Caddy or Google automatically. This procedure is the deployment source of truth.
 
 ## Reproducible isolated verification
 

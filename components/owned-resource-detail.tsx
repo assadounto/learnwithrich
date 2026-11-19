@@ -1,0 +1,50 @@
+import Link from '@/components/navigation-link';
+import {ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, LockKeyhole, FileDown, Gauge, Clock3, Layers3} from 'lucide-react';
+import type {ResourceKind, AccessMode} from '@/lib/server/resources/validation';
+import type {ResourceDetails} from '@/lib/resource-types';
+import {resourceDefinitions} from '@/lib/resource-types';
+import {money} from '@/lib/money';
+
+type Resource = {id: string; slug: string; type: ResourceKind; title: string; summary: string; coverUrl: string | null; access: AccessMode; priceMinor: number; currency: string; tags: string[]; details: ResourceDetails | null; bodyMarkdown: string | null; requiresAccess: boolean; sections: {id: string; title: string; position: number}[]; items: {position: number; sectionId: string | null; resource: {id: string; slug: string; title: string; summary: string; type: ResourceKind; coverUrl: string | null; tags: string[]; access: AccessMode; priceMinor: number; currency: string}}[]};
+const names: Record<ResourceKind, string> = {PROJECT: 'Project', ARTICLE: 'Article', COURSE: 'Course', PATH: 'Learning path', LESSON: 'Lesson', DOWNLOAD: 'Download', BOOK: 'Book', GUIDE: 'Guide', ILLUSTRATION: 'Illustration'};
+function Markdown({source}: {source: string}) {
+  const lines = source.split(/\r?\n/), blocks: React.ReactNode[] = [];
+  for (let index = 0; index < lines.length;) {
+    const line = lines[index];
+    if (!line.trim()) {index++; continue;}
+    if (/^```/.test(line)) {const code: string[] = []; index++; while (index < lines.length && !/^```/.test(lines[index])) code.push(lines[index++]); index++; blocks.push(<pre key={`code-${index}`}><code>{code.join('\n')}</code></pre>); continue;}
+    const heading = /^(#{1,3})\s+(.+)$/.exec(line);
+    if (heading) {const Tag = `h${heading[1].length + 1}` as 'h2' | 'h3' | 'h4'; blocks.push(<Tag key={`heading-${index}`}>{heading[2]}</Tag>); index++; continue;}
+    if (/^\s*[-*+]\s+/.test(line)) {const entries: string[] = []; while (index < lines.length && /^\s*[-*+]\s+/.test(lines[index])) entries.push(lines[index++].replace(/^\s*[-*+]\s+/, '')); blocks.push(<ul key={`list-${index}`}>{entries.map((entry, itemIndex) => <li key={itemIndex}>{entry}</li>)}</ul>); continue;}
+    const paragraph: string[] = []; while (index < lines.length && lines[index].trim() && !/^(#{1,3})\s+|^```|^\s*[-*+]\s+/.test(lines[index])) paragraph.push(lines[index++]); blocks.push(<p key={`paragraph-${index}`}>{paragraph.join('\n')}</p>);
+  }
+  return <div className="owned-markdown">{blocks}</div>;
+}
+
+export function OwnedResourceDetail({resource}: {resource: Resource}) {
+  const details = resource.details ?? {};
+  const file = typeof details.fileUrl === 'string' ? details.fileUrl : null;
+  const fileName = typeof details.fileName === 'string' ? details.fileName : 'Open resource file';
+  const duration = typeof details.durationMinutes === 'number' ? `${details.durationMinutes} min` : null;
+  const difficulty = typeof details.difficulty === 'string' ? details.difficulty : null;
+  const author = typeof details.author === 'string' ? details.author : 'Richmond Adu-Kyere';
+  const extraDetails = resourceDefinitions[resource.type].fields.filter(field => !['fileUrl', 'outcomes', 'difficulty', 'durationMinutes'].includes(field.key)).flatMap(field => {
+    const value = details[field.key];
+    if (value == null || value === '') return [];
+    return [{key: field.key, label: field.label, kind: field.kind, value}];
+  });
+  const groups = resource.sections.length ? [...resource.sections.map(section => ({...section, items: resource.items.filter(item => item.sectionId === section.id)})), ...(resource.items.some(item => !item.sectionId) ? [{id: 'ungrouped', title: 'More in this collection', items: resource.items.filter(item => !item.sectionId)}] : [])] : [{id: 'ungrouped', title: 'In this collection', items: resource.items}];
+  return <article className="owned-detail ref-container">
+    <nav className="owned-detail-breadcrumb" aria-label="Breadcrumb"><Link href={resource.type === 'PROJECT' ? '/projects' : resource.type === 'COURSE' || resource.type === 'LESSON' ? '/courses' : '/resources'}><ArrowLeft size={14}/>All {resource.type === 'PROJECT' ? 'projects' : resource.type === 'COURSE' || resource.type === 'LESSON' ? 'courses' : 'resources'}</Link><span aria-hidden="true">/</span><span aria-current="page">{resource.title}</span></nav>
+    <header className="owned-detail-hero"><div className="owned-detail-copy"><span className="maker-kicker">LEARNWITHRICH / {names[resource.type].toUpperCase()}</span><h1>{resource.title}</h1><p>{resource.summary}</p><div className="owned-detail-byline"><span>By {author}</span>{resource.tags.map(tag => <span key={tag}>{tag}</span>)}</div><div className="owned-detail-facts">{difficulty && <span><Gauge size={15}/>{difficulty}</span>}{duration && <span><Clock3 size={15}/>{duration}</span>}{resource.items.length > 0 && <span><Layers3 size={15}/>{resource.items.length} included resources</span>}</div></div><div className="owned-detail-cover">{resource.coverUrl ? <img src={resource.coverUrl} alt={resource.type === 'ILLUSTRATION' && typeof details.altText === 'string' ? details.altText : resource.title}/> : resource.type === 'ILLUSTRATION' && file ? <img src={file} alt={typeof details.altText === 'string' ? details.altText : resource.title}/> : <BookOpen size={74} strokeWidth={.8}/>}</div></header>
+    <div className="owned-detail-content-grid"><div className="owned-detail-content" id="resource-content"><h2>{resource.type === 'ARTICLE' ? 'The article' : resource.type === 'PROJECT' ? 'The build' : resource.type === 'LESSON' ? 'Lesson notes' : 'About this resource'}</h2>{resource.bodyMarkdown ? <Markdown source={resource.bodyMarkdown}/> : resource.requiresAccess ? <div className="owned-catalog-empty"><h2>Resource details are protected.</h2><p>Sign in or access this resource to continue.</p><Link className="button button-dark" href="/signin">Sign in to continue</Link></div> : <p>The full resource is being prepared. Check back soon.</p>}
+        {!resource.requiresAccess && extraDetails.length > 0 && <dl className="owned-detail-type-details">{extraDetails.map(field => <div key={field.key}><dt>{field.label}</dt><dd>{field.kind === 'url' && typeof field.value === 'string' ? <a href={field.value} target="_blank" rel="noreferrer">Open link <ArrowUpRight size={13}/></a> : Array.isArray(field.value) ? field.value.join(' · ') : String(field.value)}</dd></div>)}</dl>}
+        {!resource.requiresAccess && resource.items.length > 0 && <div className="owned-detail-items">{groups.map(group => <section key={group.id}><h3>{group.title}</h3><ol>{group.items.map(item => <li key={item.resource.id}><Link href={`/resources/${item.resource.slug}`}>{item.resource.title}<ArrowUpRight size={13}/></Link>{item.resource.summary && <span> — {item.resource.summary}</span>}</li>)}</ol></section>)}</div>}
+      </div><aside className="owned-detail-access"><BookOpen size={23}/><span className="maker-kicker">YOUR NEXT STEP</span><h2>{resource.requiresAccess ? <><LockKeyhole size={20}/> Access this resource</> : resource.access === 'PUBLIC' ? 'Explore and make it yours.' : 'Keep learning with Rich.'}</h2><p>{resource.access === 'PUBLIC' ? 'Read the notes, follow the steps and adapt the idea to your own work.' : resource.access === 'FREE_ACCOUNT' ? 'This resource is available to signed-in learners.' : `Premium resource · ${(resource.priceMinor / 100).toFixed(2)} ${resource.currency}`}</p>
+        {resource.access === 'PUBLIC' ? <a className="button button-dark" href="#resource-content">Read the resource <ArrowRight size={16}/></a> : resource.access === 'FREE_ACCOUNT' ? <Link className="button button-dark" href="/signin">Sign in to continue <ArrowRight size={16}/></Link> : <p className="studio-note">Premium resource · {money(resource.priceMinor, resource.currency)}. Paid access is not enabled in this catalog yet.</p>}
+        {!resource.requiresAccess && file && <a className="button button-outline" href={file} target="_blank" rel="noreferrer"><FileDown size={16}/>{fileName}</a>}
+        {Array.isArray(details.outcomes) && details.outcomes.length > 0 && <div className="owned-detail-learning"><strong>What you’ll learn</strong><ul>{details.outcomes.map((outcome, i) => <li key={`${outcome}-${i}`}>{outcome}</li>)}</ul></div>}
+      </aside></div>
+    <footer className="owned-detail-next"><span className="maker-kicker">KEEP YOUR CURIOSITY GOING</span><h2>Find another idea<br/><i>worth exploring.</i></h2><Link href="/resources" className="text-link">Back to all resources <ArrowUpRight size={16}/></Link></footer>
+  </article>;
+}

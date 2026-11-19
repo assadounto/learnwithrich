@@ -32,3 +32,13 @@ export async function refreshResourceChoices() {
     return {ok: true as const, choices: await adminRepository(database(), owner.id, owner.sessionId).choices()};
   } catch { return {ok: false as const, error: 'Could not refresh your resource library. Please try again.'}; }
 }
+
+export async function saveHomepage(input: unknown) {
+  const owner = await requireOwner();
+  try {
+    const sections = await adminRepository(database(), owner.id, owner.sessionId).saveHomepage(input);
+    revalidatePath('/');
+    revalidatePath('/admin/homepage');
+    return {ok: true as const, sections};
+  } catch (error) { return failure(error); }
+}

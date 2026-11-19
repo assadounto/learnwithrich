@@ -228,3 +228,11 @@ model ResourceAudit {
   @@index([actorId, createdAt])
   @@map("resource_audits")
 }
+
+model HomepageSettings {
+  id        Int      @id @default(1)
+  sections  Json     @default("[]")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("homepage_settings")
+}
