@@ -39,7 +39,7 @@ Google OAuth is the only enabled sign-in method. Email/password login and automa
 
 The public `/api/catalog` remains read-only and never exposes private resource content or audit snapshots. Studio pages are dynamic and marked noindex. Next.js Server Actions provide the mutation transport, including same-origin checks; action identifiers alone confer no permission. Owner checks run inside each action, not only in the workspace layout.
 
-The initial limiter is deliberately configured not to trust incoming forwarded-IP headers. With no trusted proxy configured, clients share per-path limits (100 requests/minute). Before a wider public authentication rollout, configure a proxy that strips/replaces client-supplied headers and pass only that verified header/trusted proxy configuration to Better Auth. Do not trust arbitrary X-Forwarded-For values. Add owner MFA/step-up authentication before a public production admin launch; this milestone does not configure or certify the owner's Google MFA policy.
+The initial limiter is deliberately configured not to trust incoming forwarded-IP headers. With no trusted proxy configured, clients share per-path limits (100 requests/minute). Before a wider public authentication rollout, configure a proxy that strips/replaces client-supplied headers and pass only that verified header/trusted proxy configuration to Better Auth. Do not trust arbitrary X-Forwarded-For values. App-level authenticator MFA is mandatory for owner access, independently of the Google account’s own MFA policy. Follow the enrollment and recovery procedure below.
 
 ## Resource workflow
 
@@ -83,3 +83,16 @@ Both database commands require TEST_DATABASE_URL pointing to a separate local Po
 Database tests cover signed sessions, expired/revoked sessions, role injection, cross-origin requests, verified owner bootstrap, authorization, stale writes, snapshots, collection rollback and role revocation. HTTP tests start the standalone production server on a random loopback port, use signed synthetic database sessions, and exercise protected page rendering plus real Server Action requests for create/publish/unpublish and denial cases. They make no Google OAuth requests and clean up test fixtures.
 
 Live Google OAuth needs the real configured credentials and redirect URLs above and is a separate deployment verification. Browser visual verification is also separate from server-rendered/HTTP checks.
+
+
+## Mandatory owner MFA
+
+After Google sign-in and the one-time owner bootstrap, `/admin` sends the owner to `/admin/security`. Set up a standard TOTP authenticator with the locally generated QR code or manual key and confirm a six-digit code. Setup requires Google sign-in within the previous 10 minutes, expires after 10 minutes, and is bound to that session. No enrollment secret is sent to an external QR service. The server encrypts secrets using `LWR_AUTH_SECRET`; preserve that secret and encrypted database backups.
+
+Save the ten 128-bit recovery codes when shown. Only their hashes are stored. Each code works once and still requires a valid owner Google session. Authenticator codes use 30-second periods with a one-period clock tolerance. Accepted codes cannot be replayed, including from another session. Five failed guesses across sessions and factors lock verification for 15 minutes; successful verification resets failures. Verification lasts 15 minutes in the authoritative database session. A new Google session does not inherit another session’s verification. Every private page and server action checks the gate; mutation repositories recheck it inside the transaction.
+
+Use Security in the studio to generate replacement recovery codes with a new authenticator code. This immediately invalidates the previous set. To replace a lost authenticator, sign in with Google, open `/admin/security`, choose Replace authenticator, and enter an unused recovery code (or a new code from the current authenticator). Replacement removes the factor and old recovery set and revokes all sessions. Sign in with Google again and enroll the new device; private access stays blocked until confirmation. There is no browser endpoint that disables MFA without proving an existing factor.
+
+If both the device and all recovery codes are lost, a trusted server operator can run `npm run owner:mfa-reset -- EXACT_OWNER_ID --confirm` (or use the Docker tools image with `owner:mfa-reset -- EXACT_OWNER_ID --confirm`). This requires direct database credentials, checks the existing verified owner and revokes every session. It cannot promote a user. The owner must sign in with Google and enroll again. Never expose this operator command through an API.
+
+The production environment may set `LWR_ADMIN_ENABLED=true` after migrations and OAuth setup. Keep it false to take the studio and owned identity endpoints offline. Upgrading applies a migration that signs out existing owner sessions. Local automated tests cover database concurrency and signed-session HTTP/server actions; test the actual Google callback and enrollment with the owner’s device after deploying.

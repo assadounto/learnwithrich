@@ -6,7 +6,7 @@ import {ResourceEditor} from '@/components/admin/resource-editor';
 export default async function EditResource({params}: {params: Promise<{id: string}>}) {
   const owner = await requireOwner(); const {id} = await params;
   if (!/^[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12}$/i.test(id)) notFound();
-  const admin = adminRepository(database(), owner.id);
+  const admin = adminRepository(database(), owner.id, owner.sessionId);
   const [row, choices] = await Promise.all([admin.get(id), admin.choices()]);
   if (!row) notFound();
   return <ResourceEditor key={`${row.id}-${row.version}-${row.updatedAt.toISOString()}`} choices={choices} initial={{

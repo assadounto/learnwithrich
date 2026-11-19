@@ -10,7 +10,7 @@ if (!['postgres:', 'postgresql:'].includes(url.protocol) || !['localhost', '127.
 const env = {...process.env, DATABASE_URL: connection};
 for (const args of [
   ['node_modules/prisma/build/index.js', 'migrate', 'deploy'],
-  ['--import', 'tsx', '--test', 'tests/integration/resources.test.ts', 'tests/integration/admin.test.ts'],
+  ['--import', 'tsx', '--test', '--test-concurrency=1', 'tests/integration/resources.test.ts', 'tests/integration/admin.test.ts', 'tests/integration/mfa.test.ts'],
 ]) {
   const result = spawnSync(process.execPath, args, {stdio: 'inherit', env});
   if (result.error) throw result.error;
