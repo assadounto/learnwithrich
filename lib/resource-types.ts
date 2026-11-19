@@ -1,0 +1,35 @@
+import type {ResourceKind} from './server/resources/validation.ts';
+export type DetailValue = string | number | string[];
+export type ResourceDetails = Record<string, DetailValue>;
+export type DetailField = {key: string; label: string; kind: 'text' | 'url' | 'number' | 'list' | 'select'; help?: string; options?: string[]; max?: number};
+const difficulty: DetailField = {key: 'difficulty', label: 'Difficulty', kind: 'select', options: ['Beginner', 'Intermediate', 'Advanced']};
+const duration: DetailField = {key: 'durationMinutes', label: 'Estimated duration (minutes)', kind: 'number', max: 100000};
+const outcomes: DetailField = {key: 'outcomes', label: 'Learning outcomes', kind: 'list', help: 'One outcome per line. What will someone be able to do?'};
+const prerequisites: DetailField = {key: 'prerequisites', label: 'Prerequisites', kind: 'list', help: 'One prerequisite per line.'};
+const file: DetailField = {key: 'fileUrl', label: 'Resource file URL', kind: 'url', help: 'An HTTPS link to your hosted file. File hosting permissions must match the resource access; this does not make a public file private.'};
+const format: DetailField = {key: 'fileFormat', label: 'File format', kind: 'text', help: 'For example PDF, ZIP, SVG or PNG.'};
+const license: DetailField = {key: 'license', label: 'License / usage rights', kind: 'text'};
+const author: DetailField = {key: 'author', label: 'Author', kind: 'text'};
+export const resourceDefinitions: Record<ResourceKind, {name: string; plural: string; description: string; bodyLabel: string; template: string; fields: DetailField[]}> = {
+  PROJECT: {name: 'Project', plural: 'Projects', description: 'A practical build with instructions, materials and source code.', bodyLabel: 'Build instructions', template: '## What you’ll build\n\nDescribe the finished project.\n\n## Materials and tools\n\n- \n\n## Build steps\n\n### Step 1\n\n\n## Test your build\n\n\n## Troubleshooting\n', fields: [difficulty, duration, outcomes, prerequisites, {key: 'materials', label: 'Materials and tools', kind: 'list', help: 'One item per line, including quantities where useful.'}, {key: 'repositoryUrl', label: 'Source code repository', kind: 'url'}, {key: 'demoUrl', label: 'Live demo', kind: 'url'}]},
+  ARTICLE: {name: 'Article', plural: 'Articles', description: 'Share an idea, explanation or story worth reading.', bodyLabel: 'Article', template: '## Introduction\n\n\n## The idea\n\n\n## Key takeaways\n\n- \n', fields: [author, {key: 'readingMinutes', label: 'Reading time (minutes)', kind: 'number', max: 10000}, {key: 'sourceUrl', label: 'Reference / source URL', kind: 'url'}]},
+  COURSE: {name: 'Course', plural: 'Courses', description: 'Teach a subject through an ordered collection of lessons.', bodyLabel: 'Course overview', template: '## About this course\n\n\n## What you’ll learn\n\n- \n\n## How to follow along\n', fields: [difficulty, duration, outcomes, prerequisites]},
+  PATH: {name: 'Learning path', plural: 'Learning paths', description: 'Combine projects, courses and resources into a guided journey.', bodyLabel: 'Path overview', template: '## Your learning journey\n\n\n## Who this path is for\n\n\n## Before you start\n', fields: [difficulty, duration, outcomes, prerequisites]},
+  LESSON: {name: 'Lesson', plural: 'Lessons', description: 'Teach one clear concept with content, video and an exercise.', bodyLabel: 'Lesson content', template: '## In this lesson\n\n\n## Explanation\n\n\n## Try it yourself\n\n\n## Check your understanding\n', fields: [duration, outcomes, {key: 'videoUrl', label: 'Lesson video URL', kind: 'url', help: 'Link to your hosted video or video platform.'}]},
+  DOWNLOAD: {name: 'Download', plural: 'Downloads', description: 'Deliver a template, source package, worksheet or other file.', bodyLabel: 'Description and instructions', template: '## What’s included\n\n- \n\n## How to use it\n\n\n## Requirements\n', fields: [file, {key: 'fileName', label: 'Download filename', kind: 'text'}, format, {key: 'version', label: 'Version', kind: 'text'}, license]},
+  BOOK: {name: 'Book', plural: 'Books', description: 'Publish a book with its file, author and edition details.', bodyLabel: 'Book description / contents', template: '## About the book\n\n\n## Table of contents\n\n- \n\n## Who it’s for\n', fields: [file, author, {key: 'isbn', label: 'ISBN (optional)', kind: 'text'}, {key: 'pageCount', label: 'Number of pages', kind: 'number', max: 100000}, {key: 'edition', label: 'Edition', kind: 'text'}, license]},
+  GUIDE: {name: 'Guide', plural: 'Guides', description: 'Help someone complete a task with clear, useful steps.', bodyLabel: 'Guide content', template: '## Before you begin\n\n\n## Step-by-step instructions\n\n### Step 1\n\n\n## Checklist\n\n- \n\n## Next steps\n', fields: [difficulty, duration, outcomes, prerequisites, file]},
+  ILLUSTRATION: {name: 'Illustration', plural: 'Illustrations', description: 'Share a visual resource with dimensions and usage rights.', bodyLabel: 'Description and usage', template: '## About this illustration\n\n\n## Suggested uses\n\n- \n\n## Attribution\n', fields: [file, format, {key: 'altText', label: 'Image description / alt text', kind: 'text'}, {key: 'width', label: 'Width (px)', kind: 'number', max: 100000}, {key: 'height', label: 'Height (px)', kind: 'number', max: 100000}, license]},
+};
+export function slugFromTitle(title: string) { return title.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 120).replace(/-$/, ''); }
+export function publishingIssues(value: {type: ResourceKind; summary: string; bodyMarkdown: string; details: ResourceDetails; itemCount: number}) {
+  const issues: string[] = [];
+  if (!value.summary.trim()) issues.push('Add a short description.');
+  if (['PROJECT', 'ARTICLE'].includes(value.type) && !value.bodyMarkdown.trim()) issues.push('Add the resource content.');
+  if (value.type === 'LESSON' && !value.bodyMarkdown.trim() && !value.details.videoUrl) issues.push('Add lesson content or a video.');
+  if (value.type === 'GUIDE' && !value.bodyMarkdown.trim() && !value.details.fileUrl) issues.push('Add guide content or a file.');
+  if (['COURSE', 'PATH'].includes(value.type) && !value.itemCount) issues.push(value.type === 'COURSE' ? 'Add at least one lesson.' : 'Add at least one resource.');
+  if (['DOWNLOAD', 'BOOK', 'ILLUSTRATION'].includes(value.type) && !value.details.fileUrl) issues.push('Add the resource file URL.');
+  if (value.type === 'ILLUSTRATION' && !value.details.altText) issues.push('Describe the illustration for accessibility.');
+  return issues;
+}

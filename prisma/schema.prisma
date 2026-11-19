@@ -60,6 +60,7 @@ model Resource {
 
 // Private by default: catalog projections never automatically include this row.
 model ResourceContent {
+  details      Json     @default("{}")
   resourceId   String   @id @map("resource_id") @db.Uuid
   bodyMarkdown String   @default("") @map("body_markdown") @db.Text
   resource     Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)

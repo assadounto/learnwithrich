@@ -25,3 +25,10 @@ export async function changeResourceStatus(id: string, version: number, updatedA
     return {ok: true as const, id};
   } catch (error) { return failure(error); }
 }
+
+export async function refreshResourceChoices() {
+  const owner = await requireOwner();
+  try {
+    return {ok: true as const, choices: await adminRepository(database(), owner.id, owner.sessionId).choices()};
+  } catch { return {ok: false as const, error: 'Could not refresh your resource library. Please try again.'}; }
+}

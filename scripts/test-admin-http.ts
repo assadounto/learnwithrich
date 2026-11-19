@@ -8,6 +8,7 @@ import {once} from 'node:events';
 import {makeSignature} from 'better-auth/crypto';
 import {createOTP} from '@better-auth/utils/otp';
 import {base32} from '@better-auth/utils/base32';
+import {resourceDefinitions} from '../lib/resource-types';
 import {createDatabase} from '../lib/server/database-client';
 
 if (!process.env.TEST_DATABASE_URL) throw new Error('Set TEST_DATABASE_URL to a separate local test database.');
@@ -65,7 +66,7 @@ try {
     const response = await fetch(origin + (name === 'mfaAction' ? '/admin/security' : '/admin/resources/new'), {method: 'POST', headers: {'Next-Action': actionId(name), 'Content-Type': 'text/plain;charset=UTF-8', origin: source, cookie: sessionCookie}, body: JSON.stringify(args), redirect: 'manual'});
     return {status: response.status, body: await response.text()};
   };
-  const payload = {title: 'HTTP resource', slug: prefix, type: 'ARTICLE', bodyMarkdown: 'Private until published', sections: [], items: []};
+  const payload = {title: 'HTTP resource', slug: prefix, type: 'ARTICLE', summary: 'A practical test resource.', details: {author: 'HTTP test creator', readingMinutes: 7}, bodyMarkdown: 'Private until published', sections: [], items: []};
   await action('saveResource', [{...payload, slug: `${prefix}-anonymous`}], '');
   await action('saveResource', [{...payload, slug: `${prefix}-learner`}], learnerCookie);
   await action('saveResource', [{...payload, slug: `${prefix}-foreign`}], ownerCookie, 'https://outside.example');
@@ -80,10 +81,17 @@ try {
   const codesMatch = confirmed.body.match(/"codes":(\[[^\]]+\])/);
   assert.ok(codesMatch, 'Enrollment must return recovery codes once');
   const codes = JSON.parse(codesMatch[1]) as string[];
-  const studio = await request('/admin', ownerCookie); assert.equal(studio.status, 200); assert.match(await studio.text(), /Your collection/);
+  const studio = await request('/admin', ownerCookie); assert.equal(studio.status, 200); const studioBody = await studio.text(); assert.match(studioBody, /Your collection/); assert.match(studioBody, /workspace-sidebar/); assert.doesNotMatch(studioBody, /class="site-header|class="reference-footer/);
+  const site = await request('/about'); const siteBody = await site.text(); assert.match(siteBody, /site-header/); assert.doesNotMatch(siteBody, /workspace-sidebar/);
+  for (const [kind, definition] of Object.entries(resourceDefinitions)) {
+    const response = await request(`/admin/resources/new?type=${kind}`, ownerCookie);
+    assert.equal(response.status, 200); const body = await response.text();
+    assert.ok(body.replace(/<!--.*?-->/g, '').includes(`${definition.name} details`), `Missing type-specific fields for ${kind}`);
+  }
   const editor = await request('/admin/resources/new', ownerCookie); assert.equal(editor.status, 200); assert.match(await editor.text(), /The essentials/);
   const created = await action('saveResource', [payload], ownerCookie); assert.equal(created.status, 200, created.body);
   const row = await db.resource.findUniqueOrThrow({where: {slug: prefix}}); ids.push(row.id);
+  assert.deepEqual((await db.resourceContent.findUniqueOrThrow({where: {resourceId: row.id}})).details, {author: 'HTTP test creator', readingMinutes: 7});
   assert.equal(row.status, 'DRAFT'); assert.equal(await db.resourceAudit.count({where: {resourceId: row.id, actorId: ownerId}}), 1);
   const savedEditor = await request(`/admin/resources/${row.id}`, ownerCookie); assert.equal(savedEditor.status, 200); assert.match(await savedEditor.text(), /Private until published/);
   await expectRedirect(await request(`/admin/resources/${row.id}`), '/admin/signin');
