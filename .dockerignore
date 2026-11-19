@@ -9,3 +9,7 @@ out
 *.tsbuildinfo
 npm-debug.log*
 docs/screenshots
+
+lib/generated
+work
+outputs
