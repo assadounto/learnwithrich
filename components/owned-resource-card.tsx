@@ -1,7 +1,7 @@
 import Link from '@/components/navigation-link';
 import {ArrowUpRight, BookOpen, CircuitBoard, FileText, Layers3, Image, Download, GraduationCap, Library, FolderOpen, Clock3, Gauge} from 'lucide-react';
 import type {ResourceKind} from '@/lib/server/resources/validation';
-import {money} from '@/lib/xonbay/contracts';
+import {money} from '@/lib/money';
 
 type ResourceCardData = {id: string; slug: string; type: ResourceKind; title: string; summary: string; coverUrl: string | null; access: 'PUBLIC' | 'FREE_ACCOUNT' | 'PAID'; priceMinor: number; currency: string; tags: string[]};
 const labels: Record<ResourceKind, string> = {PROJECT: 'Project', ARTICLE: 'Article', COURSE: 'Course', PATH: 'Learning path', LESSON: 'Lesson', DOWNLOAD: 'Download', BOOK: 'Book', GUIDE: 'Guide', ILLUSTRATION: 'Illustration'};

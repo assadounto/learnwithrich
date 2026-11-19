@@ -1,11 +1,11 @@
 # Owner login and resource studio
 
-The owned `/admin` studio manages all nine resource types, safely previews Markdown, publishes/unpublishes/archives resources, assembles courses and paths, and arranges homepage sections. The public homepage, resource library, project/course listings and resource details read published content from the owned PostgreSQL catalog. Legacy checkout/shop integrations remain separate.
+The owned `/admin` studio manages all nine resource types, safely previews Markdown, publishes/unpublishes/archives resources, assembles courses and paths, and arranges homepage sections. The public homepage, resource library, project/course listings and resource details read published content from the owned PostgreSQL catalog. The current release contains no external shop, checkout, learner account or payment integration.
 
 ## Before opening the studio
 
 1. Apply migrations using `npm run db:deploy` with the intended DATABASE_URL.
-2. Create a dedicated Google web OAuth client in an account/project you own. Do not assume the legacy Xonbay client is suitable.
+2. Create a Google web OAuth client in an account/project you own.
 3. Set these server-side variables in local `.env` or deployment secrets:
 
 ```text
@@ -33,7 +33,7 @@ No real owner is provisioned by tests or by application startup. Integration/HTT
 
 ## Identity boundary
 
-Better Auth 1.7.26 uses the existing PostgreSQL/Prisma setup for users, accounts, sessions, OAuth verification records and rate limits. Its routes live under `/api/identity` to avoid colliding with the legacy Xonbay `/api/auth/google`, `/api/auth/session` and `/api/auth/logout` routes. New cookies have the `lwr_identity` prefix; studio sign-out invalidates the owned identity session only.
+Better Auth 1.7.26 uses the PostgreSQL/Prisma setup for users, accounts, sessions, OAuth verification records and rate limits. Its routes live under `/api/identity`. Cookies use the `lwr_identity` prefix.
 
 Google OAuth is the only enabled sign-in method. Email/password login and automatic account linking are disabled. Role is a server-owned additional field (`input: false`), and OAuth tokens are encrypted by the auth library. Sessions last up to one day and use HTTP-only same-site cookies, secure cookies on HTTPS, and no cookie session cache. Every protected page/server action verifies the session and then re-reads owner role, email verification and Google-account linkage from the database. Private repositories also recheck owner status, including inside mutation transactions.
 
@@ -115,4 +115,4 @@ Publishing requires a summary and usable content for the selected type (includin
 - `/resources` supports type and title/summary/tag search. `/projects` and `/courses` are database-backed collections. Resource detail pages render type-specific metadata, body Markdown, course/path contents and public file links.
 - Paid and free-account pages may show catalog cards and summaries. Their body, type-specific details, child-resource outlines and file URLs remain hidden until an access/grant flow is implemented. Paid checkout is not yet connected to owned resources.
 - The homepage builder requires the `homepage_settings` migration (`20261121000000_homepage_composition`). Readiness checks this table, so deploy the full migration set with `npm run db:deploy` before starting the new web image.
-- The public `/shop`, checkout/payment and historical project detail routes still use the Xonbay integration. The owned resource catalog does not import or delete that legacy catalog data.
+- Public browsing and creator publishing use the owned resource catalog. This release intentionally has no learner account area, purchases, payments, course progress, or media upload service. Public HTTPS file URLs can be used for PUBLIC resources; private delivery remains future work.

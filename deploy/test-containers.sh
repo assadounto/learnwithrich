@@ -25,7 +25,7 @@ node --input-type=module - "$scratch/runtime.env" "$db" <<'JS'
 import {randomBytes} from 'node:crypto';
 import {writeFileSync} from 'node:fs';
 const password=randomBytes(24).toString('hex');
-writeFileSync(process.argv[2], `APP_URL=https://learnwithrich.test\nLWR_AUTH_URL=https://learnwithrich.test\nLWR_AUTH_SECRET=${randomBytes(32).toString('hex')}\nLWR_GOOGLE_CLIENT_ID=container-test-client\nLWR_GOOGLE_CLIENT_SECRET=container-test-secret\nLWR_ADMIN_ENABLED=false\nPOSTGRES_PASSWORD=${password}\nDATABASE_URL=postgresql://learnwithrich:${password}@${process.argv[3]}:5432/learnwithrich_test\n`,{mode:0o600});
+writeFileSync(process.argv[2], `LWR_AUTH_URL=https://learnwithrich.test\nLWR_AUTH_SECRET=${randomBytes(32).toString('hex')}\nLWR_GOOGLE_CLIENT_ID=container-test-client\nLWR_GOOGLE_CLIENT_SECRET=container-test-secret\nLWR_ADMIN_ENABLED=false\nPOSTGRES_PASSWORD=${password}\nDATABASE_URL=postgresql://learnwithrich:${password}@${process.argv[3]}:5432/learnwithrich_test\n`,{mode:0o600});
 JS
 docker network create "$network" >/dev/null
 docker run -d --name "$db" --network "$network" --env-file "$scratch/runtime.env" -e POSTGRES_USER=learnwithrich -e POSTGRES_DB=learnwithrich_test postgres:18-bookworm >/dev/null

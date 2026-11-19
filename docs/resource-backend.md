@@ -2,7 +2,7 @@
 
 Everything in the catalog is a `Resource`. Types: PROJECT, ARTICLE, COURSE, PATH, LESSON, DOWNLOAD, BOOK, GUIDE and ILLUSTRATION. Tags describe topics; they do not determine resource type.
 
-This backend milestone introduced PostgreSQL/Prisma storage, trusted resource-management services, a local CLI, and read-only public catalog endpoints. The current public homepage, resource library, projects and courses now read published resources from this database; Xonbay remains connected to shop, checkout and historical project detail routes. See [resource studio setup](resource-admin.md) for current owner/admin and homepage configuration. Learner progress, grants, payment processing and private asset delivery remain subsequent milestones. No public write endpoints or unauthenticated admin tools are deployed.
+This backend milestone introduced PostgreSQL/Prisma storage, trusted resource-management services, a local CLI, and read-only public catalog endpoints. The current public homepage, resource library, projects, courses and resource details read published resources from this database. See [resource studio setup](resource-admin.md) for current owner/admin and homepage configuration. Learner accounts, progress, grants, payment processing and private asset delivery are not part of the current architecture. No public write endpoints or unauthenticated admin tools are deployed.
 
 ## Local setup
 

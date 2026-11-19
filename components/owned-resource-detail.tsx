@@ -3,7 +3,7 @@ import {ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, LockKeyhole, FileDown, Ga
 import type {ResourceKind, AccessMode} from '@/lib/server/resources/validation';
 import type {ResourceDetails} from '@/lib/resource-types';
 import {resourceDefinitions} from '@/lib/resource-types';
-import {money} from '@/lib/xonbay/contracts';
+import {money} from '@/lib/money';
 
 type Resource = {id: string; slug: string; type: ResourceKind; title: string; summary: string; coverUrl: string | null; access: AccessMode; priceMinor: number; currency: string; tags: string[]; details: ResourceDetails | null; bodyMarkdown: string | null; requiresAccess: boolean; sections: {id: string; title: string; position: number}[]; items: {position: number; sectionId: string | null; resource: {id: string; slug: string; title: string; summary: string; type: ResourceKind; coverUrl: string | null; tags: string[]; access: AccessMode; priceMinor: number; currency: string}}[]};
 const names: Record<ResourceKind, string> = {PROJECT: 'Project', ARTICLE: 'Article', COURSE: 'Course', PATH: 'Learning path', LESSON: 'Lesson', DOWNLOAD: 'Download', BOOK: 'Book', GUIDE: 'Guide', ILLUSTRATION: 'Illustration'};
