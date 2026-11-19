@@ -8,10 +8,11 @@ run_id="lwr-smoke-$$"
 network="${run_id}-net"
 db="${run_id}-db"
 web="${run_id}-web"
+enabled_web="${run_id}-enabled-web"
 scratch="$(mktemp -d)"
 chmod 700 "$scratch"
 cleanup() {
-  docker rm -fv "$web" "$db" >/dev/null 2>&1 || true
+  docker rm -fv "$web" "$enabled_web" "$db" >/dev/null 2>&1 || true
   docker network rm "$network" >/dev/null 2>&1 || true
   rm -rf -- "$scratch"
 }
@@ -44,6 +45,15 @@ done
 docker exec "$web" node --input-type=module -e "for(const [path,status] of [['/api/health',200],['/api/ready',200],['/api/catalog',200],['/icon.svg',200],['/fonts/dm-sans.woff',200],['/api/identity/get-session',503]]){const r=await fetch('http://127.0.0.1:3000'+path);if(r.status!==status)throw Error(path+': '+r.status);console.log(path,status)}"
 if docker run --rm "$web_image" >"$scratch/rejected.log" 2>&1; then echo 'Unconfigured production startup unexpectedly succeeded' >&2; exit 1; fi
 grep -q 'Production configuration rejected' "$scratch/rejected.log"
+# The opt-in admin mode must also start with the MFA release. Anonymous users
+# can reach sign-in but never the private workspace.
+docker run -d --name "$enabled_web" --network "$network" --env-file "$scratch/runtime.env" -e LWR_ADMIN_ENABLED=true "$web_image" >/dev/null
+for attempt in $(seq 1 60); do
+  if docker exec "$enabled_web" node -e "fetch('http://127.0.0.1:3000/api/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" >/dev/null 2>&1; then break; fi
+  if [[ "$attempt" == 60 ]]; then docker logs "$enabled_web"; exit 1; fi
+  sleep 1
+done
+docker exec "$enabled_web" node --input-type=module -e "const s=await fetch('http://127.0.0.1:3000/admin/signin');if(s.status!==200||!(await s.text()).includes('Continue with Google'))throw Error('Admin sign-in unavailable');const a=await fetch('http://127.0.0.1:3000/api/identity/get-session');if(a.status!==200)throw Error('Enabled identity unavailable');const p=await fetch('http://127.0.0.1:3000/admin',{redirect:'manual'});if(p.status!==307||!p.headers.get('location')?.endsWith('/admin/signin'))throw Error('Anonymous studio was not redirected')"
 docker stop "$db" >/dev/null
 docker exec "$web" node --input-type=module -e "const r=await fetch('http://127.0.0.1:3000/api/ready');if(r.status!==503)throw Error('Readiness must fail without DB');const l=await fetch('http://127.0.0.1:3000/api/health');if(l.status!==200)throw Error('Liveness must remain available')"
-echo 'PASS Docker release smoke: migration, non-root runtime, catalog/static assets, startup validation, admin lock and database-loss readiness'
+echo 'PASS Docker release smoke: migration, non-root runtime, catalog/static assets, startup validation, admin disabled/enabled modes and database-loss readiness'

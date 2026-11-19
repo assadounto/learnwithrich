@@ -141,3 +141,19 @@
  .admin-signin-card { padding: 30px 24px; }
 }
 @media (prefers-reduced-motion: reduce) { .admin-resource-row { transition: none; } }
+.admin-security { max-width: 600px; }
+.admin-mfa h2 { font-size: 21px; margin: 20px 0 12px; letter-spacing: -.025em; }
+.admin-mfa p, .admin-mfa summary { font-size: 12px; line-height: 1.85; color: #63755e; }
+.admin-mfa form { display: grid; gap: 12px; margin-block: 22px; }
+.admin-mfa label { font-size: 12px; color: #435d48; }
+.admin-mfa input:not([type=checkbox]) { width: 100%; min-height: 48px; padding: 12px; border: 1px solid #cbdaca; border-radius: 6px; background: #fff; color: #203127; font: 16px ui-monospace, monospace; }
+.admin-mfa img { display: block; max-width: 100%; height: auto; margin: 20px auto; }
+.admin-mfa-secret { display: block; margin-block: 14px; overflow-wrap: anywhere; font-size: 14px; }
+.admin-recovery-codes { display: grid; gap: 10px; margin-block: 20px; padding: 15px; background: #f7faf5; border: 1px solid #dce7d8; border-radius: 6px; }
+.admin-recovery-codes code { font-size: clamp(9px, 2.4vw, 12px); overflow-wrap: anywhere; }
+.admin-mfa-ack { display: flex; gap: 10px; align-items: center; margin-block: 20px; line-height: 1.7; }
+.admin-mfa-ack input { width: 18px; height: 18px; flex-shrink: 0; }
+.admin-security-options { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
+.admin-security-signout { margin-top: 25px; padding-top: 20px; border-top: 1px solid #e0e8dc; }
+
+.admin-security-link { font-size: 11px; color: #435d48; white-space: nowrap; }

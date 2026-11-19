@@ -6,6 +6,8 @@ import {spawn} from 'node:child_process';
 import {readFile} from 'node:fs/promises';
 import {once} from 'node:events';
 import {makeSignature} from 'better-auth/crypto';
+import {createOTP} from '@better-auth/utils/otp';
+import {base32} from '@better-auth/utils/base32';
 import {createDatabase} from '../lib/server/database-client';
 
 if (!process.env.TEST_DATABASE_URL) throw new Error('Set TEST_DATABASE_URL to a separate local test database.');
@@ -22,7 +24,7 @@ const ids: string[] = [];
 let output = '';
 const server = spawn(process.execPath, ['.next/standalone/server.js'], {env: {
   ...process.env, NODE_ENV: 'production', HOSTNAME: '127.0.0.1', PORT: String(port),
-  DATABASE_URL: process.env.TEST_DATABASE_URL, LWR_AUTH_URL: origin,
+  DATABASE_URL: process.env.TEST_DATABASE_URL, LWR_AUTH_URL: origin, LWR_ADMIN_ENABLED: 'true',
   LWR_AUTH_SECRET: secret, LWR_GOOGLE_CLIENT_ID: 'http-test-client', LWR_GOOGLE_CLIENT_SECRET: 'http-test-secret',
 }, stdio: ['ignore', 'pipe', 'pipe']});
 server.stdout.on('data', value => {output += value.toString();});
@@ -51,15 +53,16 @@ try {
   const ownerCookie = await cookie(ownerId), learnerCookie = await cookie(learnerId);
   await expectRedirect(await request('/admin'), '/admin/signin');
   await expectRedirect(await request('/admin/resources/new', learnerCookie), '/admin/access-denied');
-  const studio = await request('/admin', ownerCookie); assert.equal(studio.status, 200); assert.match(await studio.text(), /Your collection/);
-  const editor = await request('/admin/resources/new', ownerCookie); assert.equal(editor.status, 200); assert.match(await editor.text(), /The essentials/);
+  await expectRedirect(await request('/admin', ownerCookie), '/admin/security');
+  await expectRedirect(await request('/admin/resources/new', ownerCookie), '/admin/security');
+  const security = await request('/admin/security', ownerCookie); assert.match(await security.text(), /Secure your studio/);
   const manifest = JSON.parse(await readFile('.next/server/server-reference-manifest.json', 'utf8'));
   const actionId = (name: string) => {
     const entry = Object.entries(manifest.node as Record<string, {exportedName?: string}>).find(([, value]) => value.exportedName === name);
     if (!entry) throw new Error(`Missing server action ${name}`); return entry[0];
   };
   const action = async (name: string, args: unknown[], sessionCookie: string, source = origin) => {
-    const response = await fetch(origin + '/admin/resources/new', {method: 'POST', headers: {'Next-Action': actionId(name), 'Content-Type': 'text/plain;charset=UTF-8', origin: source, cookie: sessionCookie}, body: JSON.stringify(args), redirect: 'manual'});
+    const response = await fetch(origin + (name === 'mfaAction' ? '/admin/security' : '/admin/resources/new'), {method: 'POST', headers: {'Next-Action': actionId(name), 'Content-Type': 'text/plain;charset=UTF-8', origin: source, cookie: sessionCookie}, body: JSON.stringify(args), redirect: 'manual'});
     return {status: response.status, body: await response.text()};
   };
   const payload = {title: 'HTTP resource', slug: prefix, type: 'ARTICLE', bodyMarkdown: 'Private until published', sections: [], items: []};
@@ -67,6 +70,18 @@ try {
   await action('saveResource', [{...payload, slug: `${prefix}-learner`}], learnerCookie);
   await action('saveResource', [{...payload, slug: `${prefix}-foreign`}], ownerCookie, 'https://outside.example');
   assert.equal(await db.resource.count({where: {slug: {startsWith: prefix}}}), 0);
+  // A valid Google session alone cannot invoke private mutations.
+  await action('saveResource', [{...payload, slug: `${prefix}-no-mfa`}], ownerCookie);
+  assert.equal(await db.resource.count({where: {slug: {startsWith: prefix}}}), 0);
+  const setup = await action('mfaAction', ['begin'], ownerCookie);
+  const setupSecret = setup.body.match(/"secret":"([A-Z2-7]+)"/)?.[1];
+  assert.ok(setupSecret, 'Enrollment action should return a setup key only to the owner');
+  const confirmed = await action('mfaAction', ['confirm', await createOTP(base32.decode(setupSecret)).totp()], ownerCookie);
+  const codesMatch = confirmed.body.match(/"codes":(\[[^\]]+\])/);
+  assert.ok(codesMatch, 'Enrollment must return recovery codes once');
+  const codes = JSON.parse(codesMatch[1]) as string[];
+  const studio = await request('/admin', ownerCookie); assert.equal(studio.status, 200); assert.match(await studio.text(), /Your collection/);
+  const editor = await request('/admin/resources/new', ownerCookie); assert.equal(editor.status, 200); assert.match(await editor.text(), /The essentials/);
   const created = await action('saveResource', [payload], ownerCookie); assert.equal(created.status, 200, created.body);
   const row = await db.resource.findUniqueOrThrow({where: {slug: prefix}}); ids.push(row.id);
   assert.equal(row.status, 'DRAFT'); assert.equal(await db.resourceAudit.count({where: {resourceId: row.id, actorId: ownerId}}), 1);
@@ -74,6 +89,12 @@ try {
   await expectRedirect(await request(`/admin/resources/${row.id}`), '/admin/signin');
   await expectRedirect(await request(`/admin/resources/${row.id}`, learnerCookie), '/admin/access-denied');
   assert.equal((await request(`/api/catalog/${prefix}`)).status, 404);
+  await db.session.updateMany({where: {userId: ownerId}, data: {mfaVerifiedAt: null}});
+  await action('changeResourceStatus', [row.id, row.version, row.updatedAt.toISOString(), 'PUBLISH'], ownerCookie);
+  assert.equal((await db.resource.findUniqueOrThrow({where: {id: row.id}})).status, 'DRAFT');
+  await action('mfaAction', ['verify', codes[0], true], ownerCookie, 'https://outside.example');
+  assert.equal((await db.session.findFirstOrThrow({where: {userId: ownerId}})).mfaVerifiedAt, null);
+  await action('mfaAction', ['verify', codes[0], true], ownerCookie);
   await action('changeResourceStatus', [row.id, row.version, row.updatedAt.toISOString(), 'PUBLISH'], ownerCookie);
   const published = await request(`/api/catalog/${prefix}`); assert.equal(published.status, 200); assert.match(await published.text(), /Private until published/);
   const current = await db.resource.findUniqueOrThrow({where: {id: row.id}});
@@ -81,9 +102,12 @@ try {
   assert.match(stale.body, /another tab/); assert.equal((await db.resource.findUniqueOrThrow({where: {id: row.id}})).title, 'HTTP resource');
   await action('changeResourceStatus', [row.id, current.version, current.updatedAt.toISOString(), 'UNPUBLISH'], ownerCookie);
   assert.equal((await request(`/api/catalog/${prefix}`)).status, 404);
+  await db.session.updateMany({where: {userId: ownerId}, data: {mfaVerifiedAt: new Date(Date.now() - 16 * 60_000)}});
+  await expectRedirect(await request('/admin', ownerCookie), '/admin/security');
+  await action('mfaAction', ['verify', codes[1], true], ownerCookie);
   await db.user.update({where: {id: ownerId}, data: {role: 'LEARNER'}});
   await expectRedirect(await request('/admin', ownerCookie), '/admin/access-denied');
-  console.log('PASS standalone admin: signed sessions, protected pages/actions, cross-origin denial, draft editing, publishing, stale-write protection and role revocation');
+  console.log('PASS standalone admin: signed sessions, MFA enrollment/recovery/expiry, Google-only mutation denial, protected pages/actions, cross-origin denial, draft editing, publishing, stale-write protection and role revocation');
 } finally {
   server.kill('SIGTERM');
   if (server.exitCode === null) await once(server, 'exit');
