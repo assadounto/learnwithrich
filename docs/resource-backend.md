@@ -2,7 +2,7 @@
 
 Everything in the catalog is a `Resource`. Types: PROJECT, ARTICLE, COURSE, PATH, LESSON, DOWNLOAD, BOOK, GUIDE and ILLUSTRATION. Tags describe topics; they do not determine resource type.
 
-This milestone adds PostgreSQL/Prisma storage, trusted resource-management services, a local CLI, and read-only public catalog endpoints. The existing frontend and Xonbay integration are deliberately not switched yet. Owner authentication/admin editing, learner progress, grants, payment processing and private asset delivery are subsequent milestones. No public write endpoints or unauthenticated admin tools are deployed by this change.
+This milestone adds PostgreSQL/Prisma storage, trusted resource-management services, a local CLI, and read-only public catalog endpoints. The existing frontend and Xonbay integration are deliberately not switched yet. Owner authentication/admin editing is now available in the next milestone; see [resource studio setup](resource-admin.md). Learner progress, grants, payment processing and private asset delivery are subsequent milestones. No public write endpoints or unauthenticated admin tools are deployed by this change.
 
 ## Local setup
 
@@ -112,6 +112,6 @@ npm run test:db
 
 The runner accepts only a local PostgreSQL host and a database name ending in `_test`, applies migrations there, and runs the suite. It never falls back to DATABASE_URL. Fixtures have unique per-run IDs/slugs and cleanup deletes only that run's data, not existing tables or unrelated content. CI runs validation, unit tests, integration tests and the production build with a PostgreSQL service.
 
-## Next milestone
+## Following milestones
 
-Add Better Auth and owner bootstrap, then the resource admin editor using these services. The owner UI should support create/edit, preview, publish/archive, tags, access/price, and ordered course/path composition. Once that works end-to-end, connect the existing Resources browser to this owned catalog and remove its Xonbay catalog dependency. Payment/access and learner progress come after identity and ownership are established.
+Better Auth, owner bootstrap and the resource admin editor are documented in [resource-admin.md](resource-admin.md). The owner UI should support create/edit, preview, publish/archive, tags, access/price, and ordered course/path composition. Once that works end-to-end, connect the existing Resources browser to this owned catalog and remove its Xonbay catalog dependency. Payment/access and learner progress come after identity and ownership are established.

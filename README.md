@@ -85,3 +85,7 @@ Mobile collection cards now use native two-column masonry: cards retain their na
 ## Owned unified resource backend
 
 The PostgreSQL resource foundation supports projects, articles, courses, paths, lessons and downloads in one catalog. See [local setup, CLI, schema rules, API and integration tests](docs/resource-backend.md). The existing frontend integration is retained until the owner editor is ready.
+
+## Owner resource studio
+
+The owned backend now includes a Google owner login and `/admin` resource editor. See [owner setup, publishing, collection editing, permissions and tests](docs/resource-admin.md). The public catalog UI cutover and learner access/payment flows remain later milestones.

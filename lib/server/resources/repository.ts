@@ -24,14 +24,18 @@ export function resourceRepository(db: Database) {
       }});
     },
     async publish(id: string) {
-      return db.resource.update({where: {id: resourceId(id)}, data: {status: 'PUBLISHED', publishedAt: new Date()}});
+      return db.resource.update({where: {id: resourceId(id)}, data: {status: 'PUBLISHED', publishedAt: new Date(), version: {increment: 1}}});
     },
     async archive(id: string) {
-      return db.resource.update({where: {id: resourceId(id)}, data: {status: 'ARCHIVED'}});
+      return db.resource.update({where: {id: resourceId(id)}, data: {status: 'ARCHIVED', version: {increment: 1}}});
     },
     async createSection(id: string, title: string, position: number) {
       if (!Number.isSafeInteger(position) || position < 0) throw new ResourceInputError('Invalid section position.');
-      return db.resourceSection.create({data: {resourceId: resourceId(id), title: text(title, 'section title', 180), position}});
+      return db.$transaction(async tx => {
+        const section = await tx.resourceSection.create({data: {resourceId: resourceId(id), title: text(title, 'section title', 180), position}});
+        await tx.resource.update({where: {id}, data: {version: {increment: 1}}});
+        return section;
+      });
     },
     async replaceItems(collectionId: string, items: {resourceId: string; sectionId?: string | null}[]) {
       resourceId(collectionId);
@@ -45,6 +49,7 @@ export function resourceRepository(db: Database) {
         if (!parent || !['COURSE', 'PATH'].includes(parent.type)) throw new ResourceInputError('Only courses and paths can contain resources.');
         await tx.resourceItem.deleteMany({where: {collectionId}});
         if (rows.length) await tx.resourceItem.createMany({data: rows});
+        await tx.resource.update({where: {id: collectionId}, data: {version: {increment: 1}}});
         return tx.resourceItem.findMany({where: {collectionId}, orderBy: {position: 'asc'}});
       });
     },

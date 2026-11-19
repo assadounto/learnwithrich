@@ -1,0 +1,27 @@
+'use server';
+import {revalidatePath} from 'next/cache';
+import {requireOwner} from '@/lib/server/identity/access';
+import {database} from '@/lib/server/database';
+import {adminRepository, EditConflictError} from '@/lib/server/admin/repository';
+import {ResourceInputError} from '@/lib/server/resources/validation';
+function failure(error: unknown) {
+  if (error instanceof ResourceInputError || error instanceof EditConflictError) return {ok: false as const, error: error.message};
+  console.error('Admin resource mutation failed', error instanceof Error ? error.name : 'UnknownError');
+  return {ok: false as const, error: 'Could not save. Check that the slug is unique, courses contain only lessons, and paths have no circular links.'};
+}
+export async function saveResource(input: unknown) {
+  const owner = await requireOwner();
+  try {
+    const row = await adminRepository(database(), owner.id).save(input);
+    revalidatePath('/admin'); revalidatePath(`/admin/resources/${row.id}`);
+    return {ok: true as const, id: row.id};
+  } catch (error) { return failure(error); }
+}
+export async function changeResourceStatus(id: string, version: number, updatedAt: string, action: string) {
+  const owner = await requireOwner();
+  try {
+    await adminRepository(database(), owner.id).transition(id, version, updatedAt, action);
+    revalidatePath('/admin'); revalidatePath(`/admin/resources/${id}`);
+    return {ok: true as const, id};
+  } catch (error) { return failure(error); }
+}
