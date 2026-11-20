@@ -17,7 +17,7 @@ export function PaymentVerification({reference}: {reference: string}) {
     void fetch(`/api/payments/verify?reference=${encodeURIComponent(reference)}`, {cache:'no-store'}).then(async response => {
       const body = await response.json();
       if (!active) return;
-      if (body.paid) {setMessage('Payment confirmed. Your resource is ready in your account.'); router.refresh();}
+      if (body.paid) {setMessage('Payment confirmed. Your account has been updated.'); router.refresh();}
       else if (response.status === 202) setMessage('Paystack is still confirming the payment. Refresh this page shortly.');
       else {setError(true); setMessage(body.error || 'We could not confirm this payment yet.');}
     }).catch(() => {if(active){setError(true);setMessage('We could not confirm this payment yet. Refresh to try again.');}});

@@ -44,6 +44,22 @@ export async function settleVerifiedPurchase(db: Database, reference: string, tr
   }
   return {ok: true as const, alreadyPaid: false};
 }
+export async function settleVerifiedServicePayment(db: Database, reference: string, transaction: PaystackTransaction) {
+  const payment = await db.servicePayment.findUnique({where: {reference}, include: {user: {select: {email: true}}}});
+  if (!payment) return {ok: false as const, reason: 'unknown_service_payment'};
+  if (payment.status === 'PAID') return {ok: true as const, alreadyPaid: true};
+  if (transaction.status !== 'success' || transaction.reference !== reference || transaction.amount !== payment.amountMinor || transaction.currency?.toUpperCase() !== payment.currency || (transaction.customer?.email && transaction.customer.email.toLowerCase() !== payment.user.email.toLowerCase())) return {ok: false as const, reason: 'transaction_mismatch'};
+  return db.$transaction(async tx => {
+    const changed = await tx.servicePayment.updateMany({where: {id: payment.id, status: 'PENDING'}, data: {status: 'PAID', paidAt: new Date(), paystackId: transaction.id == null ? null : String(transaction.id)}});
+    if (!changed.count) {
+      const latest = await tx.servicePayment.findUnique({where: {id: payment.id}, select: {status: true}});
+      return latest?.status === 'PAID' ? {ok: true as const, alreadyPaid: true} : {ok: false as const, reason: 'service_payment_not_pending'};
+    }
+    if (payment.purpose === 'QUOTE') await tx.serviceRequest.updateMany({where: {id: payment.serviceRequestId, status: {in: ['QUOTED', 'PAYMENT_PENDING']}}, data: {status: 'ACCEPTED'}});
+    else if (payment.serviceRevisionId) await tx.serviceRevision.updateMany({where: {id: payment.serviceRevisionId, status: 'PAYMENT_PENDING'}, data: {status: 'REQUESTED'}});
+    return {ok: true as const, alreadyPaid: false};
+  });
+}
 export function newPaymentReference() {return `LWR_${randomUUID().replaceAll('-', '')}`;}
 function safeEqualHex(expected: Buffer, candidate: string) {
   if (!/^[a-f\d]{128}$/i.test(candidate)) return false;
