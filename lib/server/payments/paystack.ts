@@ -52,9 +52,8 @@ function safeEqualHex(expected: Buffer, candidate: string) {
 }
 export function verifyPaystackWebhook(rawBody: Buffer, headers: Headers, now = Date.now()) {
   const webhookSecret = process.env.PAYSTACK_WEBHOOK_SECRET;
-  if (!webhookSecret || /REPLACE_/.test(webhookSecret)) return false;
   const signature = headers.get('paystack-signature');
-  if (signature) {
+  if (signature && webhookSecret && !/REPLACE_/.test(webhookSecret)) {
     let timestamp = '', signatures: string[] = [];
     for (const part of signature.split(',')) {
       const [key, ...value] = part.trim().split('=');
@@ -66,7 +65,7 @@ export function verifyPaystackWebhook(rawBody: Buffer, headers: Headers, now = D
     const expected = createHmac('sha512', webhookSecret).update(`${timestamp}.`).update(rawBody).digest();
     return signatures.some(value => {const signatureValue = value.split(':').at(-1) ?? ''; return safeEqualHex(expected, signatureValue);});
   }
-  // Paystack's legacy signature uses the API secret; retain it during webhook-key migration.
+  // Paystack also sends this signature while a webhook signing secret is not configured.
   const oldSignature = headers.get('x-paystack-signature');
   const apiSecret = process.env.PAYSTACK_SECRET_KEY;
   return Boolean(oldSignature && apiSecret && safeEqualHex(createHmac('sha512', apiSecret).update(rawBody).digest(), oldSignature));
