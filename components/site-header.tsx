@@ -5,11 +5,11 @@ import { useEffect, useState } from 'react';
 import { ArrowUpRight, Menu, X, Bookmark, UserRound } from 'lucide-react';
 import { Brand } from './brand';
 
-const links = [['Discover','/'],['Projects','/projects'],['Library','/resources?view=library'],['Courses','/courses'],['About','/about']];
+const links = [['Discover','/'],['Projects','/projects'],['Library','/resources?view=library'],['Courses','/courses'],['Work with me','/services/request'],['About','/about']];
 
 export function Header() {
  const [open,setOpen] = useState(false); const [scrolled,setScrolled] = useState(false); const [signedIn,setSignedIn] = useState(false); const path = usePathname();
- const isCourse=path==='/courses'||path.includes('esp32-first-connected-device')||path.includes('build-a-web-app');const active=isCourse?'Courses':path==='/resources'||path==='/library'?'Library':path==='/projects'||path.startsWith('/resources/')?'Projects':path==='/about'?'About':path==='/'?'Discover':'';
+ const isCourse=path==='/courses'||path.includes('esp32-first-connected-device')||path.includes('build-a-web-app');const active=path.startsWith('/services')?'Work with me':isCourse?'Courses':path==='/resources'||path==='/library'?'Library':path==='/projects'||path.startsWith('/resources/')?'Projects':path==='/about'?'About':path==='/'?'Discover':'';
  useEffect(()=>setOpen(false),[path]);
  useEffect(()=>{let active=true;fetch('/api/account/me',{cache:'no-store'}).then(r=>{if(active)setSignedIn(r.ok)}).catch(()=>{});return()=>{active=false}},[path]);
  useEffect(()=>{const update=()=>setScrolled(window.scrollY>12);update();window.addEventListener('scroll',update,{passive:true});return()=>window.removeEventListener('scroll',update)},[]);
