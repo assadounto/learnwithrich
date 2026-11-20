@@ -38,6 +38,23 @@ enum PurchaseStatus {
   @@map("purchase_status")
 }
 
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  HIDDEN
+  @@map("moderation_status")
+}
+
+enum ServiceRequestStatus {
+  NEW
+  REVIEWING
+  QUOTED
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  @@map("service_request_status")
+}
+
 model Resource {
   id          String         @id @default(uuid()) @db.Uuid
   slug        String         @unique @db.VarChar(120)
@@ -148,6 +165,8 @@ model User {
   audits        ResourceAudit[]
   purchases     Purchase[]
   savedResources SavedResource[]
+  reviews       Review[]
+  serviceRequests ServiceRequest[]
 
   @@map("users")
 }
@@ -323,4 +342,58 @@ model Purchase {
   @@index([resourceId, userId, status])
   @@index([resourceMediaId, userId, status])
   @@map("purchases")
+}
+
+model GuestbookEntry {
+  id        String           @id @default(uuid()) @db.Uuid
+  name      String           @db.VarChar(100)
+  email     String?          @db.VarChar(254)
+  message   String           @db.VarChar(800)
+  status    ModerationStatus @default(PENDING)
+  ipHash    String?          @map("ip_hash") @db.VarChar(64)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([status, createdAt])
+  @@index([ipHash, createdAt])
+  @@map("guestbook_entries")
+}
+
+model Review {
+  id          String           @id @default(uuid()) @db.Uuid
+  userId      String           @unique @map("user_id")
+  displayName String           @map("display_name") @db.VarChar(100)
+  message     String           @db.VarChar(1000)
+  rating      Int              @default(5)
+  status      ModerationStatus @default(PENDING)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@map("reviews")
+}
+
+model ServiceRequest {
+  id              String               @id @default(uuid()) @db.Uuid
+  userId          String?              @map("user_id")
+  requesterName   String               @map("requester_name") @db.VarChar(120)
+  requesterEmail  String               @map("requester_email") @db.VarChar(254)
+  serviceType     String               @map("service_type") @db.VarChar(60)
+  description     String               @db.Text
+  budgetMinor     Int?                 @map("budget_minor")
+  currency        String               @default("GHS") @db.VarChar(3)
+  timeline        String?              @db.VarChar(160)
+  status          ServiceRequestStatus @default(NEW)
+  quoteMinor      Int?                 @map("quote_minor")
+  quoteNote       String?              @map("quote_note") @db.Text
+  quotedAt        DateTime?            @map("quoted_at") @db.Timestamptz(3)
+  ipHash          String?              @map("ip_hash") @db.VarChar(64)
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user            User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+  @@index([ipHash, createdAt])
+  @@map("service_requests")
 }
