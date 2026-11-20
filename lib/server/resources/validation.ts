@@ -1,4 +1,4 @@
-import {resourceDefinitions, type ResourceDetails} from '../../resource-types.ts';
+import {editorHeadingKeys, resourceDefinitions, type ResourceDetails} from '../../resource-types.ts';
 export const resourceTypes = ['PROJECT', 'ARTICLE', 'COURSE', 'PATH', 'LESSON', 'DOWNLOAD', 'BOOK', 'GUIDE', 'ILLUSTRATION'] as const;
 export const resourceAccess = ['PUBLIC', 'FREE_ACCOUNT', 'PAID'] as const;
 export type ResourceKind = typeof resourceTypes[number];
@@ -79,6 +79,7 @@ export function normalizeDetails(type: ResourceKind, input: unknown): ResourceDe
   const fields = resourceDefinitions[type].fields;
   const result: ResourceDetails = {};
   for (const [key, raw] of Object.entries(input)) {
+    if ((editorHeadingKeys as readonly string[]).includes(key)) {result[key] = text(raw, 'section title', 80); continue;}
     const field = fields.find(field => field.key === key);
     if (!field) throw new ResourceInputError('This detail does not belong to the selected resource type.');
     if (raw === '' || raw == null) continue;
@@ -92,7 +93,7 @@ export function normalizeDetails(type: ResourceKind, input: unknown): ResourceDe
       const value = text(raw, field.label, field.kind === 'url' ? 2048 : 1000);
       if (field.kind === 'select' && !field.options?.includes(value)) throw new ResourceInputError(`Invalid ${field.label.toLowerCase()}.`);
       if (field.kind === 'url') {
-        if (!safeResourceUrl(value)) throw new ResourceInputError('Resource links must use HTTPS or a media library file, without embedded credentials.');
+        if (!safeResourceUrl(value) && !/^media:\/\/[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12}$/i.test(value)) throw new ResourceInputError('Resource links must use HTTPS or a selected media library file, without embedded credentials.');
       }
       result[key] = value;
     }
