@@ -1,0 +1,61 @@
+name: Deploy LearnWithRich
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: learnwithrich-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check out the selected main commit
+        uses: actions/checkout@v4
+
+      - name: Validate deployment settings and configure SSH
+        shell: bash
+        env:
+          DEPLOY_HOST: 187.77.170.99
+          DEPLOY_USER: deploy
+          DEPLOY_APP_DIR: /opt/learnwithrich
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for name in DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing production environment secret: $name"
+              exit 1
+            fi
+          done
+          [[ "$DEPLOY_KNOWN_HOSTS" == *"$DEPLOY_HOST"* ]] || { echo "::error::DEPLOY_KNOWN_HOSTS must contain $DEPLOY_HOST"; exit 1; }
+
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_ed25519" "$HOME/.ssh/known_hosts"
+
+      - name: Deploy over SSH
+        shell: bash
+        env:
+          DEPLOY_HOST: 187.77.170.99
+          DEPLOY_USER: deploy
+          DEPLOY_APP_DIR: /opt/learnwithrich
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/id_ed25519" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o BatchMode=yes \
+            -o ConnectTimeout=20 \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "bash -s -- '$DEPLOY_APP_DIR' '$RELEASE_SHA'" < deploy/server-release.sh
