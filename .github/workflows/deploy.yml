@@ -22,22 +22,20 @@ jobs:
       - name: Validate deployment settings and configure SSH
         shell: bash
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: 187.77.170.99
+          DEPLOY_USER: root
+          DEPLOY_APP_DIR: /opt/learnwithrich
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-          DEPLOY_APP_DIR: ${{ secrets.DEPLOY_APP_DIR }}
         run: |
           set -euo pipefail
-          for name in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS DEPLOY_APP_DIR; do
+          for name in DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS; do
             if [[ -z "${!name:-}" ]]; then
               echo "::error::Missing production environment secret: $name"
               exit 1
             fi
           done
-          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]] || { echo "::error::DEPLOY_USER has unsupported characters"; exit 1; }
-          [[ "$DEPLOY_APP_DIR" =~ ^/[A-Za-z0-9._/-]+$ && "$DEPLOY_APP_DIR" != *"/../"* ]] || { echo "::error::DEPLOY_APP_DIR must be an absolute path without spaces or parent traversal"; exit 1; }
-          [[ "$DEPLOY_KNOWN_HOSTS" == *"187.77.170.99"* ]] || { echo "::error::DEPLOY_KNOWN_HOSTS must contain the configured VPS address"; exit 1; }
+          [[ "$DEPLOY_KNOWN_HOSTS" == *"$DEPLOY_HOST"* ]] || { echo "::error::DEPLOY_KNOWN_HOSTS must contain $DEPLOY_HOST"; exit 1; }
 
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
@@ -48,9 +46,9 @@ jobs:
       - name: Deploy over SSH
         shell: bash
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_APP_DIR: ${{ secrets.DEPLOY_APP_DIR }}
+          DEPLOY_HOST: 187.77.170.99
+          DEPLOY_USER: root
+          DEPLOY_APP_DIR: /opt/learnwithrich
           RELEASE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
