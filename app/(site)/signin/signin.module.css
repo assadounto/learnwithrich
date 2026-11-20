@@ -2,12 +2,12 @@
 .back { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; margin-bottom: 19px; font-size: 12px; color: #65634f; }
 .back:hover { color: var(--orange); }
 .layout { display: grid; grid-template-columns: 1.06fr 1fr; border: 1px solid var(--card-border); border-radius: 14px; overflow: hidden; box-shadow: 0 12px 44px #32331c08; }
-.story { position: relative; overflow: hidden; padding: 46px 44px 32px; background: #d65316; color: #ffffff; }
+.story { position: relative; overflow: hidden; padding: 46px 44px 32px; background: #fff; color: var(--ink); border-right: 1px solid var(--line); }
 .eyebrow { display: flex; align-items: center; gap: 9px; font-size: 9px; font-weight: 700; letter-spacing: .15em; line-height: 1.6; }
 .story > .eyebrow { color: #686b70; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: #d8bb79; box-shadow: 0 0 0 4px #d8bb7914; }
-.story h1 { font-size: clamp(44px, 4.6vw, 65px); line-height: 1.08; letter-spacing: -.055em; margin: 29px 0 26px; }
-.story h1 i { position: relative; display: inline-block; color: #e7b37b; font-weight: 550; }
+.story h1 { color: var(--ink); font-size: clamp(44px, 4.6vw, 65px); line-height: 1.08; letter-spacing: -.055em; margin: 29px 0 26px; }
+.story h1 i { position: relative; display: inline-block; color: #686b70; font-weight: 550; }
 .story h1 i svg { color: #686b70; left: 0; bottom: -11px; width: 100%; height: 10px; }
 .story > p { max-width: 320px; font-size: 13px; color: #686b70; line-height: 1.75; margin-bottom: 31px; }
 .workbench { position: relative; padding: 8px 8px 31px; margin: 0 14px 0 0; background: #ffffff; transform: rotate(-3deg); box-shadow: 0 10px 24px #111e2455; }
@@ -21,7 +21,7 @@
 .signatureLine { height: 1px; width: 24px; background: #c6a678; flex-shrink: 0; }
 .panel { display: flex; flex-direction: column; justify-content: center; padding: 40px 48px 30px; background: var(--surface); min-width: 0; }
 .panelIntro { text-align: center; }
-.welcomeIcon { display: grid; place-items: center; margin: 0 auto 17px; width: 43px; height: 43px; border: 1px solid #d9d8bd; border-radius: 50%; color: #d65316; background: var(--surface-green); }
+.welcomeIcon { display: grid; place-items: center; margin: 0 auto 17px; width: 43px; height: 43px; border: 1px solid #d9d8bd; border-radius: 50%; color: #686b70; background: var(--surface-green); }
 .panelIntro > .eyebrow { justify-content: center; color: #77765d; font-size: 8px; }
 .panelIntro h2 { font-size: 45px; line-height: 1.05; margin: 15px 0 15px; letter-spacing: -.05em; }
 .panelIntro h2 i { color: #a65329; }
@@ -32,10 +32,10 @@
 .benefitsLabel { display: block; color: #7b7963; font-size: 8px; font-weight: 700; letter-spacing: .12em; }
 .benefits ul { list-style: none; display: grid; gap: 17px; padding: 0; margin: 20px 0 24px; }
 .benefits li { display: flex; align-items: flex-start; gap: 12px; font-size: 12px; font-weight: 600; line-height: 1.4; }
-.benefits li > svg { color: #d65316; margin-top: 2px; flex-shrink: 0; }
+.benefits li > svg { color: #686b70; margin-top: 2px; flex-shrink: 0; }
 .benefits small { display: block; font-size: 10px; font-weight: 400; color: #77735f; margin-top: 4px; line-height: 1.5; }
 .privacy { border-top: 1px solid var(--line); padding-top: 17px; margin: 0; display: flex; justify-content: center; align-items: flex-start; gap: 7px; font-size: 9px; color: #77735f; line-height: 1.8; }
-.privacy > svg { flex-shrink: 0; margin-top: 2px; color: #d65316; }
+.privacy > svg { flex-shrink: 0; margin-top: 2px; color: #686b70; }
 .privacy a { display: inline-flex; align-items: center; gap: 3px; text-decoration: underline; text-underline-offset: 3px; }
 .privacy a:hover { color: var(--orange); }
 .below { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 23px; color: #77735f; font-size: 10px; line-height: 1.6; }
