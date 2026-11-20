@@ -23,7 +23,7 @@ jobs:
         shell: bash
         env:
           DEPLOY_HOST: 187.77.170.99
-          DEPLOY_USER: root
+          DEPLOY_USER: deploy
           DEPLOY_APP_DIR: /opt/learnwithrich
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
@@ -47,7 +47,7 @@ jobs:
         shell: bash
         env:
           DEPLOY_HOST: 187.77.170.99
-          DEPLOY_USER: root
+          DEPLOY_USER: deploy
           DEPLOY_APP_DIR: /opt/learnwithrich
           RELEASE_SHA: ${{ github.sha }}
         run: |
