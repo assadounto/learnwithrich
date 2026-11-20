@@ -306,6 +306,7 @@ model MediaAsset {
   folder       MediaFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   resources    ResourceMedia[]
   serviceRevisionFiles ServiceRevisionFile[]
+  serviceRequestFiles ServiceRequestFile[]
 
   @@index([folderId, createdAt])
   @@map("media_assets")
@@ -416,6 +417,7 @@ model ServiceRequest {
   user            User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
   payments        ServicePayment[]
   revisions       ServiceRevision[]
+  files           ServiceRequestFile[]
 
   @@index([status, createdAt])
   @@index([userId, createdAt])
@@ -444,6 +446,20 @@ model ServicePayment {
   @@index([userId, status, createdAt])
   @@index([serviceRequestId, purpose, status])
   @@map("service_payments")
+}
+
+model ServiceRequestFile {
+  serviceRequestId String        @map("service_request_id") @db.Uuid
+  mediaAssetId     String        @map("media_asset_id") @db.Uuid
+  position         Int
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  mediaAsset       MediaAsset     @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  @@id([serviceRequestId, mediaAssetId])
+  @@unique([serviceRequestId, position])
+  @@index([mediaAssetId])
+  @@map("service_request_files")
 }
 
 model ServiceRevision {
