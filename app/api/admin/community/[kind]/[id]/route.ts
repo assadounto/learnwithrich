@@ -24,7 +24,17 @@ export async function PATCH(request: Request, context: {params: Promise<{kind: s
       if (quoteMinor != null && (!Number.isSafeInteger(quoteMinor) || quoteMinor < 0 || quoteMinor > 2147483647)) return Response.json({error: 'Enter a valid quote amount.'}, {status: 400});
       const quoteNote = typeof value.quoteNote === 'string' ? value.quoteNote.trim() : '';
       if (quoteNote.length > 5000) return Response.json({error: 'Quote notes must be 5,000 characters or fewer.'}, {status: 400});
-      await db.serviceRequest.update({where: {id}, data: {status: value.status as typeof statuses[number], quoteMinor, quoteNote: quoteNote || null, quotedAt: value.status === 'QUOTED' ? new Date() : undefined}});
+      const includedRevisions = value.includedRevisions == null ? undefined : Number(value.includedRevisions);
+      const extraRevisionPriceMinor = value.extraRevisionPriceMinor == null || value.extraRevisionPriceMinor === '' ? undefined : Number(value.extraRevisionPriceMinor);
+      if (includedRevisions != null && (!Number.isSafeInteger(includedRevisions) || includedRevisions < 0 || includedRevisions > 50)) return Response.json({error: 'Set between 0 and 50 included revisions.'}, {status: 400});
+      if (extraRevisionPriceMinor != null && (!Number.isSafeInteger(extraRevisionPriceMinor) || extraRevisionPriceMinor < 0 || extraRevisionPriceMinor > 2147483647)) return Response.json({error: 'Enter a valid price per extra revision.'}, {status: 400});
+      const existing = await db.serviceRequest.findUnique({where:{id},select:{userId:true,status:true,quoteMinor:true,includedRevisions:true,extraRevisionPriceMinor:true}});
+      if (value.status === 'ACCEPTED' && existing?.status !== 'ACCEPTED') return Response.json({error:'A service becomes active only after Paystack confirms the quote payment.'},{status:409});
+      if (existing?.status === 'ACCEPTED' && value.status !== 'ACCEPTED' && value.status !== 'COMPLETED') return Response.json({error:'A paid project can only remain in progress or be marked complete.'},{status:409});
+      const quotePaid = await db.servicePayment.findFirst({where:{serviceRequestId:id,purpose:'QUOTE',status:'PAID'},select:{id:true}});
+      if (quotePaid && (quoteMinor !== existing?.quoteMinor || (includedRevisions != null && includedRevisions !== existing?.includedRevisions) || (extraRevisionPriceMinor != null && extraRevisionPriceMinor !== existing?.extraRevisionPriceMinor))) return Response.json({error:'The paid quote and revision terms are locked after payment.'},{status:409});
+      if (value.status === 'QUOTED' && (!quoteMinor || quoteMinor < 1 || !existing?.userId)) return Response.json({error:'A quote amount and signed-in requester are required before sending a payable quote.'},{status:400});
+      await db.serviceRequest.update({where: {id}, data: {status: value.status as typeof statuses[number], quoteMinor, quoteNote: quoteNote || null, ...(includedRevisions == null ? {} : {includedRevisions}), ...(extraRevisionPriceMinor == null ? {} : {extraRevisionPriceMinor}), quotedAt: value.status === 'QUOTED' ? new Date() : undefined}});
     } else return Response.json({error: 'Unknown community section.'}, {status: 404});
     return Response.json({saved: true});
   } catch {return Response.json({error: 'Could not update this item.'}, {status: 404});}
