@@ -17,11 +17,13 @@ The site includes learner Google accounts, saved resources, purchase history, Pa
 Requires Node.js 22.12+ and Docker for the documented database workflow.
 
 ```sh
+
 npm install
 cp .env.example .env
 npm run db:up
 npm run db:deploy
 npm run dev
+
 ```
 
 Open http://localhost:3000. Configure the owned Google OAuth client and the `LWR_*` variables in `.env` to use the creator studio. Register `http://localhost:3000/api/identity/callback/google` as its redirect URL.
