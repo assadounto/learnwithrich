@@ -10,7 +10,7 @@ const extForMime: Record<string, string> = {
   'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif',
   'application/pdf': '.pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
   'application/msword': '.doc', 'audio/mpeg': '.mp3', 'audio/mp4': '.m4a', 'audio/wav': '.wav',
-  'audio/ogg': '.ogg', 'audio/webm': '.webm',
+  'audio/ogg': '.ogg', 'video/mp4': '.mp4', 'video/webm': '.webm',
 };
 
 let client: S3Client | undefined;
@@ -59,8 +59,9 @@ export function detectMediaMime(bytes: Uint8Array, name: string) {
   if (b.subarray(0, 3).toString('ascii') === 'ID3' || (b.length > 1 && b[0] === 0xff && (b[1] & 0xe0) === 0xe0)) return 'audio/mpeg';
   if (b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WAVE') return 'audio/wav';
   if (b.subarray(0, 4).toString('ascii') === 'OggS') return 'audio/ogg';
-  if (b.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]))) return 'audio/webm';
-  if (b.toString('ascii', 4, 8) === 'ftyp' && /\.(m4a|mp4)$/i.test(name)) return 'audio/mp4';
+  if (b.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3])) && /\.webm$/i.test(name)) return 'video/webm';
+  if (b.toString('ascii', 4, 8) === 'ftyp' && /\.(mp4|m4v)$/i.test(name)) return 'video/mp4';
+  if (b.toString('ascii', 4, 8) === 'ftyp' && /\.m4a$/i.test(name)) return 'audio/mp4';
   return null;
 }
 
@@ -75,7 +76,7 @@ export async function saveMedia(db: Database, file: File, folderId: string | nul
   const originalName = cleanOriginalName(file.name);
   const bytes = Buffer.from(await file.arrayBuffer());
   const mimeType = detectMediaMime(bytes, originalName);
-  if (!mimeType || !extForMime[mimeType]) throw new Error('Use an image (JPG, PNG, WebP, GIF, AVIF), PDF, Word document, or audio file (MP3, M4A, WAV, OGG, WebM).');
+  if (!mimeType || !extForMime[mimeType]) throw new Error('Use an image (JPG, PNG, WebP, GIF, AVIF), PDF, Word document, audio file (MP3, M4A, WAV, OGG), or video file (MP4, WebM).');
   if (folderId && !await db.mediaFolder.findUnique({where: {id: folderId}, select: {id: true}})) throw new Error('That folder no longer exists.');
   const id = randomUUID(), storageKey = `assets/${id}${extForMime[mimeType]}`;
   await putMediaObject(storageKey, bytes, mimeType);
