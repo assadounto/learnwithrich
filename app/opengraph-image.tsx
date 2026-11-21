@@ -15,9 +15,9 @@ export default function OpenGraphImage() {
           LearnWithRich
         </div>
         <div style={{display: 'flex', flexDirection: 'column', maxWidth: 810}}>
-          <div style={{fontSize: 22, letterSpacing: 4, fontWeight: 700, color: '#52694d', marginBottom: 18}}>LEARN · BUILD · SHARE</div>
-          <div style={{fontSize: 76, lineHeight: 1.05, letterSpacing: -3, fontWeight: 700}}>A little curiosity.<br/>A lot of possibility.</div>
-          <div style={{fontSize: 28, color: '#47534d', marginTop: 26}}>Projects, ideas and practical learning by Richmond Adu-Kyere.</div>
+          <div style={{display: 'flex', fontSize: 22, letterSpacing: 4, fontWeight: 700, color: '#52694d', marginBottom: 18}}>LEARN · BUILD · SHARE</div>
+          <div style={{display: 'flex', fontSize: 76, lineHeight: 1.05, letterSpacing: -3, fontWeight: 700}}>A little curiosity.<br/>A lot of possibility.</div>
+          <div style={{display: 'flex', fontSize: 28, color: '#47534d', marginTop: 26}}>Projects, ideas and practical learning by Richmond Adu-Kyere.</div>
         </div>
         <div style={{fontSize: 20, color: '#526052'}}>learnwithrich.com</div>
       </div>
