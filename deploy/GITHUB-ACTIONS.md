@@ -33,7 +33,7 @@ The simple setup uses the Docker group so the release script can build and start
 
 ## Running a release
 
-After this change is merged to `main`, open **Actions → Deploy LearnWithRich → Run workflow** and select `main`. The workflow serializes releases, fetches the exact selected commit, builds both production images, waits for PostgreSQL, writes a pre-migration database dump, applies migrations once, starts the web service, and checks `/api/ready`.
+After this change is merged to `main`, open **Actions → Deploy LearnWithRich → Run workflow** and select `main`. The workflow serializes releases, fetches the exact selected commit, builds both production images, waits for PostgreSQL, writes a pre-migration database dump, applies migrations once, starts the web service, and checks `/api/ready`. Over SSH, it first writes the release script to a private temporary file and then runs it; this prevents Compose commands from consuming the remaining script input and silently ending a release early.
 
 If a build or migration fails, the workflow stops and does not continue to the web update. Review the Actions log and server logs before retrying. This is a restart-based deployment with a short interruption, as described in [DOCKER.md](DOCKER.md).
 
