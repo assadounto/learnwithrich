@@ -42,6 +42,9 @@
 .below > span { font-family: var(--serif); font-size: 15px; font-style: italic; }
 .below a { display: inline-flex; align-items: center; gap: 5px; min-height: 36px; color: #686b70; }
 .below a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.creatorLink { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #b9ae8c55; color: #77735f; font-size: 9px; }
+.creatorLink a { display: inline-flex; align-items: center; gap: 4px; color: #53694e; font-weight: 700; }
+.creatorLink a:hover { text-decoration: underline; text-underline-offset: 3px; }
 @media (min-width: 1400px) { .page { padding-top: 36px; } }
 @media (max-width: 1000px) {
   .story { padding: 40px 30px 29px; }

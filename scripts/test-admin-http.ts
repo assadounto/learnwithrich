@@ -52,7 +52,7 @@ try {
   }
   for (const [id, role] of [[ownerId, 'OWNER'], [learnerId, 'LEARNER']] as const) await db.user.create({data: {id, name: 'HTTP test creator', email: `${id}@example.test`, emailVerified: true, role, accounts: {create: {id: randomUUID(), providerId: 'google', accountId: id}}}});
   const ownerCookie = await cookie(ownerId), learnerCookie = await cookie(learnerId);
-  await expectRedirect(await request('/admin'), '/admin/signin');
+  const entry = await request('/admin'); assert.equal(entry.status, 200); assert.match(await entry.text(), /OWNER-ONLY CREATOR SPACE/);
   await expectRedirect(await request('/admin/resources/new', learnerCookie), '/admin/access-denied');
   await expectRedirect(await request('/admin', ownerCookie), '/admin/security');
   await expectRedirect(await request('/admin/resources/new', ownerCookie), '/admin/security');
@@ -81,7 +81,8 @@ try {
   const codesMatch = confirmed.body.match(/"codes":(\[[^\]]+\])/);
   assert.ok(codesMatch, 'Enrollment must return recovery codes once');
   const codes = JSON.parse(codesMatch[1]) as string[];
-  const studio = await request('/admin', ownerCookie); assert.equal(studio.status, 200); const studioBody = await studio.text(); assert.match(studioBody, /Your collection/); assert.match(studioBody, /workspace-sidebar/); assert.doesNotMatch(studioBody, /class="site-header|class="reference-footer/);
+  await expectRedirect(await request('/admin', ownerCookie), '/admin/resources');
+  const studio = await request('/admin/resources', ownerCookie); assert.equal(studio.status, 200); const studioBody = await studio.text(); assert.match(studioBody, /Your collection/); assert.match(studioBody, /workspace-sidebar/); assert.doesNotMatch(studioBody, /class="site-header|class="reference-footer/);
   const site = await request('/about'); const siteBody = await site.text(); assert.match(siteBody, /site-header/); assert.doesNotMatch(siteBody, /workspace-sidebar/);
   for (const [kind, definition] of Object.entries(resourceDefinitions)) {
     const response = await request(`/admin/resources/new?type=${kind}`, ownerCookie);
@@ -94,7 +95,7 @@ try {
   assert.deepEqual((await db.resourceContent.findUniqueOrThrow({where: {resourceId: row.id}})).details, {author: 'HTTP test creator', readingMinutes: 7});
   assert.equal(row.status, 'DRAFT'); assert.equal(await db.resourceAudit.count({where: {resourceId: row.id, actorId: ownerId}}), 1);
   const savedEditor = await request(`/admin/resources/${row.id}`, ownerCookie); assert.equal(savedEditor.status, 200); assert.match(await savedEditor.text(), /Private until published/);
-  await expectRedirect(await request(`/admin/resources/${row.id}`), '/admin/signin');
+  await expectRedirect(await request(`/admin/resources/${row.id}`), '/admin');
   await expectRedirect(await request(`/admin/resources/${row.id}`, learnerCookie), '/admin/access-denied');
   assert.equal((await request(`/api/catalog/${prefix}`)).status, 404);
   await db.session.updateMany({where: {userId: ownerId}, data: {mfaVerifiedAt: null}});
