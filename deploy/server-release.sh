@@ -35,11 +35,11 @@ compose=(docker compose --env-file .env.production -f docker-compose.prod.yml)
 backup_dir="$app_dir/backups"
 install -d -m 700 "$backup_dir"
 backup_file="$backup_dir/pre-release-$release_sha.dump"
-"${compose[@]}" exec -T db pg_dump -U learnwithrich -d learnwithrich -Fc > "$backup_file"
+"${compose[@]}" exec -T db pg_dump -U learnwithrich -d learnwithrich -Fc </dev/null > "$backup_file"
 test -s "$backup_file"
 
 # Migrations are a release gate. A failure stops before the web image is replaced.
-"${compose[@]}" run --rm tools db:deploy
+"${compose[@]}" run --rm tools db:deploy </dev/null
 "${compose[@]}" up -d --wait web
 
 curl --fail --silent --show-error --retry 12 --retry-connrefused --retry-delay 5 --max-time 15 \

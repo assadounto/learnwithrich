@@ -55,10 +55,12 @@ jobs:
           RELEASE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
+          remote_script="/tmp/learnwithrich-release-${RELEASE_SHA}.sh"
           ssh -i "$HOME/.ssh/id_ed25519" \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             -o BatchMode=yes \
             -o ConnectTimeout=20 \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            "bash -s -- '$DEPLOY_APP_DIR' '$RELEASE_SHA'" < deploy/server-release.sh
+            "umask 077; cat > '$remote_script'; status=\$?; if [ \$status -eq 0 ]; then bash '$remote_script' '$DEPLOY_APP_DIR' '$RELEASE_SHA'; status=\$?; fi; rm -f '$remote_script'; exit \$status" \
+            < deploy/server-release.sh
