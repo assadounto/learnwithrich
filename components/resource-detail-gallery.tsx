@@ -1,0 +1,24 @@
+'use client';
+
+import {useState} from 'react';
+import {Maximize2} from 'lucide-react';
+
+export type ResourceGalleryImage = {src: string; alt: string; label: string};
+
+export function ResourceDetailGallery({images, kind, title}: {images: ResourceGalleryImage[]; kind: string; title: string}) {
+  const [active, setActive] = useState(0);
+  const selected = images[active];
+  return <div className="resource-detail-gallery">
+    <div className="resource-gallery-stage">
+      {selected ? <img src={selected.src} alt={selected.alt}/> : <div className="owned-detail-cover-empty"><span>{kind}</span><span className="resource-gallery-placeholder-mark" aria-hidden="true">✳</span><small>LEARN · BUILD · SHARE</small></div>}
+      <span className="resource-gallery-kind">{kind}</span>
+      {selected && <a className="resource-gallery-open" href={selected.src} target="_blank" rel="noreferrer" aria-label={`Open full-size image for ${title}`}><Maximize2 size={17}/></a>}
+    </div>
+    {images.length > 1 && <div className="resource-gallery-thumbnails" aria-label="More resource images">
+      {images.map((image, index) => <button key={`${image.src}-${index}`} type="button" aria-label={`Show image ${index + 1}: ${image.label}`} aria-pressed={active === index} onClick={() => setActive(index)}>
+        <img src={image.src} alt="" loading="lazy"/>
+      </button>)}
+    </div>}
+    {selected && images.length > 1 && <p className="resource-gallery-caption">{selected.label}</p>}
+  </div>;
+}
