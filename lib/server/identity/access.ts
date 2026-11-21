@@ -7,10 +7,10 @@ import {assertOwner, OwnerAccessError} from './owner';
 import {mfaService} from './mfa';
 import {identityConfig} from './config';
 export async function requirePrimaryOwner() {
-  if (process.env.LWR_ADMIN_ENABLED === 'false') redirect('/admin/signin');
-  if (!identityReady()) redirect('/admin/signin');
+  if (process.env.LWR_ADMIN_ENABLED === 'false') redirect('/admin');
+  if (!identityReady()) redirect('/admin');
   const session = await identity().api.getSession({headers: await headers(), query: {disableCookieCache: true}});
-  if (!session) redirect('/admin/signin');
+  if (!session) redirect('/admin');
   try { const owner = await assertOwner(database(), session.user.id); return {owner, context: {userId: owner.id, sessionId: session.session.id}}; }
   catch (error) { if (error instanceof OwnerAccessError) redirect('/admin/access-denied'); throw error; }
 }

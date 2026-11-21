@@ -1,6 +1,6 @@
 # Owner login and resource studio
 
-The owned `/admin` studio manages all nine resource types, safely previews Markdown, publishes/unpublishes/archives resources, assembles courses and paths, and arranges homepage sections. The public homepage, resource library, project/course listings and resource details read published content from the owned PostgreSQL catalog. The current release contains no external shop, checkout, learner account or payment integration.
+The owner-only studio manages all nine resource types, safely previews Markdown, publishes/unpublishes/archives resources, assembles courses and paths, and arranges homepage sections. The public homepage, resource library, project/course listings and resource details read published content from the owned PostgreSQL catalog. The current release contains no external shop, checkout, learner account or payment integration.
 
 ## Before opening the studio
 
@@ -18,7 +18,7 @@ LWR_GOOGLE_CLIENT_SECRET=<owned Google web client secret>
 `LWR_AUTH_URL` must be the exact origin without a trailing slash/path. Production requires HTTPS. The example localhost origin is for development only. Generate a secret locally, for example with `openssl rand -hex 32`; do not commit it.
 
 4. Register the Google redirect URI `http://localhost:3000/api/identity/callback/google` for development and `https://YOUR_DOMAIN/api/identity/callback/google` for production.
-5. Open `/admin/signin` and sign in with your Google account. Google sign-in creates an ordinary LEARNER account; it does not automatically grant owner rights.
+5. Open `/admin` and sign in with your Google account. Google sign-in creates an ordinary LEARNER account; it does not automatically grant owner rights.
 6. The access-denied page shows **your own account ID**. On your trusted server/workstation run:
 
 ```sh
@@ -27,7 +27,7 @@ npm run owner:bootstrap -- YOUR_VERIFIED_ACCOUNT_ID
 
 The command requires an existing email-verified account with a linked Google identity. A transaction lock and unique database index enforce one owner. The first signup is never automatically owner. Bootstrap cannot create another owner or elevate an arbitrary/unverified account. It is an operator command requiring database credentials, not a web endpoint.
 
-7. Return to `/admin`. Role checks read the current user record, so there is no need to recreate a session after bootstrap.
+7. Return to `/admin/resources`. Role checks read the current user record, so there is no need to recreate a session after bootstrap.
 
 No real owner is provisioned by tests or by application startup. Integration/HTTP tests use synthetic accounts in a separate local `_test` database and remove them afterward.
 
@@ -43,7 +43,7 @@ The initial limiter is deliberately configured not to trust incoming forwarded-I
 
 ## Resource workflow
 
-- `/admin`: search up to 100 recently updated resources by title/slug; open drafts, published content or archives.
+- `/admin/resources`: search up to 100 recently updated resources by title/slug; open drafts, published content or archives.
 - `/admin/resources/new`: choose a type, title, slug, summary, body, tags, HTTPS cover URL, access mode and price. Save creates a draft.
 - `/admin/resources/:id`: edit, preview, save, publish, return to draft, or archive.
 - Preview is inside the protected editor and uses the existing escaped Markdown renderer. It never publishes a draft or opens an unguarded preview URL.
@@ -87,7 +87,7 @@ Live Google OAuth needs the real configured credentials and redirect URLs above 
 
 ## Mandatory owner MFA
 
-After Google sign-in and the one-time owner bootstrap, `/admin` sends the owner to `/admin/security`. Set up a standard TOTP authenticator with the locally generated QR code or manual key and confirm a six-digit code. Setup requires Google sign-in within the previous 10 minutes, expires after 10 minutes, and is bound to that session. No enrollment secret is sent to an external QR service. The server encrypts secrets using `LWR_AUTH_SECRET`; preserve that secret and encrypted database backups.
+After Google sign-in and the one-time owner bootstrap, `/admin` sends a signed-in owner to `/admin/security` until MFA is verified, then opens `/admin/resources`. Set up a standard TOTP authenticator with the locally generated QR code or manual key and confirm a six-digit code. Setup requires Google sign-in within the previous 10 minutes, expires after 10 minutes, and is bound to that session. No enrollment secret is sent to an external QR service. The server encrypts secrets using `LWR_AUTH_SECRET`; preserve that secret and encrypted database backups.
 
 Save the ten 128-bit recovery codes when shown. Only their hashes are stored. Each code works once and still requires a valid owner Google session. Authenticator codes use 30-second periods with a one-period clock tolerance. Accepted codes cannot be replayed, including from another session. Five failed guesses across sessions and factors lock verification for 15 minutes; successful verification resets failures. Verification lasts 15 minutes in the authoritative database session. A new Google session does not inherit another session’s verification. Every private page and server action checks the gate; mutation repositories recheck it inside the transaction.
 
