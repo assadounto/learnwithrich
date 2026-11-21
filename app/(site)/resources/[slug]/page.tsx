@@ -21,7 +21,10 @@ export default async function ResourcePage({params}: {params: Promise<{slug: str
   const resource = await publicResources().getPublic(slug, user?.id);
   if (resource) {
     const details = resource.details && typeof resource.details === 'object' && !Array.isArray(resource.details) ? resource.details as ResourceDetails : null;
-    return <OwnedResourceDetail resource={{...resource, details}}/>;
+    const hasLearningCollection = resource.type === 'COURSE' || resource.type === 'PATH' || resource.collections.length > 0;
+    const relatedResult = hasLearningCollection ? null : await publicResources().listPublic(new URLSearchParams(resource.tags[0] ? {limit: '8', tag: resource.tags[0]} : {limit: '8', type: resource.type}));
+    const relatedResources = relatedResult?.items.filter(item => item.slug !== resource.slug).slice(0, 6) ?? [];
+    return <OwnedResourceDetail resource={{...resource, details}} relatedResources={relatedResources}/>;
   }
   const legacy = legacyResources.find(item => item.slug === slug);
   if (!legacy) notFound();

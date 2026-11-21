@@ -95,6 +95,11 @@ export function resourceRepository(db: Database) {
         ...cardSelect,
         sections: {select: {id: true, title: true, position: true}, orderBy: {position: 'asc'}},
         items: {where: {resource: published()}, orderBy: {position: 'asc'}, select: {position: true, sectionId: true, resource: {select: cardSelect}}},
+        includedIn: {where: {collection: published()}, select: {collection: {select: {
+          ...cardSelect,
+          sections: {select: {id: true, title: true, position: true}, orderBy: {position: 'asc'}},
+          items: {where: {resource: published()}, orderBy: {position: 'asc'}, select: {position: true, sectionId: true, resource: {select: cardSelect}}},
+        }}}},
         media: {include: {mediaAsset: {select: {id: true, originalName: true, mimeType: true, sizeBytes: true}}}, orderBy: {position: 'asc'}},
       }});
       if (!row) return null;
@@ -109,6 +114,7 @@ export function resourceRepository(db: Database) {
       const purchasedMedia = new Set(filePurchases.map(purchase => purchase.resourceMediaId));
       return {
         ...card(row), items: row.items.map(item => ({position: item.position, sectionId: item.sectionId, resource: card(item.resource)})),
+        collections: row.includedIn.map(item => ({...card(item.collection), sections: item.collection.sections, items: item.collection.items.map(child => ({position: child.position, sectionId: child.sectionId, resource: card(child.resource)}))})),
         media: row.media.map(item => ({id: item.id, title: item.title, priceMinor: item.priceMinor, originalName: item.mediaAsset.originalName, mimeType: item.mediaAsset.mimeType, sizeBytes: item.mediaAsset.sizeBytes, includedInBundle: row.access === 'PAID', owned: row.access === 'PAID' ? hasBundle : (row.access === 'PUBLIC' || Boolean(viewerId)) && (item.priceMinor === 0 || purchasedMedia.has(item.id))})),
         bodyMarkdown: readable?.content?.bodyMarkdown ?? null, details: readable?.content?.details ?? null, requiresAccess: !canRead, hasBundle, signedIn: Boolean(viewerId),
       };

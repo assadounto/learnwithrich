@@ -9,8 +9,11 @@ import {SaveButton} from '@/components/resource-card';
 import {RichMarkdown, youtubeId} from '@/components/rich-markdown';
 import {ResourceDetailTabs} from '@/components/resource-detail-tabs';
 import {ResourceDetailGallery, type ResourceGalleryImage} from '@/components/resource-detail-gallery';
+import {ResourceLearningSidebar} from '@/components/resource-learning-sidebar';
 
-type Resource = {id: string; slug: string; type: ResourceKind; title: string; summary: string; coverUrl: string | null; access: AccessMode; priceMinor: number; currency: string; tags: string[]; details: ResourceDetails | null; bodyMarkdown: string | null; requiresAccess: boolean; hasBundle: boolean; signedIn: boolean; media: {id: string; title: string; priceMinor: number; originalName: string; mimeType: string; sizeBytes: number; includedInBundle: boolean; owned: boolean}[]; sections: {id: string; title: string; position: number}[]; items: {position: number; sectionId: string | null; resource: {id: string; slug: string; title: string; summary: string; type: ResourceKind; coverUrl: string | null; tags: string[]; access: AccessMode; priceMinor: number; currency: string}}[]};
+type ResourceItem = {id: string; slug: string; title: string; summary: string; type: ResourceKind; coverUrl: string | null; tags: string[]; access: AccessMode; priceMinor: number; currency: string};
+type ResourceCollection = {id: string; slug: string; title: string; type: ResourceKind; sections: {id: string; title: string; position: number}[]; items: {position: number; sectionId: string | null; resource: ResourceItem}[]};
+type Resource = {id: string; slug: string; type: ResourceKind; title: string; summary: string; coverUrl: string | null; access: AccessMode; priceMinor: number; currency: string; tags: string[]; details: ResourceDetails | null; bodyMarkdown: string | null; requiresAccess: boolean; hasBundle: boolean; signedIn: boolean; media: {id: string; title: string; priceMinor: number; originalName: string; mimeType: string; sizeBytes: number; includedInBundle: boolean; owned: boolean}[]; sections: {id: string; title: string; position: number}[]; items: {position: number; sectionId: string | null; resource: ResourceItem}[]; collections: ResourceCollection[]};
 
 const names: Record<ResourceKind, string> = {PROJECT: 'Project', ARTICLE: 'Article', COURSE: 'Course', PATH: 'Learning path', LESSON: 'Lesson', DOWNLOAD: 'Download', BOOK: 'Book', GUIDE: 'Guide', ILLUSTRATION: 'Illustration'};
 const detailHeadings: Record<ResourceKind, string> = {PROJECT: 'A useful idea to explore', ARTICLE: 'The idea behind the article', COURSE: 'Build your understanding', PATH: 'A guided learning journey', LESSON: 'One clear step forward', DOWNLOAD: 'A resource to put to work', BOOK: 'Ideas worth keeping', GUIDE: 'A practical guide', ILLUSTRATION: 'A visual resource to use'};
@@ -42,7 +45,7 @@ function humanFileSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export function OwnedResourceDetail({resource}: {resource: Resource}) {
+export function OwnedResourceDetail({resource, relatedResources}: {resource: Resource; relatedResources: ResourceItem[]}) {
   const details = resource.details ?? {};
   const file = typeof details.fileUrl === 'string' ? details.fileUrl : null;
   const fileName = typeof details.fileName === 'string' ? details.fileName : 'Open resource file';
@@ -141,6 +144,9 @@ export function OwnedResourceDetail({resource}: {resource: Resource}) {
   const beforeList = prerequisites.length ? prerequisites : fallbackPrerequisites[resource.type];
   const parentHref = resource.type === 'PROJECT' ? '/projects' : resource.type === 'COURSE' || resource.type === 'LESSON' ? '/courses' : '/resources';
   const parentLabel = resource.type === 'PROJECT' ? 'projects' : resource.type === 'COURSE' || resource.type === 'LESSON' ? 'courses' : 'resources';
+  const playlist: ResourceCollection | null = resource.type === 'COURSE' || resource.type === 'PATH'
+    ? {id: resource.id, slug: resource.slug, title: resource.title, type: resource.type, sections: resource.sections, items: resource.items}
+    : resource.collections.find(item => item.type === 'PATH') ?? resource.collections.find(item => item.type === 'COURSE') ?? null;
   const coverAlt = resource.type === 'ILLUSTRATION' && typeof details.altText === 'string' ? details.altText : resource.title;
   const freeMedia = resource.media.find(item => item.owned && item.priceMinor === 0 && !item.mimeType.startsWith('image/'));
   const firstMediaUrl = freeMedia ? `/api/resource-files/${freeMedia.id}?resourceId=${resource.id}` : null;
@@ -174,7 +180,10 @@ export function OwnedResourceDetail({resource}: {resource: Resource}) {
       <section className="resource-detail-before"><span className="maker-kicker">GETTING STARTED</span><h2>Before you begin</h2><ul>{beforeList.slice(0, 4).map((item, index) => <li key={`${item}-${index}`}><Check size={14}/>{item}</li>)}</ul><Link href="/about" className="text-link">Meet the maker <ArrowRight size={15}/></Link></section>
     </div>
 
-    <ResourceDetailTabs items={tabItems}/>
+    <div className="resource-detail-lower-layout">
+      <ResourceDetailTabs items={tabItems}/>
+      <ResourceLearningSidebar currentSlug={resource.slug} playlist={playlist} related={relatedResources}/>
+    </div>
 
     <footer className="owned-detail-next"><div><span className="maker-kicker">KEEP YOUR CURIOSITY GOING</span><h2>There’s always<br/><i>more to explore.</i></h2></div><Link href={parentHref} className="button button-outline">Browse more {names[resource.type].toLowerCase()}s <ArrowUpRight size={16}/></Link></footer>
   </article>;
