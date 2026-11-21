@@ -5,7 +5,7 @@ import {OwnedResourceGrid} from '@/components/owned-resource-card';
 import {ArrowRight, CircuitBoard, Code2, FileText} from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = {title: 'Projects — code, circuits and useful ideas', description: 'Explore LearnWithRich projects with practical build notes, materials and source code.'};
+export const metadata: Metadata = {title: 'Projects — code, circuits and useful ideas', description: 'Explore LearnWithRich projects with practical build notes, materials and source code.', alternates: {canonical: '/projects'}, openGraph: {url: '/projects'}};
 export default async function ProjectsPage() {
   const {items, total} = await resources().listPublic(new URLSearchParams({type: 'PROJECT', limit: '48'}));
   const free = items.filter(item => item.access === 'PUBLIC').length;

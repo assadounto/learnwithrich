@@ -7,7 +7,17 @@ import Link from '@/components/navigation-link';
 import {Search} from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = {title: 'Resource library', description: 'Explore projects, articles, courses, learning paths, books, guides, downloads and illustrations from LearnWithRich.'};
+export async function generateMetadata({searchParams}: {searchParams: Promise<Params>}): Promise<Metadata> {
+  const params = await searchParams;
+  const hasFilters = Boolean(params.q || params.type || params.page);
+  return {
+    title: 'Resource library',
+    description: 'Explore projects, articles, courses, learning paths, books, guides, downloads and illustrations from LearnWithRich.',
+    alternates: {canonical: '/resources'},
+    openGraph: {url: '/resources'},
+    ...(hasFilters ? {robots: {index: false, follow: true}} : {}),
+  };
+}
 type Params = Record<string, string | string[] | undefined>;
 const one = (value: string | string[] | undefined) => typeof value === 'string' ? value : '';
 export default async function ResourcesPage({searchParams}: {searchParams: Promise<Params>}) {

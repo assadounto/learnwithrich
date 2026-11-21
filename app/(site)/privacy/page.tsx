@@ -1,4 +1,4 @@
-export const metadata = {title: 'Privacy'};
+export const metadata = {title: 'Privacy', alternates: {canonical: '/privacy'}};
 export default function Privacy() {
   return <article className="container about-page"><span className="eyebrow">YOUR INFORMATION</span><h1>Your privacy,<br/><i>kept simple.</i></h1>
     <h2>Public browsing</h2><p>LearnWithRich serves published resources from its PostgreSQL catalog. Search and browsing do not require an account. You can save resources in your browser or, when signed in, sync them to your learner account.</p>

@@ -5,7 +5,7 @@ import {OwnedResourceGrid} from '@/components/owned-resource-card';
 import {ArrowRight, BookOpenCheck, Route} from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = {title: 'Practical courses and learning paths', description: 'Learn by making with guided courses, lessons and learning paths from LearnWithRich.'};
+export const metadata: Metadata = {title: 'Practical courses and learning paths', description: 'Learn by making with guided courses, lessons and learning paths from LearnWithRich.', alternates: {canonical: '/courses'}, openGraph: {url: '/courses'}};
 export default async function CoursesPage() {
   const [courses, paths] = await Promise.all([
     resources().listPublic(new URLSearchParams({type: 'COURSE', limit: '48'})),
