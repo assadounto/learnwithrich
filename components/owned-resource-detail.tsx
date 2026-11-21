@@ -13,6 +13,7 @@ import {ResourceLearningSidebar} from '@/components/resource-learning-sidebar';
 
 type ResourceItem = {id: string; slug: string; title: string; summary: string; type: ResourceKind; coverUrl: string | null; tags: string[]; access: AccessMode; priceMinor: number; currency: string};
 type ResourceCollection = {id: string; slug: string; title: string; type: ResourceKind; sections: {id: string; title: string; position: number}[]; items: {position: number; sectionId: string | null; resource: ResourceItem}[]};
+type Playlist = Omit<ResourceCollection, 'type'> & {type: 'COURSE' | 'PATH'};
 type Resource = {id: string; slug: string; type: ResourceKind; title: string; summary: string; coverUrl: string | null; access: AccessMode; priceMinor: number; currency: string; tags: string[]; details: ResourceDetails | null; bodyMarkdown: string | null; requiresAccess: boolean; hasBundle: boolean; signedIn: boolean; media: {id: string; title: string; priceMinor: number; originalName: string; mimeType: string; sizeBytes: number; includedInBundle: boolean; owned: boolean}[]; sections: {id: string; title: string; position: number}[]; items: {position: number; sectionId: string | null; resource: ResourceItem}[]; collections: ResourceCollection[]};
 
 const names: Record<ResourceKind, string> = {PROJECT: 'Project', ARTICLE: 'Article', COURSE: 'Course', PATH: 'Learning path', LESSON: 'Lesson', DOWNLOAD: 'Download', BOOK: 'Book', GUIDE: 'Guide', ILLUSTRATION: 'Illustration'};
@@ -144,9 +145,9 @@ export function OwnedResourceDetail({resource, relatedResources}: {resource: Res
   const beforeList = prerequisites.length ? prerequisites : fallbackPrerequisites[resource.type];
   const parentHref = resource.type === 'PROJECT' ? '/projects' : resource.type === 'COURSE' || resource.type === 'LESSON' ? '/courses' : '/resources';
   const parentLabel = resource.type === 'PROJECT' ? 'projects' : resource.type === 'COURSE' || resource.type === 'LESSON' ? 'courses' : 'resources';
-  const playlist: ResourceCollection | null = resource.type === 'COURSE' || resource.type === 'PATH'
+  const playlist: Playlist | null = resource.type === 'COURSE' || resource.type === 'PATH'
     ? {id: resource.id, slug: resource.slug, title: resource.title, type: resource.type, sections: resource.sections, items: resource.items}
-    : resource.collections.find(item => item.type === 'PATH') ?? resource.collections.find(item => item.type === 'COURSE') ?? null;
+    : resource.collections.find((item): item is Playlist => item.type === 'PATH') ?? resource.collections.find((item): item is Playlist => item.type === 'COURSE') ?? null;
   const coverAlt = resource.type === 'ILLUSTRATION' && typeof details.altText === 'string' ? details.altText : resource.title;
   const freeMedia = resource.media.find(item => item.owned && item.priceMinor === 0 && !item.mimeType.startsWith('image/'));
   const firstMediaUrl = freeMedia ? `/api/resource-files/${freeMedia.id}?resourceId=${resource.id}` : null;
