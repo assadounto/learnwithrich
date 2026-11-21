@@ -45,5 +45,27 @@ test -s "$backup_file"
 curl --fail --silent --show-error --retry 12 --retry-connrefused --retry-delay 5 --max-time 15 \
   https://learnwithrich.com/api/ready
 
+# Keep five verified restore points. Pruning only happens after readiness passes,
+# so a failed migration or unhealthy release cannot remove older backups.
+backup_retention_count=5
+if backup_listing="$(find "$backup_dir" -mindepth 1 -maxdepth 1 -type f -name 'pre-release-*.dump' -printf '%T@ %f\n' | sort -nr)"; then
+  backup_names=()
+  if [[ -n "$backup_listing" ]]; then
+    while IFS= read -r backup_line; do
+      backup_names+=("${backup_line#* }")
+    done <<< "$backup_listing"
+  fi
+  if (( ${#backup_names[@]} > backup_retention_count )); then
+    for stale_backup in "${backup_names[@]:backup_retention_count}"; do
+      [[ "$stale_backup" =~ ^pre-release-[0-9a-f]{40}\.dump$ ]] || continue
+      if ! rm -f -- "$backup_dir/$stale_backup"; then
+        echo "Warning: could not remove old database backup: $backup_dir/$stale_backup" >&2
+      fi
+    done
+  fi
+else
+  echo "Warning: could not list old database backups; leaving them in place." >&2
+fi
+
 echo "Deployment succeeded: $release_sha"
 echo "Pre-migration database dump: $backup_file"
