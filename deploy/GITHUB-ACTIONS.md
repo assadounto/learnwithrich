@@ -37,4 +37,4 @@ After this change is merged to `main`, open **Actions â†’ Deploy LearnWithRich â
 
 If a build or migration fails, the workflow stops and does not continue to the web update. Review the Actions log and server logs before retrying. This is a restart-based deployment with a short interruption, as described in [DOCKER.md](DOCKER.md).
 
-The dump is kept under `/opt/learnwithrich/backups/` on the VPS as a release safety point. It does not replace the encrypted off-host backups and restore checks required by [DOCKER.md](DOCKER.md). Keep the existing scheduled off-host backup process in place.
+The five newest successful pre-migration dumps are kept under `/opt/learnwithrich/backups/` on the VPS as release safety points; older release dumps are pruned after readiness passes. These do not replace the encrypted off-host backups and restore checks required by [DOCKER.md](DOCKER.md). Keep the existing scheduled off-host backup process in place.
