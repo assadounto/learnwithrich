@@ -12,7 +12,7 @@ import {ServiceRequestFiles} from '@/components/service-request-files';
 import {AccountWorkspaceTabs} from '@/components/account-workspace-tabs';
 import {LearnerServiceRequestsTable} from '@/components/learner-service-requests-table';
 
-export const metadata: Metadata = {title: 'Your learning account'};
+export const metadata: Metadata = {title: 'Your learning account', robots: {index: false, follow: false}};
 export const dynamic = 'force-dynamic';
 
 export default async function AccountPage({searchParams}: {searchParams: Promise<{payment?: string; reference?: string}>}) {

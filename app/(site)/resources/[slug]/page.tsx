@@ -11,9 +11,9 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({params}: {params: Promise<{slug: string}>}): Promise<Metadata> {
   const {slug} = await params;
   const resource = await publicResources().getPublic(slug);
-  if (resource) return {title: resource.title, description: resource.summary || undefined};
+  if (resource) return {title: resource.title, description: resource.summary || undefined, alternates: {canonical: `/resources/${resource.slug}`}, openGraph: {type: 'article', title: resource.title, description: resource.summary || undefined, url: `https://learnwithrich.com/resources/${resource.slug}`}};
   const legacy = legacyResources.find(item => item.slug === slug);
-  return {title: legacy?.title || 'Resource not found', description: legacy?.description};
+  return {title: legacy?.title || 'Resource not found', description: legacy?.description, alternates: {canonical: `/resources/${slug}`}, openGraph: legacy ? {type: 'article', title: legacy.title, description: legacy.description, url: `https://learnwithrich.com/resources/${slug}`} : undefined};
 }
 export default async function ResourcePage({params}: {params: Promise<{slug: string}>}) {
   const {slug} = await params;

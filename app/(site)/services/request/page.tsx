@@ -4,7 +4,7 @@ import {ArrowLeft, ArrowUpRight, BookOpen, CircuitBoard, Code2, GraduationCap, M
 import {ServiceRequestForm} from '@/components/service-request-form';
 import {currentUser} from '@/lib/server/identity/current-user';
 
-export const metadata: Metadata = {title: 'Request a service', description: 'Share your thesis, software, electronics or project brief and request a quote from LearnWithRich.'};
+export const metadata: Metadata = {title: 'Request a service', description: 'Share your thesis, software, electronics or project brief and request a quote from LearnWithRich.', alternates: {canonical: '/services/request'}};
 export const dynamic = 'force-dynamic';
 export default async function ServiceRequestPage() {
   const user = await currentUser();
