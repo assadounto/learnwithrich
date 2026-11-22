@@ -307,6 +307,8 @@ model MediaAsset {
   resources    ResourceMedia[]
   serviceRevisionFiles ServiceRevisionFile[]
   serviceRequestFiles ServiceRequestFile[]
+  communityGuestbookPhotos GuestbookEntry[] @relation("GuestbookPhoto")
+  communityReviewPhotos Review[] @relation("ReviewPhoto")
 
   @@index([folderId, createdAt])
   @@map("media_assets")
@@ -368,13 +370,18 @@ model GuestbookEntry {
   id        String           @id @default(uuid()) @db.Uuid
   name      String           @db.VarChar(100)
   email     String?          @db.VarChar(254)
+  title     String?          @db.VarChar(120)
+  country   String?          @db.VarChar(80)
+  imageAssetId String?       @map("image_asset_id") @db.Uuid
   message   String           @db.VarChar(800)
   status    ModerationStatus @default(PENDING)
   ipHash    String?          @map("ip_hash") @db.VarChar(64)
   createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  imageAsset MediaAsset?     @relation("GuestbookPhoto", fields: [imageAssetId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([ipHash, createdAt])
+  @@index([imageAssetId])
   @@map("guestbook_entries")
 }
 
@@ -382,14 +389,19 @@ model Review {
   id          String           @id @default(uuid()) @db.Uuid
   userId      String           @unique @map("user_id")
   displayName String           @map("display_name") @db.VarChar(100)
+  title       String?          @db.VarChar(120)
+  country     String?          @db.VarChar(80)
+  imageAssetId String?         @map("image_asset_id") @db.Uuid
   message     String           @db.VarChar(1000)
   rating      Int              @default(5)
   status      ModerationStatus @default(PENDING)
   createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imageAsset  MediaAsset?      @relation("ReviewPhoto", fields: [imageAssetId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
+  @@index([imageAssetId])
   @@map("reviews")
 }
 
