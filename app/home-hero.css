@@ -1,0 +1,82 @@
+.reference-hero.home-hero-preset-centered { overflow: hidden; }
+.home-hero-preset-centered .ref-hero-inner { min-height: clamp(470px, 48vw, 691px); }
+.home-hero-preset-centered .ref-hero-copy,
+.home-hero-cinematic[data-hero-phase="centered-static"] .ref-hero-copy,
+.home-hero-cinematic[data-hero-phase="center-copy"] .ref-hero-copy,
+.home-hero-cinematic[data-hero-phase="move-art"] .ref-hero-copy,
+.home-hero-cinematic[data-hero-phase="video"] .ref-hero-copy {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  width: min(88%, 1000px);
+  text-align: center;
+  transform: translate(-50%, -50%);
+  transition: top 1s cubic-bezier(.2,.7,.2,1), left 1s cubic-bezier(.2,.7,.2,1), width 1s cubic-bezier(.2,.7,.2,1), transform 1s cubic-bezier(.2,.7,.2,1), color .6s ease;
+}
+.home-hero-preset-centered .ref-hero-copy h1,
+.home-hero-cinematic[data-hero-phase="centered-static"] .ref-hero-copy h1,
+.home-hero-cinematic[data-hero-phase="center-copy"] .ref-hero-copy h1,
+.home-hero-cinematic[data-hero-phase="move-art"] .ref-hero-copy h1,
+.home-hero-cinematic[data-hero-phase="video"] .ref-hero-copy h1 { white-space: normal; transform: none; }
+.home-hero-preset-centered .ref-hero-copy .ref-hero-actions,
+.home-hero-cinematic[data-hero-phase="centered-static"] .ref-hero-actions,
+.home-hero-cinematic[data-hero-phase="center-copy"] .ref-hero-actions,
+.home-hero-cinematic[data-hero-phase="move-art"] .ref-hero-actions,
+.home-hero-cinematic[data-hero-phase="video"] .ref-hero-actions { justify-content: center; }
+.home-hero-preset-centered .ref-hero-copy > p,
+.home-hero-cinematic[data-hero-phase="centered-static"] .ref-hero-copy > p { margin-inline: auto; }
+.home-hero-preset-centered .ref-hero-art { right: 0; width: 100%; background-size: contain; opacity: .48; }
+.home-hero-cinematic { overflow: hidden; isolation: isolate; }
+.home-hero-cinematic .ref-hero-inner { isolation: isolate; }
+.home-hero-cinematic .ref-hero-copy { transition: top 1s cubic-bezier(.2,.7,.2,1), left 1s cubic-bezier(.2,.7,.2,1), width 1s cubic-bezier(.2,.7,.2,1), transform 1s cubic-bezier(.2,.7,.2,1), color .6s ease; }
+.home-hero-cinematic .ref-hero-art { transition: width 1.1s cubic-bezier(.2,.7,.2,1), height 1.1s cubic-bezier(.2,.7,.2,1), right 1.1s cubic-bezier(.2,.7,.2,1), top 1.1s cubic-bezier(.2,.7,.2,1), transform 1.1s cubic-bezier(.2,.7,.2,1), opacity 1.1s ease, filter 1.1s ease; }
+.home-hero-video { position: absolute; inset: 0; z-index: 2; overflow: hidden; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
+.home-hero-video::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #10120fd9 0%, #10120f9e 52%, #10120f61 100%), linear-gradient(0deg, #10120f55, transparent 45%); }
+.home-hero-video video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.home-hero-cinematic[data-hero-phase="move-art"] .ref-hero-art,
+.home-hero-cinematic[data-hero-phase="video"] .ref-hero-art { width: 110%; height: 100%; top: 0; right: -5%; transform: scale(1.12); background-size: cover; opacity: .27; filter: blur(3px); }
+.home-hero-cinematic[data-hero-phase="video"] .home-hero-video { opacity: 1; }
+.home-hero-cinematic[data-hero-phase="video"] .ref-hero-copy,
+.home-hero-cinematic[data-hero-phase="video"] .ref-hero-copy h1,
+.home-hero-cinematic[data-hero-phase="video"] .ref-hero-copy h1 i,
+.home-hero-cinematic[data-hero-phase="video"] .ref-hero-copy > p,
+.home-hero-cinematic[data-hero-phase="video"] .ref-hero-copy .ref-eyebrow { color: #fffdf7; }
+.home-hero-cinematic[data-hero-phase="video"] .ref-hero-copy .text-link { color: #fffdf7; border-color: #fffdf7; }
+.home-hero-cinematic[data-hero-phase="video"] .hero-rays { display: none; }
+.home-hero-preset-centered .ref-eyebrow .orange-scribble,
+.home-hero-cinematic[data-hero-phase="centered-static"] .ref-eyebrow .orange-scribble,
+.home-hero-cinematic[data-hero-phase="center-copy"] .ref-eyebrow .orange-scribble,
+.home-hero-cinematic[data-hero-phase="move-art"] .ref-eyebrow .orange-scribble,
+.home-hero-cinematic[data-hero-phase="video"] .ref-eyebrow .orange-scribble { left: 50%; transform: translateX(-50%) rotate(-3deg); }
+
+@media (max-width: 800px) {
+  .home-hero-preset-centered .ref-hero-inner { min-height: 570px; }
+  .home-hero-preset-centered .ref-hero-copy,
+  .home-hero-cinematic[data-hero-phase="centered-static"] .ref-hero-copy,
+  .home-hero-cinematic[data-hero-phase="center-copy"] .ref-hero-copy,
+  .home-hero-cinematic[data-hero-phase="move-art"] .ref-hero-copy,
+  .home-hero-cinematic[data-hero-phase="video"] .ref-hero-copy { width: min(92%, 760px); }
+}
+@media (max-width: 580px) {
+  .home-hero-cinematic .ref-hero-inner { display: block; width: calc(100% - 40px); height: min(760px, 96svh); min-height: 620px; padding: 0; }
+  .home-hero-cinematic .ref-hero-copy { position: absolute; inset: 35px auto auto 0; width: 100%; }
+  .home-hero-cinematic .ref-hero-art { position: absolute; inset: auto -15px -18px; width: calc(100% + 30px); height: auto; margin: 0; aspect-ratio: 1.02; background-size: contain; }
+  .home-hero-cinematic[data-hero-phase="move-art"] .ref-hero-art,
+  .home-hero-cinematic[data-hero-phase="video"] .ref-hero-art { inset: 0 -20px auto; width: calc(100% + 40px); height: 100%; aspect-ratio: auto; background-size: cover; }
+  .home-hero-preset-centered .ref-hero-inner { display: block; height: min(760px, 96svh); min-height: 620px; padding: 0; }
+  .home-hero-preset-centered .ref-hero-art { position: absolute; inset: 0 -20px auto; width: calc(100% + 40px); height: 100%; aspect-ratio: auto; background-size: contain; margin: 0; }
+  .home-hero-preset-centered .ref-hero-copy,
+  .home-hero-cinematic[data-hero-phase="centered-static"] .ref-hero-copy,
+  .home-hero-cinematic[data-hero-phase="center-copy"] .ref-hero-copy,
+  .home-hero-cinematic[data-hero-phase="move-art"] .ref-hero-copy,
+  .home-hero-cinematic[data-hero-phase="video"] .ref-hero-copy { width: calc(100% - 4px); }
+  .home-hero-cinematic[data-hero-phase="video"] .ref-hero-copy > p { max-width: 340px; }
+  .home-hero-cinematic[data-hero-phase="video"] .ref-hero-actions { flex-direction: column; align-items: center; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-cinematic .ref-hero-copy,
+  .home-hero-cinematic .ref-hero-art,
+  .home-hero-video { transition: none !important; }
+  .home-hero-cinematic .ref-hero-art { filter: none !important; }
+}
