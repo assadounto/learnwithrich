@@ -9,12 +9,13 @@ export async function GET(_request: Request, context: {params: Promise<{id: stri
   const url = `/api/public-media/${id}`;
   try {
     const db = database();
-    const [resource, guestbookEntry, review] = await Promise.all([
+    const [resource, guestbookEntry, review, homepageSettings] = await Promise.all([
       db.resource.findFirst({where: {status: 'PUBLISHED', publishedAt: {lte: new Date()}, coverUrl: url}, select: {id: true}}),
       db.guestbookEntry.findFirst({where: {status: 'APPROVED', imageAssetId: id}, select: {id: true}}),
       db.review.findFirst({where: {status: 'APPROVED', imageAssetId: id}, select: {id: true}}),
+      db.homepageSettings.findFirst({where: {id: 1, heroPreset: 'CENTERED', heroImageAssetId: id}, select: {id: true}}),
     ]);
-    const asset = (resource || guestbookEntry || review) && await db.mediaAsset.findUnique({where: {id}, select: {storageKey: true, originalName: true, mimeType: true}});
+    const asset = (resource || guestbookEntry || review || homepageSettings) && await db.mediaAsset.findUnique({where: {id}, select: {storageKey: true, originalName: true, mimeType: true}});
     if (!asset || !asset.mimeType.startsWith('image/')) return new Response('Not found', {status: 404});
     return new Response(null, {status: 302, headers: {'Location': await signedMediaUrl(asset.storageKey, asset.originalName, asset.mimeType, 'inline', 300), 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer'}});
   } catch { return new Response('Not found', {status: 404}); }

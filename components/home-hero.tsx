@@ -7,7 +7,7 @@ import {DrawnUnderline, AccentRays} from './decorative-marks';
 
 type Preset = 'CLASSIC' | 'CENTERED' | 'CINEMATIC';
 
-export function HomeHero({preset, videoUrl, delaySeconds}: {preset: Preset; videoUrl: string | null; delaySeconds: number}) {
+export function HomeHero({preset, imageUrl, videoUrl, delaySeconds}: {preset: Preset; imageUrl: string | null; videoUrl: string | null; delaySeconds: number}) {
   const video = useRef<HTMLVideoElement>(null);
   const [phase, setPhase] = useState(preset === 'CENTERED' ? 'centered-static' : 'intro');
 
@@ -29,7 +29,10 @@ export function HomeHero({preset, videoUrl, delaySeconds}: {preset: Preset; vide
   }, [preset, videoUrl, delaySeconds]);
 
   const active = preset === 'CINEMATIC' && !!videoUrl;
-  return <section className={`reference-hero home-hero-preset-${preset.toLowerCase()}${active ? ' home-hero-cinematic' : ''}`} data-hero-phase={active ? phase : preset === 'CENTERED' ? 'centered-static' : 'intro'}>
+  const centeredImage = preset === 'CENTERED' ? imageUrl : null;
+  return <section className={`reference-hero home-hero-preset-${preset.toLowerCase()}${preset !== 'CLASSIC' ? ' home-hero-fullbleed' : ''}${active ? ' home-hero-cinematic' : ''}`} data-hero-phase={active ? phase : preset === 'CENTERED' ? 'centered-static' : 'intro'}>
+    {centeredImage && <div className="home-hero-image" role="img" aria-label="Selected LearnWithRich hero background" style={{backgroundImage: `url("${centeredImage}")`}}/>}
+    {preset === 'CINEMATIC' && videoUrl && <div className="home-hero-video" aria-hidden="true"><video ref={video} src={videoUrl} muted playsInline loop preload="auto"/></div>}
     <div className="ref-container ref-hero-inner">
       <div className="ref-hero-copy">
         <div className="ref-eyebrow">THE INTERNET IS FULL OF IDEAS. LET’S BUILD SOME.<DrawnUnderline className="orange-scribble"/></div>
@@ -37,8 +40,7 @@ export function HomeHero({preset, videoUrl, delaySeconds}: {preset: Preset; vide
         <p>Projects, books, illustrations and practical<br className="ref-desktop-break"/> courses by Richmond Adu-Kyere.</p>
         <div className="ref-hero-actions"><Link className="button button-orange" href="/projects">Find your next project</Link><Link className="text-link" href="/services/request">Request a service <ArrowUpRight size={18}/></Link></div>
       </div>
-      {active && <div className="ref-hero-video" aria-hidden="true"><video ref={video} src={videoUrl} muted playsInline loop preload="auto"/></div>}
-      <div className="ref-hero-art" role="img" aria-label="Maker collage with an ESP32 board, Practical Maker book, African portrait illustrations and a project notebook"/>
+      {preset === 'CLASSIC' && <div className="ref-hero-art" role="img" aria-label="Maker collage with an ESP32 board, Practical Maker book, African portrait illustrations and a project notebook"/>}
     </div>
   </section>;
 }

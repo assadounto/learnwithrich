@@ -72,9 +72,21 @@ export function resourceRepository(db: Database) {
       return {items: rows.map(card), total, page, limit};
     },
     async homepage() {
-      const settings = await db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true, heroPreset: true, heroVideoAssetId: true, heroDelaySeconds: true}});
+      const settings = await db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true, heroPreset: true, heroImageAssetId: true, heroVideoAssetId: true, heroDelaySeconds: true}});
       const sections = validateHomepageSections(settings?.sections ?? defaultHomepageSections);
-      const hero = settings ? {preset: settings.heroPreset as HomepageHeroPreset, videoAssetId: settings.heroVideoAssetId, delaySeconds: settings.heroDelaySeconds} : defaultHomepageHero;
+      const [image, video] = await Promise.all([
+        settings?.heroImageAssetId ? db.mediaAsset.findUnique({where: {id: settings.heroImageAssetId}, select: {mimeType: true}}) : null,
+        settings?.heroVideoAssetId ? db.mediaAsset.findUnique({where: {id: settings.heroVideoAssetId}, select: {mimeType: true}}) : null,
+      ]);
+      const preset = (settings?.heroPreset as HomepageHeroPreset | undefined) ?? defaultHomepageHero.preset;
+      const hasImage = Boolean(image?.mimeType.startsWith('image/'));
+      const hasVideo = Boolean(video?.mimeType.startsWith('video/'));
+      const hero = {
+        preset: preset === 'CENTERED' && !hasImage || preset === 'CINEMATIC' && !hasVideo ? 'CLASSIC' as const : preset,
+        imageAssetId: hasImage ? settings?.heroImageAssetId ?? null : null,
+        videoAssetId: hasVideo ? settings?.heroVideoAssetId ?? null : null,
+        delaySeconds: settings?.heroDelaySeconds ?? defaultHomepageHero.delaySeconds,
+      };
       const items = await Promise.all(sections.map(async section => {
         const rows = await db.resource.findMany({
           where: {
