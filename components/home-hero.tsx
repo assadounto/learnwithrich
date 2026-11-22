@@ -23,16 +23,41 @@ export function HomeHero({preset, imageUrl, videoUrl, delaySeconds}: {preset: Pr
   useEffect(() => {
     if (preset !== 'CINEMATIC' || !videoUrl) return;
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (motion.matches) {setPhase('centered-static'); return;}
+    if (motion.matches) return;
+    const player = video.current;
+    if (!player) return;
+    let delayElapsed = false;
+    let videoReady = player.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA;
+    let transitionStarted = false;
     let playTimer: ReturnType<typeof setTimeout> | undefined;
-    const startTimer = setTimeout(() => {
+    const beginTransition = () => {
+      if (!delayElapsed || !videoReady || transitionStarted) return;
+      transitionStarted = true;
       setPhase('center-copy');
       playTimer = setTimeout(() => {
-        const player = video.current;
-        if (player) void player.play().then(() => setPhase('video')).catch(() => setPhase('centered-static'));
+        void player.play().then(() => setPhase('video')).catch(() => {player.pause(); setPhase('intro');});
       }, 1250);
-    }, Math.max(3, Math.min(delaySeconds, 12)) * 1000);
-    return () => {clearTimeout(startTimer); if (playTimer) clearTimeout(playTimer); video.current?.pause();};
+    };
+    const onCanPlayThrough = () => {
+      videoReady = player.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA;
+      beginTransition();
+    };
+    const onVideoError = () => {
+      videoReady = false;
+      player.pause();
+      if (transitionStarted) {if (playTimer) clearTimeout(playTimer); setPhase('intro');}
+    };
+    player.addEventListener('canplaythrough', onCanPlayThrough);
+    player.addEventListener('error', onVideoError);
+    if (videoReady) onCanPlayThrough();
+    const startTimer = setTimeout(() => {delayElapsed = true; beginTransition();}, Math.max(3, Math.min(delaySeconds, 12)) * 1000);
+    return () => {
+      player.removeEventListener('canplaythrough', onCanPlayThrough);
+      player.removeEventListener('error', onVideoError);
+      clearTimeout(startTimer);
+      if (playTimer) clearTimeout(playTimer);
+      player.pause();
+    };
   }, [preset, videoUrl, delaySeconds]);
 
   const active = preset === 'CINEMATIC' && !!videoUrl;
@@ -45,7 +70,7 @@ export function HomeHero({preset, imageUrl, videoUrl, delaySeconds}: {preset: Pr
         <HeroCopy className="ref-hero-copy hero-copy-intro" hidden={phase !== 'intro'}/>
         <HeroCopy className={`ref-hero-copy hero-copy-arriving${phase !== 'intro' ? ' is-visible' : ''}`} hidden={phase === 'intro'}/>
       </> : <HeroCopy className="ref-hero-copy"/>}
-      {preset === 'CLASSIC' && <div className="ref-hero-art" role="img" aria-label="Maker collage with an ESP32 board, Practical Maker book, African portrait illustrations and a project notebook"/>}
+      {(preset === 'CLASSIC' || active) && <div className="ref-hero-art" role="img" aria-label="Maker collage with an ESP32 board, Practical Maker book, African portrait illustrations and a project notebook"/>}
     </div>
   </section>;
 }
