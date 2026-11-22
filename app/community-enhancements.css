@@ -49,3 +49,58 @@
   .skills-possibilities { grid-template-columns: 1fr; }
   .skills-possibilities article { min-height: 0; }
 }
+
+/* Homepage opportunity cards stay legible over the warm section background. */
+.skills-possibilities { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.skills-possibilities article { min-height: 132px; padding: 18px; border-color: #e6dfd1; background: #fffdf8; box-shadow: 0 5px 18px #40230e12; }
+.skills-possibilities article > span { color: #b94820; font-size: 18px; }
+.skills-possibilities h3 { color: #20221d; font-size: 15px; line-height: 1.35; }
+.skills-possibilities p { color: #42433d; font-size: 13px; line-height: 1.55; }
+.skills-marquee-top { justify-content: flex-end; }
+
+/* Keep the community panels stacked, with independently scrollable card rails. */
+.community-home-grid { display: flex; flex-direction: column; gap: 18px; }
+.community-home-grid > .community-board { width: 100%; min-width: 0; }
+.guestbook-entries, .review-cards {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 0 -2px 16px;
+  padding: 2px 2px 12px;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #b6b4a9 transparent;
+  overscroll-behavior-inline: contain;
+}
+.guestbook-entries:focus-visible, .review-cards:focus-visible { outline: 2px solid #b94820; outline-offset: 3px; }
+.guestbook-entries blockquote, .review-cards article {
+  flex: 0 0 clamp(280px, 34vw, 390px);
+  min-width: 0;
+  min-height: 166px;
+  scroll-snap-align: start;
+}
+.guestbook-entries blockquote { grid-template-columns: 24px minmax(0, 1fr); }
+.guestbook-entries blockquote > div { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; }
+.guestbook-entries blockquote p { width: 100%; }
+.guestbook-entries blockquote cite { margin-top: auto; }
+.review-cards article { display: flex; flex-direction: column; }
+.review-cards article > p { margin-top: 10px; }
+.review-cards article .review-stars { margin-top: auto; }
+@media (max-width: 700px) {
+  .skills-possibilities { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .skills-possibilities article { min-height: 138px; padding: 14px; }
+  .skills-possibilities h3 { font-size: 14px; }
+  .skills-possibilities p { font-size: 12px; }
+  .guestbook-entries blockquote, .review-cards article { flex-basis: min(82vw, 360px); }
+  .community-home-grid { gap: 14px; }
+}
+@media (max-width: 380px) {
+  .skills-possibilities article { min-height: 150px; padding: 12px; }
+  .skills-possibilities h3 { font-size: 13px; }
+  .skills-possibilities p { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guestbook-entries, .review-cards { scroll-behavior: auto; }
+}
