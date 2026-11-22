@@ -6,6 +6,7 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json package-lock.json prisma.config.ts ./
 COPY prisma ./prisma
+RUN chmod -R a+rX /app/prisma && chmod a+r /app/prisma.config.ts
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 FROM dependencies AS builder
@@ -18,6 +19,7 @@ COPY scripts ./scripts
 COPY lib ./lib
 ENV NODE_ENV=production
 USER node
+RUN npm run db:validate
 ENTRYPOINT ["npm", "run"]
 CMD ["db:deploy"]
 
