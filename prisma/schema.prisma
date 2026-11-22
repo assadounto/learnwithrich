@@ -279,9 +279,12 @@ model ResourceAudit {
 }
 
 model HomepageSettings {
-  id        Int      @id @default(1)
-  sections  Json     @default("[]")
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id                 Int      @id @default(1)
+  sections           Json     @default("[]")
+  heroPreset         String   @default("CLASSIC") @map("hero_preset") @db.VarChar(20)
+  heroVideoAssetId   String?  @map("hero_video_asset_id") @db.Uuid
+  heroDelaySeconds   Int      @default(5) @map("hero_delay_seconds")
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("homepage_settings")
 }

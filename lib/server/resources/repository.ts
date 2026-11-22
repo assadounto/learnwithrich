@@ -1,7 +1,7 @@
 import type {Prisma} from '../../generated/prisma/client';
 import type {Database} from '../database-client';
 import {catalogQuery, ResourceInputError, resourceId, resourceSlug, text, validateDraft} from './validation';
-import {defaultHomepageSections, validateHomepageSections} from '../admin/homepage';
+import {defaultHomepageHero, defaultHomepageSections, validateHomepageSections, type HomepageHeroPreset} from '../admin/homepage';
 
 const cardSelect = {
   id: true, slug: true, type: true, title: true, summary: true, coverUrl: true,
@@ -72,9 +72,10 @@ export function resourceRepository(db: Database) {
       return {items: rows.map(card), total, page, limit};
     },
     async homepage() {
-      const settings = await db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true}});
+      const settings = await db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true, heroPreset: true, heroVideoAssetId: true, heroDelaySeconds: true}});
       const sections = validateHomepageSections(settings?.sections ?? defaultHomepageSections);
-      return Promise.all(sections.map(async section => {
+      const hero = settings ? {preset: settings.heroPreset as HomepageHeroPreset, videoAssetId: settings.heroVideoAssetId, delaySeconds: settings.heroDelaySeconds} : defaultHomepageHero;
+      const items = await Promise.all(sections.map(async section => {
         const rows = await db.resource.findMany({
           where: {
             ...published(),
@@ -89,6 +90,7 @@ export function resourceRepository(db: Database) {
         const ordered = section.source === 'SELECTED' ? section.resourceIds.map(id => byId.get(id)).filter((row): row is (typeof rows)[number] => Boolean(row)).slice(0, section.limit) : rows;
         return {...section, items: ordered.map(card)};
       }));
+      return {sections: items, hero};
     },
     async getPublic(slug: string, viewerId?: string) {
       const row = await db.resource.findFirst({where: {...published(), slug: resourceSlug(slug)}, select: {

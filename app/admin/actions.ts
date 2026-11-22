@@ -42,3 +42,13 @@ export async function saveHomepage(input: unknown) {
     return {ok: true as const, sections};
   } catch (error) { return failure(error); }
 }
+
+export async function saveHomepageHero(input: unknown) {
+  const owner = await requireOwner();
+  try {
+    await adminRepository(database(), owner.id, owner.sessionId).saveHomepageHero(input);
+    revalidatePath('/');
+    revalidatePath('/admin/homepage');
+    return {ok: true as const};
+  } catch (error) { return failure(error); }
+}

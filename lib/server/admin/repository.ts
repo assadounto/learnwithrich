@@ -6,7 +6,7 @@ import {assertOwner} from '../identity/owner';
 import {assertSessionMfa} from '../identity/mfa';
 import {adminDraft, editToken} from './input';
 import {ResourceInputError, resourceId, text, enumValue, resourceTypes} from '../resources/validation';
-import {defaultHomepageSections, validateHomepageSections} from './homepage';
+import {defaultHomepageHero, defaultHomepageSections, validateHomepageHero, validateHomepageSections, type HomepageHeroPreset} from './homepage';
 export class EditConflictError extends Error {}
 const fullResource = {
   content: true, tags: {include: {tag: true}},
@@ -49,10 +49,26 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
     async homepageSettings() {
       await authorize(db);
       const [settings, resources] = await Promise.all([
-        db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true}}),
+        db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true, heroPreset: true, heroVideoAssetId: true, heroDelaySeconds: true}}),
         db.resource.findMany({where: {status: 'PUBLISHED', publishedAt: {lte: new Date()}}, select: {id: true, title: true, type: true, coverUrl: true, summary: true}, orderBy: [{publishedAt: 'desc'}, {title: 'asc'}], take: 500}),
       ]);
-      return {sections: validateHomepageSections(settings?.sections ?? defaultHomepageSections), resources};
+      const video = settings?.heroVideoAssetId ? await db.mediaAsset.findUnique({where: {id: settings.heroVideoAssetId}, select: {originalName: true, mimeType: true}}) : null;
+      const hero = settings ? {preset: settings.heroPreset as HomepageHeroPreset, videoAssetId: video?.mimeType.startsWith('video/') ? settings.heroVideoAssetId : null, videoName: video?.mimeType.startsWith('video/') ? video.originalName : null, delaySeconds: settings.heroDelaySeconds} : {...defaultHomepageHero, videoName: null};
+      return {sections: validateHomepageSections(settings?.sections ?? defaultHomepageSections), hero, resources};
+    },
+    async saveHomepageHero(input: unknown) {
+      await authorize(db);
+      const hero = validateHomepageHero(input);
+      if (hero.videoAssetId) {
+        const asset = await db.mediaAsset.findUnique({where: {id: hero.videoAssetId}, select: {mimeType: true}});
+        if (!asset?.mimeType.startsWith('video/')) throw new ResourceInputError('Choose a video from the media library.');
+      }
+      return db.homepageSettings.upsert({
+        where: {id: 1},
+        create: {id: 1, sections: defaultHomepageSections as Prisma.InputJsonValue, heroPreset: hero.preset, heroVideoAssetId: hero.videoAssetId, heroDelaySeconds: hero.delaySeconds},
+        update: {heroPreset: hero.preset, heroVideoAssetId: hero.videoAssetId, heroDelaySeconds: hero.delaySeconds},
+        select: {heroPreset: true, heroVideoAssetId: true, heroDelaySeconds: true},
+      });
     },
     async saveHomepage(input: unknown) {
       await authorize(db);
