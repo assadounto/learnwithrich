@@ -39,8 +39,16 @@ export function HomeHero({preset, imageUrl, videoUrl, delaySeconds}: {preset: Pr
       }, 1250);
     };
     const onCanPlayThrough = () => {
-      videoReady = player.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA;
+      videoReady = true;
       beginTransition();
+    };
+    const onBufferedCanPlay = () => {
+      const bufferedEnd = player.buffered.length ? player.buffered.end(player.buffered.length - 1) : 0;
+      const hasWholeClip = Number.isFinite(player.duration) && player.duration > 0 && bufferedEnd >= player.duration - 0.35;
+      if (player.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA || hasWholeClip) {
+        videoReady = true;
+        beginTransition();
+      }
     };
     const onVideoError = () => {
       videoReady = false;
@@ -48,11 +56,15 @@ export function HomeHero({preset, imageUrl, videoUrl, delaySeconds}: {preset: Pr
       if (transitionStarted) {if (playTimer) clearTimeout(playTimer); setPhase('intro');}
     };
     player.addEventListener('canplaythrough', onCanPlayThrough);
+    player.addEventListener('canplay', onBufferedCanPlay);
+    player.addEventListener('progress', onBufferedCanPlay);
     player.addEventListener('error', onVideoError);
     if (videoReady) onCanPlayThrough();
     const startTimer = setTimeout(() => {delayElapsed = true; beginTransition();}, Math.max(3, Math.min(delaySeconds, 12)) * 1000);
     return () => {
       player.removeEventListener('canplaythrough', onCanPlayThrough);
+      player.removeEventListener('canplay', onBufferedCanPlay);
+      player.removeEventListener('progress', onBufferedCanPlay);
       player.removeEventListener('error', onVideoError);
       clearTimeout(startTimer);
       if (playTimer) clearTimeout(playTimer);

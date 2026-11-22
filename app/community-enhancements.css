@@ -104,3 +104,54 @@
 @media (prefers-reduced-motion: reduce) {
   .guestbook-entries, .review-cards { scroll-behavior: auto; }
 }
+
+/* Homepage reviews follow a framed, editorial testimonial layout. */
+.community-home { padding: 68px 0 74px; background: #f1eee5; border-block: 1px solid #d8d2c5; }
+.community-testimonial-panel { max-width: 1180px; margin-inline: auto; padding: 35px 28px 0; border: 1px solid #bdb9ad; background: #fffdf6; }
+.community-testimonial-heading { margin: 0 auto 26px; text-align: center; }
+.community-testimonial-heading .maker-kicker { margin-bottom: 12px; color: #64645c; font-size: 10px; letter-spacing: .16em; }
+.community-testimonial-heading :is(h1,h2) { margin: 0; color: #20211e; font: 900 clamp(35px, 4vw, 52px)/.94 var(--sans); letter-spacing: -.06em; }
+.community-review-page-panel .community-testimonial-heading > p { max-width: 580px; margin: 13px auto 0; color: #55564e; font-size: 13px; }
+.community-review-page-panel .community-page-count { margin-top: 15px; }
+.community-testimonial-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid #cbc7bb; }
+.community-testimonial-card { display: flex; min-width: 0; flex-direction: column; align-items: center; padding: 14px 13px 16px; border-right: 1px solid #cbc7bb; text-align: center; }
+.community-testimonial-card:last-child { border-right: 0; }
+.community-testimonial-image { display: grid; width: 100%; aspect-ratio: 1.52; place-items: center; overflow: hidden; background: #dce8df; color: #28362c; }
+.community-testimonial-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.community-testimonial-image > span { font: 600 58px/1 var(--serif); }
+.community-testimonial-image-2 { background: #e9e2d2; color: #60482c; }
+.community-testimonial-image-3 { background: #dce8ef; color: #2e4a58; }
+.community-testimonial-image-4 { background: #eadfe7; color: #633e5b; }
+.community-testimonial-card .review-stars { justify-content: center; gap: 3px; margin: 13px 0 10px; color: #b07828; }
+.community-testimonial-title { min-height: 14px; margin: 0 0 4px; color: #67665e; font-size: 10px; font-weight: 700; line-height: 1.35; }
+.community-testimonial-card blockquote { flex: 1; margin: 0; color: #373832; font: italic 14px/1.48 var(--serif); }
+.community-testimonial-card footer { display: flex; justify-content: center; align-items: flex-start; gap: 7px; margin-top: 14px; }
+.community-testimonial-dot { width: 7px; height: 7px; flex: 0 0 auto; margin-top: 5px; border-radius: 50%; background: #cf551f; }
+.community-testimonial-card footer > span:last-child { display: grid; gap: 2px; text-align: left; }
+.community-testimonial-card footer strong { color: #292a25; font-size: 11px; }
+.community-testimonial-card footer small { color: #6f7068; font-size: 9px; }
+.community-testimonial-actions { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 64px; margin-top: 0; padding: 12px 3px; }
+.community-testimonial-actions > span { color: #55564e; font-size: 11px; font-weight: 700; letter-spacing: .03em; }
+.community-testimonial-actions > div { display: flex; align-items: center; gap: 20px; }
+.community-testimonial-actions .text-link { font-size: 11px; }
+.community-testimonial-actions .button { min-height: 38px; padding: 9px 12px; font-size: 11px; }
+.community-testimonial-empty { padding: 40px 20px; color: #55564e; text-align: center; }
+.community-testimonial-empty p { margin: 0 0 14px; font-size: 14px; }
+.community-review-page-panel + .review-page-form { position: static; max-width: 720px; margin: 22px auto 0; }
+@media (max-width: 900px) {
+  .community-testimonial-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .community-testimonial-card:nth-child(2) { border-right: 0; }
+  .community-testimonial-card:nth-child(-n+2) { border-bottom: 1px solid #cbc7bb; }
+}
+@media (max-width: 560px) {
+  .community-home { padding: 42px 0 48px; }
+  .community-testimonial-panel { padding: 26px 13px 0; }
+  .community-testimonial-heading { margin-bottom: 20px; }
+  .community-testimonial-heading :is(h1,h2) { font-size: 34px; }
+  .community-testimonial-grid { grid-template-columns: 1fr; }
+  .community-testimonial-card { border-right: 0; border-bottom: 1px solid #cbc7bb; padding: 13px; }
+  .community-testimonial-card:last-child { border-bottom: 0; }
+  .community-testimonial-image { aspect-ratio: 1.8; }
+  .community-testimonial-actions { align-items: flex-start; flex-direction: column; padding: 15px 2px; }
+  .community-testimonial-actions > div { width: 100%; justify-content: space-between; gap: 10px; }
+}
