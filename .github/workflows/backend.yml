@@ -37,3 +37,5 @@ jobs:
       - run: npm run test:db
       - run: npm run build
       - run: npm run test:admin-http
+      - name: Build the migration tools image
+        run: docker build --target tools --tag learnwithrich:tools .
