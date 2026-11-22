@@ -1,0 +1,83 @@
+/* A small type-size lift keeps supporting copy comfortable to read. */
+body {
+  font-size: 16px;
+}
+
+.button,
+.studio-page .button,
+.folio-page .button {
+  font-size: 13px;
+}
+
+.resource-card > p,
+.ref-project-info p,
+.ref-course-info p,
+.ref-library-copy p,
+.folio-project-copy > p,
+.guide-description,
+.resource-detail-overview-grid p,
+.resource-detail-meta-panel > p,
+.resource-detail-components > header p,
+.resource-detail-collection > header p {
+  font-size: 14px;
+}
+
+.resource-outcome-list li,
+.resource-detail-before li,
+.resource-detail-glance dd,
+.resource-detail-meta-panel dd,
+.resource-detail-components li strong,
+.resource-collection-group li p {
+  font-size: 13px;
+}
+
+.resource-playlist-copy strong,
+.resource-related-item strong {
+  font-size: 12px;
+}
+
+.resource-learning-sidebar-heading p,
+.resource-related-summary {
+  font-size: 11px;
+}
+
+.ref-course-time,
+.ref-course-info .text-link,
+.ref-newsletter-form > p {
+  font-size: 12px;
+}
+
+.ref-newsletter-form input,
+.ref-newsletter-form .button {
+  font-size: 13px;
+}
+
+@media (max-width: 580px) {
+  body {
+    font-size: 15px;
+  }
+
+  .button,
+  .studio-page .button,
+  .folio-page .button {
+    font-size: 13px;
+  }
+
+  .resource-card > p,
+  .ref-project-info p,
+  .ref-course-info p,
+  .ref-library-copy p,
+  .folio-project-copy > p,
+  .guide-description,
+  .resource-detail-overview-grid p,
+  .resource-detail-meta-panel > p,
+  .resource-detail-components > header p,
+  .resource-detail-collection > header p {
+    font-size: 13px;
+  }
+
+  .resource-learning-sidebar-heading p,
+  .resource-related-summary {
+    font-size: 12px;
+  }
+}

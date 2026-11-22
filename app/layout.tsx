@@ -13,6 +13,7 @@ import './live-projects.css';
 import './owned-resources.css';
 import './catalog-card-rows.css';
 import './white-theme.css';
+import './readability.css';
 import { NavigationFeedback } from '@/components/navigation-feedback';
 const siteUrl = 'https://learnwithrich.com';
 
