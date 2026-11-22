@@ -221,17 +221,18 @@
  .index :global(.project-level) { flex: 1; min-width: 0; }
  .index :global(.project-level select) { width: 100%; font-size: 11px; }
  .index :global(.folio-project-grid) { display: grid; grid-template-columns: minmax(0,1fr); gap: 23px; }
- .index :global(.folio-project-card) { display: flex; flex-direction: column; grid-template-columns: none; }
- .index :global(.folio-project-image-link) { flex: none; display: block; width: 100%; height: auto; aspect-ratio: 1.55; align-self: auto; }
+ .index :global(.folio-project-card) { display: grid; grid-template-columns: minmax(112px, 40%) minmax(0, 1fr); grid-template-areas: "image intro" "description description" "tools tools" "foot foot"; align-items: start; column-gap: 15px; padding: 12px; }
+ .index :global(.folio-project-image-link) { grid-area: image; display: block; width: 100%; height: auto; aspect-ratio: 1; align-self: stretch; }
  .index :global(.live-project-cover), .index :global(.folio-project-image) { position: relative; height: 100%; aspect-ratio: auto; }
- .index :global(.folio-project-copy) { padding: 23px 21px 16px; display: flex; align-items: stretch; }
- .index :global(.folio-project-copy h3) { font-size: 29px; display: block; margin-bottom: 12px; }
- .index :global(.folio-project-meta) { font-size: 9px; margin-bottom: 12px; }
- .index :global(.folio-project-copy > p) { display: -webkit-box; -webkit-line-clamp: 3; font-size: 12px; line-height: 1.7; margin-bottom: 17px; }
- .index :global(.folio-tool-list) { display: flex; }
+ .index :global(.folio-project-copy) { display: contents; }
+ .index :global(.folio-project-intro) { grid-area: intro; align-self: center; min-width: 0; }
+ .index :global(.folio-project-copy h3) { font-size: clamp(20px, 6vw, 24px); display: block; line-height: 1.12; margin: 0; }
+ .index :global(.folio-project-meta) { font-size: 9px; margin-bottom: 8px; gap: 5px 9px; }
+ .index :global(.folio-project-copy > p) { grid-area: description; display: -webkit-box; -webkit-line-clamp: 3; font-size: 13px; line-height: 1.65; margin: 13px 0 14px; }
+ .index :global(.folio-tool-list) { grid-area: tools; display: flex; margin: 0 0 13px; }
  .index :global(.folio-image-arrow) { display: grid; }
  .index :global(.folio-image-label) { top: 13px; left: 13px; padding: 6px 8px; font-size: 8px; }
- .index :global(.folio-project-card-foot) { flex-direction: row; padding-top: 12px; border-top: 1px solid var(--line); }
+ .index :global(.folio-project-card-foot) { grid-area: foot; flex-direction: row; padding-top: 12px; border-top: 1px solid var(--line); }
  .index :global(.folio-project-card-foot > span) { display: block; font-size: 9px; }
  .index :global(.folio-project-card-foot > a) { font-size: 11px; min-height: 40px; }
  .samples { padding-inline: 18px; margin-bottom: 30px; }
