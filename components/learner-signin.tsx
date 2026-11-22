@@ -4,18 +4,19 @@ import {useSearchParams} from 'next/navigation';
 import {ArrowLeft, ArrowRight, Bookmark, CircleCheck, CreditCard, Sparkles} from 'lucide-react';
 import Link from '@/components/navigation-link';
 import {identityClient} from '@/lib/identity-client';
+import {learnerDestination} from '@/lib/identity/learner-destination';
 import styles from '@/app/(site)/signin/signin.module.css';
 
 export function LearnerSignIn() {
   const search = useSearchParams();
-  const rawNext = search.get('next') || '/account';
-  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.toLowerCase().startsWith('/admin') ? rawNext : '/account';
+  const next = learnerDestination(search.get('next'));
   const signInError = search.get('error') === 'signin';
   const [pending, setPending] = useState(false), [error, setError] = useState('');
   async function signIn() {
     setPending(true); setError('');
     try {
-      const result = await identityClient.signIn.social({provider: 'google', callbackURL: next, errorCallbackURL: '/signin?error=signin'});
+      const callbackURL = `/signin/complete?next=${encodeURIComponent(next)}`;
+      const result = await identityClient.signIn.social({provider: 'google', callbackURL, errorCallbackURL: '/signin?error=signin'});
       if (result.error) throw new Error(result.error.message || 'Google sign-in is not available right now.');
     } catch (reason) {setError(reason instanceof Error ? reason.message : 'Could not start sign-in.'); setPending(false);}
   }
