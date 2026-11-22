@@ -1,5 +1,12 @@
 import type {Metadata} from 'next';
-export const metadata: Metadata = {alternates: {canonical: '/'}, openGraph: {url: 'https://learnwithrich.com'}};
+export const metadata: Metadata = {
+  alternates: {canonical: '/'},
+  openGraph: {
+    url: 'https://learnwithrich.com',
+    images: [{url: '/images/hero-collage.webp', alt: 'LearnWithRich maker collage featuring projects, a maker book and illustrations'}],
+  },
+  twitter: {images: ['/images/hero-collage.webp']},
+};
 export const dynamic='force-dynamic';
 import { resources } from '@/lib/server/resources';
 import { HomeResourceSections } from '@/components/home-resource-sections';
