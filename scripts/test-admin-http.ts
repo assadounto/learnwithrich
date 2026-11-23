@@ -75,6 +75,15 @@ try {
   }
   for (const [id, role] of [[ownerId, 'OWNER'], [learnerId, 'LEARNER']] as const) await db.user.create({data: {id, name: 'HTTP test creator', email: `${id}@example.test`, emailVerified: true, role, accounts: {create: {id: randomUUID(), providerId: 'google', accountId: id}}}});
   const ownerCookie = await cookie(ownerId), learnerCookie = await cookie(learnerId);
+  const learnerEntry = await request('/signin?next=%2Faccount%2Fsaved');
+  assert.equal(learnerEntry.status, 200);
+  const learnerEntryBody = await learnerEntry.text();
+  assert.match(learnerEntryBody, /Learner sign in/);
+  assert.doesNotMatch(learnerEntryBody, /OWNER-ONLY CREATOR SPACE/);
+  await expectRedirect(await request('/signin?next=%2Faccount%2Fsaved', learnerCookie), '/account/saved');
+  await expectRedirect(await request('/signin/complete?next=%2Faccount%2Fsaved', learnerCookie), '/account/saved');
+  await expectRedirect(await request('/signin/complete?next=%2Fadmin%2Fresources', learnerCookie), '/account');
+  await expectRedirect(await request('/admin/signin'), '/admin');
   const entry = await request('/admin'); assert.equal(entry.status, 200); assert.match(await entry.text(), /OWNER-ONLY CREATOR SPACE/);
   await expectRedirect(await request('/admin/resources/new', learnerCookie), '/admin/access-denied');
   await expectRedirect(await request('/admin', ownerCookie), '/admin/security');
