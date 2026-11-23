@@ -258,3 +258,23 @@
   .owned-resource-copy>p{font-size:11px}
   .owned-resource-bottom{font-size:8px}
 }
+
+@media(max-width:600px){
+  .owned-resource-card{border-color:#dce3d9;border-radius:11px;box-shadow:0 5px 17px rgb(33 46 36 / 7%)}
+  .owned-resource-cover{border-radius:7px}
+  .owned-resource-type,.owned-resource-arrow{display:none}
+  .owned-resource-meta{gap:4px}
+  .owned-resource-meta>span{padding:4px 6px;border-radius:20px;background:#edf1e8;color:#3c5140;font-size:7px;font-weight:700;line-height:1.2;white-space:nowrap}
+  .owned-resource-meta .save-button{margin-left:auto;border-radius:50%;background:#e8efe4;color:#263c2e}
+  .owned-resource-meta .save-button:hover,.owned-resource-meta .save-button[aria-pressed=true]{background:#dce8d7;color:#c84b13}
+  .owned-resource-tags span{background:#e8efe4;color:#344a38;font-weight:650}
+  .owned-resource-bottom{border-color:#e3e8e1;color:#445749;font-weight:650}
+  .owned-resource-bottom>span{min-width:0;overflow-wrap:anywhere}
+  .owned-resource-bottom>a{min-height:36px;padding:0 11px;border-radius:6px;background:#c84b13;color:#fff;font-weight:700}
+  .owned-resource-bottom>a:hover{background:#a83d10;color:#fff}
+}
+@media(max-width:380px){
+  .owned-resource-meta>span{padding-inline:5px;font-size:6px}
+  .owned-resource-meta .save-button{width:28px;height:28px;min-width:28px;min-height:28px}
+  .owned-resource-bottom>a{padding-inline:9px;font-size:9px}
+}
