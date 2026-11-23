@@ -46,6 +46,7 @@ The initial limiter is deliberately configured not to trust incoming forwarded-I
 - `/admin/resources`: search up to 100 recently updated resources by title/slug; open drafts, published content or archives.
 - `/admin/resources/new`: choose a type, title, slug, summary, body, tags, HTTPS cover URL, access mode and price. Save creates a draft.
 - `/admin/resources/:id`: edit, preview, save, publish, return to draft, or archive.
+- `/admin/resources/import`: upload a ZIP containing one resource or a bundle, review its resources, publishing readiness, files, references, and validation errors, then import it as drafts. Import is owner/MFA protected; referenced package files are added to the media library and linked to their resources.
 - Preview is inside the protected editor and uses the existing escaped Markdown renderer. It never publishes a draft or opens an unguarded preview URL.
 - Public/published resource edits become visible when saved. The editor explicitly says so. To work privately, first return the resource to draft. Draft staging/release approval for an already-published revision is not implemented.
 - Public/free-account prices must be zero; paid resources require a positive minor-unit amount. The UI accepts a decimal string and converts it to minor units without floating-point multiplication.

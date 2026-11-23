@@ -1,0 +1,47 @@
+{
+  "format": "learnwithrich-resource",
+  "version": 1,
+  "resources": [
+    {
+      "key": "beginner-electronics",
+      "type": "COURSE",
+      "title": "Beginner Electronics",
+      "slug": "beginner-electronics",
+      "summary": "Learn circuit basics by building and testing small projects.",
+      "tags": ["electronics", "beginner"],
+      "bodyMarkdown": "## About this course\n\nBuild confidence with circuits through guided lessons.\n\n## How to follow along\n\nComplete the lessons in order and try each activity.",
+      "details": {
+        "difficulty": "Beginner",
+        "outcomes": ["Read a simple circuit diagram", "Build and test a basic circuit"]
+      },
+      "cover": "files/course-cover.jpg",
+      "sections": [
+        {"key": "getting-started", "title": "Getting started"}
+      ],
+      "items": [
+        {"resource": "understanding-ohms-law", "section": "getting-started"},
+        {"resource": "build-your-first-circuit", "section": "getting-started"}
+      ]
+    },
+    {
+      "key": "understanding-ohms-law",
+      "type": "LESSON",
+      "title": "Understanding Ohm’s Law",
+      "slug": "understanding-ohms-law",
+      "summary": "Relate voltage, current, and resistance.",
+      "tags": ["electronics"],
+      "bodyMarkdown": "## The relationship\n\nVoltage equals current multiplied by resistance.\n\nWatch the [lesson video](https://www.youtube.com/watch?v=example).",
+      "details": {"durationMinutes": 15, "videoUrl": "https://www.youtube.com/watch?v=example"}
+    },
+    {
+      "key": "build-your-first-circuit",
+      "type": "LESSON",
+      "title": "Build Your First Circuit",
+      "slug": "build-your-first-circuit",
+      "summary": "Connect a battery, resistor, and LED.",
+      "tags": ["electronics", "hands-on"],
+      "bodyMarkdown": "## Build it\n\nFollow the diagram, then test your circuit.\n\n![Circuit diagram](package-file:files/first-circuit.png)",
+      "details": {"durationMinutes": 25}
+    }
+  ]
+}

@@ -44,6 +44,7 @@
 .admin-page-heading h1{font-size:32px;margin:0 0 9px}
 .admin-page-heading p{font-size:14px;color:#686b70;margin:0}
 .admin-page-heading>.button{flex-shrink:0}
+.admin-page-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;flex-shrink:0}
 .workspace-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:30px}
 .workspace-stat{display:flex;flex-direction:column;gap:10px;background:#fff;border:1px solid #d9dce1;border-radius:10px;padding:22px 24px;box-shadow:0 2px 4px #1f3c2803}
 .workspace-stat>span{display:flex;align-items:center;gap:9px;color:#686b70;font-size:13px}
