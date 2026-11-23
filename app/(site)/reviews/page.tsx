@@ -41,7 +41,7 @@ export default async function ReviewsPage() {
           {reviews.map(review => <article className="community-review-card" key={review.id}>
             <div>
               <div className="community-review-person">
-                {review.imageAssetId ? <img src={`/api/public-media/${review.imageAssetId}`} alt="" width="38" height="38"/> : <span className="community-review-avatar" aria-hidden="true">{review.displayName.slice(0, 1).toUpperCase()}</span>}
+                {review.imageAssetId ? <img src={`/api/public-media/${review.imageAssetId}?width=96`} loading="lazy" decoding="async" alt="" width="38" height="38"/> : <span className="community-review-avatar" aria-hidden="true">{review.displayName.slice(0, 1).toUpperCase()}</span>}
                 <div><strong>{review.displayName}</strong>{review.country && <small>{review.country}</small>}<time dateTime={review.createdAt.toISOString()}>{review.createdAt.toLocaleDateString('en-GH', {year: 'numeric', month: 'short', day: 'numeric'})}</time></div>
               </div>
               <div className="review-stars" aria-label={`${review.rating} out of 5 stars`}>{Array.from({length: 5}, (_, star) => <Star key={star} size={14} fill={star < review.rating ? 'currentColor' : 'none'}/>)}</div>

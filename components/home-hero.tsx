@@ -2,6 +2,7 @@
 
 import {useEffect, useRef, useState} from 'react';
 import Link from '@/components/navigation-link';
+import {publicImageAttributes} from '@/lib/image-sizes';
 import {ArrowUpRight} from 'lucide-react';
 import {DrawnUnderline, AccentRays} from './decorative-marks';
 
@@ -85,14 +86,23 @@ export function HomeHero({preset, imageUrl, videoUrl, delaySeconds}: {preset: Pr
   const layoutPreset = preset === 'CINEMATIC' && !active ? 'CLASSIC' : preset;
   const centeredImage = preset === 'CENTERED' ? imageUrl ?? '/images/hero-collage.webp' : null;
   return <section className={`reference-hero home-hero-preset-${layoutPreset.toLowerCase()}${layoutPreset !== 'CLASSIC' ? ' home-hero-fullbleed' : ''}${active ? ' home-hero-cinematic' : ''}`} data-hero-phase={showVideo ? 'video' : preset === 'CENTERED' ? 'centered-static' : 'intro'}>
-    {centeredImage && <div className="home-hero-image" role="img" aria-label="Selected LearnWithRich hero background" style={{backgroundImage: `url("${centeredImage}")`}}/>}
+    {centeredImage && <div className="home-hero-image" aria-hidden="true">
+      <img {...(imageUrl ? publicImageAttributes(centeredImage, [768, 1280, 1920], '100vw') : {src: centeredImage})}
+        alt="" fetchPriority="high" decoding="async"/>
+    </div>}
     {preset === 'CINEMATIC' && videoUrl && <div className="home-hero-video" aria-hidden="true"><video ref={video} muted playsInline loop preload="none"/></div>}
     <div className="ref-container ref-hero-inner">
       {active ? <>
         <HeroCopy className="ref-hero-copy hero-copy-intro" hidden={showVideo}/>
         <HeroCopy className={`ref-hero-copy hero-copy-arriving${showVideo ? ' is-visible' : ''}`} hidden={!showVideo}/>
       </> : <HeroCopy className="ref-hero-copy"/>}
-      {(layoutPreset === 'CLASSIC' || active) && <div className="ref-hero-art" role="img" aria-label="Maker collage with an ESP32 board, Practical Maker book, African portrait illustrations and a project notebook"/>}
+      {(layoutPreset === 'CLASSIC' || active) && <div className="ref-hero-art">
+        <img src="/images/hero-collage-960.webp"
+          srcSet="/images/hero-collage-640.webp 640w, /images/hero-collage-960.webp 960w, /images/hero-collage.webp 1254w"
+          sizes="(max-width: 580px) 100vw, (max-width: 1440px) 51vw, 760px"
+          alt="Maker collage with an ESP32 board, a maker book, illustrated portraits, and a project notebook"
+          width="1254" height="1254" fetchPriority="high" decoding="async"/>
+      </div>}
     </div>
   </section>;
 }

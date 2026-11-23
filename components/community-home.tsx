@@ -1,4 +1,5 @@
 "use client";
+import {publicImageAttributes} from '@/lib/image-sizes';
 import Link from "@/components/navigation-link";
 import { useEffect, useState } from "react";
 import { ArrowRight, ArrowUpRight, Heart, PenLine, Star } from "lucide-react";
@@ -298,7 +299,7 @@ export function CommunityReviewCards({ reviews }: { reviews: Review[] }) {
           <blockquote>“{review.message}”</blockquote>
           <footer>
             {review.imageAssetId ? (
-              <img className="community-testimonial-avatar" src={`/api/public-media/${review.imageAssetId}`} alt="" width="40" height="40" loading="lazy"/>
+              <img className="community-testimonial-avatar" {...publicImageAttributes(`/api/public-media/${review.imageAssetId}`, [96], "40px")} decoding="async" alt="" width="40" height="40" loading="lazy"/>
             ) : (
               <span className="community-testimonial-avatar" aria-hidden="true">{review.displayName.slice(0, 1).toUpperCase()}</span>
             )}

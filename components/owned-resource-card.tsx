@@ -1,3 +1,4 @@
+import {publicImageAttributes} from '@/lib/image-sizes';
 import Link from '@/components/navigation-link';
 import {ArrowUpRight, BookOpen, CircuitBoard, FileText, Layers3, Image, Download, GraduationCap, Library, FolderOpen, Clock3, Gauge} from 'lucide-react';
 import type {ResourceKind} from '@/lib/server/resources/validation';
@@ -11,7 +12,7 @@ export function OwnedResourceCard({item, featured = false}: {item: ResourceCardD
   const Icon = icons[item.type];
   return <article className={`owned-resource-card${featured ? ' is-featured' : ''}`}>
     <Link href={`/resources/${item.slug}`} className="owned-resource-cover" aria-label={`Open ${item.title}`}>
-      {item.coverUrl ? <img src={item.coverUrl} alt="" loading="lazy"/> : <span className="owned-resource-art"><Icon size={featured ? 48 : 35} strokeWidth={1.15}/><small>LEARNWITHRICH</small></span>}
+      {item.coverUrl ? <img {...publicImageAttributes(item.coverUrl, [192, 384, 768], "(max-width: 580px) 90vw, 33vw")} alt="" loading="lazy" decoding="async"/> : <span className="owned-resource-art"><Icon size={featured ? 48 : 35} strokeWidth={1.15}/><small>LEARNWITHRICH</small></span>}
       <span className="owned-resource-type">{labels[item.type]}</span><span className="owned-resource-arrow"><ArrowUpRight size={19}/></span>
     </Link>
     <div className="owned-resource-copy"><div className="owned-resource-meta"><span>{labels[item.type]}</span><span>{item.access === 'PUBLIC' ? 'Open access' : item.access === 'PAID' ? 'Premium' : 'Free account'}</span><SaveButton slug={item.slug}/></div><h3><Link href={`/resources/${item.slug}`}>{item.title}</Link></h3><p>{item.summary || 'A new resource from the LearnWithRich collection.'}</p>

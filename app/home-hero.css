@@ -2,14 +2,17 @@
 .reference-hero.home-hero-fullbleed { position: relative; width: 100%; max-width: none; margin: 0; overflow: hidden; isolation: isolate; }
 .home-hero-fullbleed .ref-hero-inner { position: relative; z-index: 2; width: calc(100% - 6.7%); height: clamp(440px, 48vw, 691px); min-height: clamp(440px, 48vw, 691px); padding-block: 0; }
 .home-hero-image, .home-hero-video { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
-.home-hero-image { background-color: #34372f; background-position: center; background-repeat: no-repeat; background-size: cover; }
+.home-hero-image { background-color: #34372f; }
+.home-hero-image > img, .ref-hero-art > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ref-hero-art > img { object-fit: contain; }
 .home-hero-image::after, .home-hero-video::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #10120fa8 0%, #10120f4f 55%, #10120f38 100%), linear-gradient(0deg, #10120f55, transparent 46%); }
 .home-hero-video { z-index: 1; opacity: 0; transition: opacity .65s ease-out; }
 .home-hero-video video { display: block; width: 100%; height: 100%; object-fit: cover; }
 .home-hero-cinematic { background: var(--paper, #f7f3ea); }
 .home-hero-cinematic .ref-hero-inner { display: block; isolation: isolate; }
-.home-hero-cinematic .hero-copy-intro,
-.home-hero-cinematic .hero-copy-arriving { top: 50%; left: 50%; width: min(90%, 1000px); text-align: center; opacity: 0; transform: translate3d(-50%, calc(-50% + 8px), 0); transition: opacity .5s ease, transform .55s ease-out; }
+.home-hero-cinematic .hero-copy-intro { position: absolute; z-index: 3; top: clamp(45px, 5.6vw, 81px); left: 0; width: 60%; transition: opacity .45s ease-out; }
+.home-hero-cinematic .hero-copy-intro[aria-hidden="true"] { opacity: 0; pointer-events: none; }
+.home-hero-cinematic .hero-copy-arriving { position: absolute; z-index: 3; top: 50%; left: 50%; width: min(90%, 1000px); text-align: center; opacity: 0; transform: translate3d(-50%, calc(-50% + 8px), 0); transition: opacity .5s ease, transform .55s ease-out; }
 .home-hero-cinematic .hero-copy-arriving.is-visible { opacity: 1; transform: translate3d(-50%, -50%, 0); }
 .home-hero-cinematic .hero-copy-intro h1,
 .home-hero-cinematic .hero-copy-arriving h1 { white-space: normal; transform: none; }
