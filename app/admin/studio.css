@@ -239,3 +239,12 @@
   .studio-shell .workspace-content { padding-top: 16px; }
   .studio-file-search { width: 100%; }
 }
+
+.resource-api-page { display: grid; gap: 16px; }
+.resource-api-page .admin-page-heading { margin-bottom: 0; }
+.resource-api-page pre { overflow: auto; padding: 14px; margin: 0 0 12px; border: 1px solid #d9dce1; border-radius: 6px; background: #f5f6f7; font-size: 13px; }
+.resource-api-page p a { text-decoration: underline; }
+.resource-api-secret { border-top: 1px solid #d9dce1; margin-top: 16px; padding-top: 16px; }
+.resource-api-tokens { padding: 0; margin: 0; list-style: none; }
+.resource-api-tokens li { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 0; border-top: 1px solid #d9dce1; }
+.resource-api-tokens li > div { display: grid; flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }

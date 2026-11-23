@@ -6,7 +6,7 @@ import type {Database} from '../database-client';
 import type {Prisma} from '../../generated/prisma/client';
 import {assertOwner} from './owner';
 
-export const MFA_VALID_MS = 15 * 60_000;
+export const MFA_VALID_MS = 30 * 60_000;
 const ENROLLMENT_MS = 10 * 60_000;
 const LOCK_MS = 15 * 60_000;
 export class MfaError extends Error {}
@@ -139,6 +139,7 @@ export function mfaService(db: Database, encryptionKey: string, clock = Date.now
       return run(context, async (tx, now) => {
         const valid = await attempt(tx, context, code, recovery, now);
         if (!valid.ok) return valid;
+        await tx.resourceApiToken.updateMany({where: {ownerId: context.userId, revokedAt: null}, data: {revokedAt: new Date(now)}});
         await tx.ownerMfa.delete({where: {userId: context.userId}});
         // Revoke every session, including this one: replacement requires fresh Google auth.
         await tx.session.deleteMany({where: {userId: context.userId}});

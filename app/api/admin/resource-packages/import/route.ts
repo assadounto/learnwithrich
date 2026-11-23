@@ -1,5 +1,5 @@
 import {randomUUID} from 'node:crypto';
-import {requireOwner} from '@/lib/server/identity/access';
+import {resourceApiAccess, ResourceTokenError} from '@/lib/server/identity/resource-token';
 import {database} from '@/lib/server/database';
 import {adminRepository, EditConflictError, packageSlugConflictMessage, packageSlugConflicts, type PackageMediaAssetInput, type PackageResourceInput} from '@/lib/server/admin/repository';
 import {cleanOriginalName, checkMediaStorage, deleteMediaObject, detectMediaMime, mediaExtension, putMediaObject} from '@/lib/server/media/library';
@@ -10,12 +10,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
-  let owner: Awaited<ReturnType<typeof requireOwner>>;
-  try { owner = await requireOwner(); } catch { return Response.json({error: 'Sign in to the creator studio.'}, {status: 401}); }
   const contentLength = Number(request.headers.get('content-length') || 0);
   if (contentLength > MAX_RESOURCE_PACKAGE_BYTES + 1024 * 1024) return Response.json({error: 'ZIP packages must be 100 MB or smaller.'}, {status: 413});
   const uploaded: string[] = [];
   try {
+    const owner = await resourceApiAccess(request, 'upload', true);
     const form = await request.formData(), file = form.get('file');
     if (!(file instanceof File) || !file.size || file.size > MAX_RESOURCE_PACKAGE_BYTES || !/\.zip$/i.test(file.name)) throw new ResourceInputError('Choose a ZIP package up to 100 MB.');
     const parsed = readResourcePackageForImport(Buffer.from(await file.arrayBuffer()));
@@ -68,10 +67,11 @@ export async function POST(request: Request) {
       await putMediaObject(asset.storageKey, sourceById.get(asset.id)!, asset.mimeType);
       uploaded.push(asset.storageKey);
     }
-    const imported = await adminRepository(db, owner.id, owner.sessionId).importPackage({assets, resources, folderName});
+    const imported = await adminRepository(db, owner.id, owner.sessionId, owner.automation).importPackage({assets, resources, folderName});
     return Response.json(imported, {status: 201, headers: {'Cache-Control': 'no-store'}});
   } catch (error) {
     if (uploaded.length) await Promise.all(uploaded.map(key => deleteMediaObject(key).catch(() => undefined)));
+    if (error instanceof ResourceTokenError) return Response.json({error: error.message}, {status: error.status, headers: {'Cache-Control': 'no-store'}});
     if (error instanceof ResourceInputError) return Response.json({error: error.message}, {status: 400, headers: {'Cache-Control': 'no-store'}});
     if (error instanceof EditConflictError) return Response.json({error: error.message}, {status: 409, headers: {'Cache-Control': 'no-store'}});
     console.error('Resource package import failed', error instanceof Error ? error.name : 'UnknownError');

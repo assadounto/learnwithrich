@@ -62,7 +62,7 @@ export function ResourcePackagePreview() {
   return <div className={styles.root}>
     <section className={`admin-panel ${styles.upload}`}>
       <div className="admin-panel-heading"><FileArchive size={19}/><h2>Choose a resource package</h2></div>
-      <p className="admin-help">Upload a ZIP with a root <code>manifest.json</code> and any referenced files under <code>files/</code>. One resource and a complete course or path bundle use the same format. Packages up to 100 MB are accepted; each media file may be up to 50 MB. <a href="/resource-package" target="_blank" rel="noreferrer">Read the package format and examples</a>.</p>
+      <p className="admin-help">Upload a ZIP with a root <code>manifest.json</code> and any referenced files under <code>files/</code>. One resource and a complete course or path bundle use the same format. Packages up to 100 MB are accepted; each media file may be up to 50 MB. <a href="/resource-package" target="_blank" rel="noreferrer">Read the package format and examples</a>. <Link href="/admin/resource-api">API tokens and commands</Link>.</p>
       <input ref={input} type="file" accept=".zip,application/zip" hidden onChange={event => {void inspect(event.currentTarget.files?.[0]); event.currentTarget.value = '';}}/>
       <button className="button button-dark" type="button" disabled={busy} onClick={() => input.current?.click()}>{busy ? <LoaderCircle className="service-spin" size={16}/> : <Upload size={16}/>} {busy ? 'Inspecting package…' : preview ? 'Choose another ZIP' : 'Choose ZIP file'}</button>
       {fileName && <p className={styles.filename}>{fileName}</p>}
