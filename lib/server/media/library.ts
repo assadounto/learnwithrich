@@ -51,6 +51,15 @@ export async function deleteMediaObject(key: string) {
 export async function signedMediaUrl(key: string, filename: string, mimeType: string, disposition: 'inline' | 'attachment', expiresIn = 60) {
   return getSignedUrl(mediaS3Client(), new GetObjectCommand({Bucket: mediaBucket(), Key: key, ResponseContentType: mimeType, ResponseContentDisposition: `${disposition}; filename*=UTF-8''${encodeURIComponent(filename).replace(/[']/g, '%27')}`, ResponseCacheControl: 'private, no-store'}), {expiresIn});
 }
+export async function readMediaText(key: string, maxBytes: number) {
+  const object = await mediaS3Client().send(new GetObjectCommand({
+    Bucket: mediaBucket(), Key: key, Range: `bytes=0-${maxBytes - 1}`,
+  }));
+  if (!object.Body) throw new Error('File content could not be loaded.');
+  const bytes = await object.Body.transformToByteArray();
+  return new TextDecoder().decode(bytes.subarray(0, maxBytes));
+}
+
 export async function checkMediaStorage() {
   mediaBucket();
   mediaS3Client();

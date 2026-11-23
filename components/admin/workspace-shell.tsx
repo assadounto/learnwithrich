@@ -1,48 +1,278 @@
 'use client';
+
 import {createContext, useContext, useEffect, useRef, useState} from 'react';
-import {usePathname, useSearchParams} from 'next/navigation';
+import {usePathname, useRouter, useSearchParams} from 'next/navigation';
+import {ChevronRight, FileArchive, FileText, Files, FolderOpen, Globe, Library, Menu, MessageSquareQuote, PanelsTopLeft, Plus, Search, ShieldCheck, X} from 'lucide-react';
 import Link from '@/components/navigation-link';
-import {BookOpen, Boxes, FileText, FolderOpen, GraduationCap, Image, Layers3, Library, Menu, Plus, ShieldCheck, X, Download, Wrench, Globe, PanelsTopLeft, MessageSquareQuote, ClipboardList, Star} from 'lucide-react';
-import {OwnerSignout} from './session-buttons';
 import {resourceDefinitions} from '@/lib/resource-types';
-import {resourceTypes} from '@/lib/server/resources/validation';
-const icons = {PROJECT: Wrench, ARTICLE: FileText, COURSE: GraduationCap, PATH: Layers3, LESSON: BookOpen, DOWNLOAD: Download, BOOK: Library, GUIDE: FolderOpen, ILLUSTRATION: Image};
-const DirtyContext = createContext<(value: boolean) => void>(() => {});
-export function useAdminDirty(value: boolean) {
-  const setDirty = useContext(DirtyContext);
-  useEffect(() => {setDirty(value); return () => setDirty(false);}, [value, setDirty]);
+import {OwnerSignout} from './session-buttons';
+
+const sections = [
+  {href: '/admin/resources', label: 'Resources', icon: Library},
+  {href: '/admin/files', label: 'Files', icon: FolderOpen},
+  {href: '/admin/homepage', label: 'Homepage', icon: PanelsTopLeft},
+  {href: '/admin/community/guestbook', label: 'Guest book', icon: MessageSquareQuote},
+  {href: '/admin/community/service-requests', label: 'Service requests', icon: FileText},
+  {href: '/admin/community/reviews', label: 'Reviews', icon: MessageSquareQuote},
+  {href: '/admin/security', label: 'Account & security', icon: ShieldCheck},
+];
+const actions = [
+  {href: '/admin/resources/new', label: 'New resource', icon: Plus},
+  {href: '/admin/resources/import', label: 'Import ZIP', icon: FileArchive},
+];
+
+type ResourceEntry = {id: string; title: string; type: keyof typeof resourceDefinitions; status: string};
+type WorkspaceTab = {href: string; label: string; type?: string};
+function tabDestination(tab: WorkspaceTab) {
+  return tab.href === '/admin/resources/new' && tab.type ? `${tab.href}?type=${encodeURIComponent(tab.type)}` : tab.href;
 }
-export function WorkspaceShell({name, email, children}: {name: string; email: string; children: React.ReactNode}) {
-  const path = usePathname(), params = useSearchParams();
-  const type = params.get('type'), status = params.get('status');
-  const [open, setOpen] = useState(false), [dirty, setDirty] = useState(false);
-  const menu = useRef<HTMLButtonElement>(null), sidebar = useRef<HTMLElement>(null);
-  useEffect(() => setOpen(false), [path, type, status]);
+const tabStore = 'learnwithrich.studio.tabs';
+const home = '/admin/resources';
+const tabPath = /^\/admin\/(?:resources\/(?:new|import|[a-f0-9-]{36})|files\/[a-f0-9-]{36}|files|homepage|community\/(?:guestbook|service-requests|reviews)|security)$/;
+const WorkspaceContext = createContext({
+  trackDirty: (_key: object, _dirty: boolean) => {},
+  namePage: (_path: string, _label: string) => {},
+});
+
+export function useAdminDirty(value: boolean) {
+  const {trackDirty} = useContext(WorkspaceContext);
+  const key = useRef({});
   useEffect(() => {
-    if (!open) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const resize = () => {if (window.innerWidth > 950) setOpen(false);};
-    window.addEventListener('resize', resize);
-    sidebar.current?.querySelector<HTMLElement>('a,button')?.focus();
-    const close = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {setOpen(false); menu.current?.focus();}
-      if (event.key === 'Tab') {
-        const nodes = sidebar.current?.querySelectorAll<HTMLElement>('a,button');
-        if (!nodes?.length) return;
-        const first = nodes[0], last = nodes[nodes.length - 1];
-        if (event.shiftKey && document.activeElement === first) {event.preventDefault(); last.focus();}
-        else if (!event.shiftKey && document.activeElement === last) {event.preventDefault(); first.focus();}
+    const id = key.current;
+    trackDirty(id, value);
+    return () => trackDirty(id, false);
+  }, [value, trackDirty]);
+}
+
+export function WorkspacePageTitle({title}: {title: string}) {
+  const {namePage} = useContext(WorkspaceContext);
+  const path = usePathname();
+  useEffect(() => namePage(path, title), [namePage, path, title]);
+  return null;
+}
+
+export function WorkspaceShell({name, email, resources, children}: {
+  name: string;
+  email: string;
+  resources: ResourceEntry[];
+  children: React.ReactNode;
+}) {
+  const path = usePathname();
+  const params = useSearchParams();
+  const router = useRouter();
+  const [tabs, setTabs] = useState<WorkspaceTab[]>([]);
+  const [labels, setLabels] = useState<Record<string, string>>({});
+  const [restored, setRestored] = useState(false);
+  const [narrow, setNarrow] = useState(false);
+  const [drawer, setDrawer] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [query, setQuery] = useState('');
+  const [dirtyEditors, setDirtyEditors] = useState<Set<object>>(() => new Set());
+  const dirty = dirtyEditors.size > 0;
+  const menu = useRef<HTMLButtonElement>(null);
+  const sidebar = useRef<HTMLElement>(null);
+  const palette = useRef<HTMLDialogElement>(null);
+  const tabStrip = useRef<HTMLElement>(null);
+  const paletteInput = useRef<HTMLInputElement>(null);
+  const [context] = useState(() => ({
+    trackDirty(key: object, value: boolean) {
+      setDirtyEditors(previous => {
+        if (previous.has(key) === value) return previous;
+        const next = new Set(previous);
+        if (value) next.add(key);
+        else next.delete(key);
+        return next;
+      });
+    },
+    namePage(href: string, label: string) {
+      setLabels(previous => previous[href] === label ? previous : {...previous, [href]: label});
+    },
+  }));
+
+  const resource = resources.find(row => path === `/admin/resources/${row.id}`);
+  const label = labels[path] ?? resource?.title ?? [...sections, ...actions].find(item => item.href === path)?.label
+    ?? tabs.find(tab => tab.href === path)?.label ?? (path.startsWith('/admin/files/') ? 'File preview' : 'Resource editor');
+  const newType = path === '/admin/resources/new' ? params.get('type') ?? undefined : undefined;
+  const activeTab = path === home || tabPath.test(path) ? path : home;
+  const matching = resources.filter(row => row.title.toLowerCase().includes(query.trim().toLowerCase()));
+
+  useEffect(() => {
+    try {
+      const stored: unknown = JSON.parse(sessionStorage.getItem(tabStore) ?? '[]');
+      if (Array.isArray(stored)) {
+        setTabs(stored.filter(tab => typeof tab?.href === 'string' && tabPath.test(tab.href) && typeof tab.label === 'string').slice(0, 30));
+      }
+    } catch { /* Workspace storage is optional. */ }
+    setRestored(true);
+  }, []);
+  useEffect(() => {
+    if (!restored || !tabPath.test(path)) return;
+    setTabs(previous => {
+      const current = previous.find(tab => tab.href === path);
+      if (current && current.label === label && current.type === newType) return previous;
+      const next = {href: path, label, type: newType};
+      if (current) return previous.map(tab => tab.href === path ? next : tab);
+      return [...previous.slice(-29), next];
+    });
+  }, [restored, path, label, newType]);
+  useEffect(() => {
+    if (!restored) return;
+    try { sessionStorage.setItem(tabStore, JSON.stringify(tabs)); } catch { /* Workspace storage is optional. */ }
+  }, [restored, tabs]);
+  useEffect(() => {
+    const strip = tabStrip.current;
+    const current = strip?.querySelector<HTMLElement>('[aria-current="page"]')?.parentElement;
+    if (!strip || !current) return;
+    const bounds = current.getBoundingClientRect();
+    const viewport = strip.getBoundingClientRect();
+    if (bounds.left < viewport.left) strip.scrollLeft -= viewport.left - bounds.left;
+    else if (bounds.right > viewport.right) strip.scrollLeft += bounds.right - viewport.right;
+  }, [activeTab, tabs]);
+  useEffect(() => {
+    setDrawer(false);
+    palette.current?.close();
+  }, [path, params]);
+  useEffect(() => {
+    const openPalette = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        if (!palette.current?.open) palette.current?.showModal();
+        paletteInput.current?.focus();
       }
     };
-    document.addEventListener('keydown', close);
-    return () => {document.removeEventListener('keydown', close); window.removeEventListener('resize', resize); document.body.style.overflow = previousOverflow;};
-  }, [open]);
-  const libraryActive = path === '/admin/resources' && !type && !status;
-  return <DirtyContext.Provider value={setDirty}><div className="workspace-shell" onClickCapture={event => {
-    const target = (event.target as HTMLElement).closest('a');
-    if (dirty && target && target.target !== '_blank' && new URL(target.href).href !== window.location.href && !window.confirm('Leave without saving your changes?')) {event.preventDefault(); event.stopPropagation();}
-  }}><header className="workspace-header"><div className="workspace-brand"><button ref={menu} className="workspace-menu" aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open} aria-controls="workspace-sidebar" onClick={() => setOpen(!open)}>{open ? <X size={20}/> : <Menu size={20}/>}</button><Link href="/admin/resources"><strong>learn<span>WithRich</span></strong><span className="workspace-label">STUDIO</span></Link></div><div className="workspace-header-trail"><span>Workspace</span><span>/</span><strong>{path.includes('/security') ? 'Security' : path.includes('/community/guestbook') ? 'Guest book' : path.includes('/community/service-requests') ? 'Service requests' : path.includes('/community/reviews') ? 'Reviews' : path.includes('/homepage') ? 'Homepage builder' : path.includes('/resources/new') ? 'New resource' : path.includes('/resources/') ? 'Resource editor' : 'Resources'}</strong></div><div className="workspace-header-actions"><Link href="/" className="workspace-site-link"><Globe size={16}/>View website</Link><span className="workspace-avatar" aria-label={`Signed in as ${name}`}>{name.split(' ').map(word => word[0]).slice(0, 2).join('').toUpperCase()}</span></div></header>
-      {open && <button type="button" className="workspace-backdrop" aria-label="Close navigation" onClick={() => {setOpen(false); menu.current?.focus();}}/>}
-      <aside id="workspace-sidebar" ref={sidebar} role={open ? 'dialog' : undefined} aria-modal={open || undefined} className={`workspace-sidebar${open ? ' is-open' : ''}`} aria-label="Workspace navigation"><div className="workspace-sidebar-intro"><span className="workspace-space-icon"><Boxes size={19}/></span><div><strong>Your creator workspace</strong><span>LearnWithRich</span></div></div><Link href="/admin/resources/new" className="workspace-create"><Plus size={17}/>Create resource</Link><nav><p className="workspace-nav-label">WORKSPACE</p><Link href="/admin/resources" className={`workspace-nav-item${libraryActive ? ' active' : ''}`} aria-current={libraryActive ? 'page' : undefined}><Library size={18}/>All resources</Link><Link href="/admin/homepage" className={`workspace-nav-item${path.startsWith('/admin/homepage') ? ' active' : ''}`} aria-current={path.startsWith('/admin/homepage') ? 'page' : undefined}><PanelsTopLeft size={18}/>Homepage builder</Link><Link href="/admin/resources?status=DRAFT" className={`workspace-nav-item${status === 'DRAFT' ? ' active' : ''}`} aria-current={status === 'DRAFT' ? 'page' : undefined}><FileText size={18}/>Drafts</Link><p className="workspace-nav-label">RESOURCE TYPES</p>{resourceTypes.map(key => {const Icon = icons[key]; const active = path === '/admin/resources' && type === key; return <Link href={`/admin/resources?type=${key}`} className={`workspace-nav-item${active ? ' active' : ''}`} key={key} aria-current={active ? 'page' : undefined}><Icon size={17}/>{resourceDefinitions[key].plural}</Link>;})}<p className="workspace-nav-label">SETTINGS</p><Link href="/admin/security" className={`workspace-nav-item${path === '/admin/security' ? ' active' : ''}`} aria-current={path === '/admin/security' ? 'page' : undefined}><ShieldCheck size={18}/>Account & security</Link></nav><nav className="workspace-community-nav"><p className="workspace-nav-label">COMMUNITY & SERVICES</p><Link href="/admin/community/guestbook" className={`workspace-nav-item${path.startsWith("/admin/community/guestbook") ? " active" : ""}`}><MessageSquareQuote size={17}/>Guest book</Link><Link href="/admin/community/service-requests" className={`workspace-nav-item${path.startsWith("/admin/community/service-requests") ? " active" : ""}`}><ClipboardList size={17}/>Service requests</Link><Link href="/admin/community/reviews" className={`workspace-nav-item${path.startsWith("/admin/community/reviews") ? " active" : ""}`}><Star size={17}/>Reviews</Link></nav><div className="workspace-sidebar-account"><span className="workspace-account-name">{name}</span><span title={email}>{email}</span><OwnerSignout beforeSignout={() => !dirty || window.confirm('Sign out without saving your changes?')}/></div></aside><div className="workspace-main" inert={open}><div className="workspace-content">{children}</div><footer className="workspace-footer"><span>LearnWithRich Studio</span><span>A space to make knowledge useful.</span></footer></div></div></DirtyContext.Provider>;
+    window.addEventListener('keydown', openPalette);
+    return () => window.removeEventListener('keydown', openPalette);
+  }, []);
+  useEffect(() => {
+    const viewport = window.matchMedia('(max-width: 950px)');
+    const sync = () => {
+      setNarrow(viewport.matches);
+      if (!viewport.matches) setDrawer(false);
+    };
+    sync();
+    viewport.addEventListener('change', sync);
+    return () => viewport.removeEventListener('change', sync);
+  }, []);
+  useEffect(() => {
+    if (!drawer) return;
+    sidebar.current?.querySelector<HTMLElement>('a,button')?.focus();
+    const dismiss = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setDrawer(false);
+        menu.current?.focus();
+      } else if (event.key === 'Tab') {
+        const nodes = Array.from(sidebar.current?.querySelectorAll<HTMLElement>('a,button,summary') ?? [])
+          .filter(element => element.getClientRects().length > 0);
+        const first = nodes[0];
+        const last = nodes.at(-1);
+        if (event.shiftKey && document.activeElement === first && last) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last && first) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', dismiss);
+    return () => {
+      window.removeEventListener('keydown', dismiss);
+    };
+  }, [drawer]);
+
+  function closeTab(href: string) {
+    if (href === activeTab && dirty && !window.confirm('Close this tab without saving your changes?')) return;
+    const index = tabs.findIndex(tab => tab.href === href);
+    const next = tabs.filter(tab => tab.href !== href);
+    setTabs(next);
+    if (href === activeTab) {
+      const neighbor = next[Math.max(0, index - 1)];
+      router.push(neighbor ? tabDestination(neighbor) : home);
+    }
+  }
+
+  return <WorkspaceContext.Provider value={context}>
+    <div className={`workspace-shell studio-shell${collapsed ? ' explorer-collapsed' : ''}`} onClickCapture={event => {
+      const anchor = event.target instanceof Element ? event.target.closest('a') : null;
+      if (!dirty || !anchor || anchor.target === '_blank' || anchor.hasAttribute('download') || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const url = new URL(anchor.href, window.location.href);
+      if (url.pathname === window.location.pathname && url.search === window.location.search && url.origin === window.location.origin) return;
+      if (!window.confirm('Leave without saving your changes?')) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }}>
+      <header className="workspace-header">
+        <div className="workspace-brand">
+          <button ref={menu} type="button" className="workspace-menu" aria-label="Toggle explorer" aria-controls="workspace-sidebar"
+            aria-expanded={narrow ? drawer : !collapsed} onClick={() => narrow ? setDrawer(!drawer) : setCollapsed(!collapsed)}>
+            <Menu size={20}/>
+          </button>
+          <Link href={home}><strong>learn<span>WithRich</span></strong><span className="workspace-label">STUDIO</span></Link>
+        </div>
+        <button type="button" className="studio-quick-open" onClick={() => palette.current?.showModal()}>
+          <Search size={16}/><span>Quick open</span><kbd>Ctrl / ⌘ K</kbd>
+        </button>
+        <div className="workspace-header-actions"><Link href="/" className="workspace-site-link"><Globe size={16}/>View website</Link></div>
+      </header>
+      {drawer && <button type="button" className="workspace-backdrop" aria-label="Close explorer" onClick={() => {setDrawer(false); menu.current?.focus();}}/>}
+      <aside id="workspace-sidebar" ref={sidebar} role={drawer ? 'dialog' : undefined} aria-modal={drawer || undefined} className={`workspace-sidebar${drawer ? ' is-open' : ''}`} aria-label="Studio explorer">
+        <div className="studio-explorer-heading"><Files size={16}/> Explorer</div>
+        <div className="studio-explorer-actions">{actions.map(({href, label: title, icon: Icon}) =>
+          <Link key={href} href={href}><Icon size={16}/>{title}</Link>)}</div>
+        <nav aria-label="Content">
+          <Link className="workspace-nav-item" href={home} aria-current={path === home && !params.get('type') && !params.get('status') ? 'page' : undefined}><Library size={16}/>All resources</Link>
+          <Link className="workspace-nav-item" href={`${home}?status=DRAFT`}> <FileText size={16}/>Drafts</Link>
+          {(Object.keys(resourceDefinitions) as ResourceEntry['type'][]).map(type => {
+            const entries = resources.filter(row => row.type === type);
+            return <details key={type} className="studio-tree-group" open={resource?.type === type || params.get('type') === type ? true : undefined}>
+              <summary><ChevronRight size={14}/><FolderOpen size={15}/><span>{resourceDefinitions[type].plural}</span><small>{entries.length}</small></summary>
+              <Link className="workspace-nav-item studio-tree-file" href={`${home}?type=${type}`}>Browse {resourceDefinitions[type].plural.toLowerCase()}</Link>
+              {entries.slice(0, 12).map(row => <Link className="workspace-nav-item studio-tree-file" key={row.id} href={`${home}/${row.id}`} prefetch={false} aria-current={resource?.id === row.id ? 'page' : undefined}>
+                <FileText size={14}/><span title={row.title}>{row.title}</span>{row.status === 'DRAFT' && <small>Draft</small>}
+              </Link>)}
+            </details>;
+          })}
+        </nav>
+        <nav className="studio-tools" aria-label="Studio tools">
+          {sections.slice(1).map(({href, label: title, icon: Icon}) => <Link key={href} className="workspace-nav-item" href={href}
+            aria-current={path === href || path.startsWith(href + '/') ? 'page' : undefined}><Icon size={16}/>{title}</Link>)}
+        </nav>
+        <div className="workspace-sidebar-account">
+          <span className="workspace-account-name">{name}</span><span title={email}>{email}</span>
+          <OwnerSignout beforeSignout={() => !dirty || window.confirm('Sign out without saving your changes?')}/>
+        </div>
+      </aside>
+      <div className="workspace-main" inert={drawer}>
+        <nav ref={tabStrip} className="studio-tabs" aria-label="Open workspace tabs">
+          <div className="studio-tab"><Link href={home} aria-current={activeTab === home ? 'page' : undefined}><Library size={15}/>Resources</Link></div>
+          {tabs.map(tab => <div className="studio-tab" key={tab.href}>
+            <Link href={tabDestination(tab)} title={tab.label} prefetch={false} aria-current={activeTab === tab.href ? 'page' : undefined}><FileText size={14}/><span>{tab.label}</span></Link>
+            <button type="button" aria-label={`Close ${tab.label}`} onClick={() => closeTab(tab.href)}>{dirty && activeTab === tab.href ? <span className="studio-dirty-dot"/> : <X size={15}/>}</button>
+          </div>)}
+        </nav>
+        <div className="workspace-content">{children}</div>
+        <footer className="workspace-footer"><span><span className="studio-status-dot"/> LearnWithRich Studio</span><span>{dirty ? 'Unsaved changes' : label}</span></footer>
+      </div>
+      <dialog ref={palette} className="studio-palette" aria-label="Quick open" onClose={() => setQuery('')}>
+        <div className="studio-palette-search"><Search size={18}/>
+          <input ref={paletteInput} onKeyDown={event => {
+            const first = palette.current?.querySelector<HTMLAnchorElement>('.studio-palette-results a[href]');
+            if (!first) return;
+            if (event.key === 'ArrowDown') {event.preventDefault(); first.focus();}
+            if (event.key === 'Enter') {event.preventDefault(); first.click();}
+          }} type="search" aria-label="Find resources or studio tools" placeholder="Find resources or studio tools…" value={query} onChange={event => setQuery(event.target.value)}/>
+          <button type="button" aria-label="Close quick open" onClick={() => palette.current?.close()}><X size={18}/></button>
+        </div>
+        <div className="studio-palette-results">
+          {[...actions, ...sections].filter(item => item.label.toLowerCase().includes(query.trim().toLowerCase())).map(({href, label: title, icon: Icon}) =>
+            <Link key={href} href={href} onClick={() => palette.current?.close()}><Icon size={16}/>{title}</Link>)}
+          {matching.slice(0, 30).map(row => <Link key={row.id} href={`${home}/${row.id}`} prefetch={false} onClick={() => palette.current?.close()}>
+            <FileText size={16}/><span>{row.title}</span><small>{resourceDefinitions[row.type].name}</small>
+          </Link>)}
+          {query.trim() && !matching.length && <Link href={`${home}?q=${encodeURIComponent(query.trim().slice(0, 200))}`} onClick={() => palette.current?.close()}><Search size={16}/>Search the full catalog</Link>}
+        </div>
+      </dialog>
+    </div>
+  </WorkspaceContext.Provider>;
 }
