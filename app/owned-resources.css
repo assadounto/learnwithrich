@@ -216,3 +216,18 @@
 .resource-related-empty a{display:inline-flex;align-items:center;gap:4px;color:#53694e;font-weight:650}
 @media(max-width:900px){.resource-detail-lower-layout{grid-template-columns:minmax(0,1fr) 265px;gap:3%}.resource-detail-lower-layout .resource-detail-tab-list{gap:14px}.resource-learning-sidebar-heading{padding:15px 13px}.resource-related-item{grid-template-columns:68px minmax(0,1fr) 12px;gap:7px}.resource-related-item>img,.resource-related-placeholder{width:68px;height:50px}}
 @media(max-width:720px){.resource-detail-lower-layout{grid-template-columns:minmax(0,1fr);gap:24px;margin-top:32px}.resource-detail-lower-layout>.resource-detail-tabs{grid-row:1}.resource-learning-sidebar{position:static;max-height:none}.resource-playlist-groups,.resource-related-list{max-height:390px}.resource-related-list{grid-template-columns:1fr 1fr;gap:0 13px}.resource-related-list li+li{border-top:0}.resource-related-list li:nth-child(n+3){border-top:1px solid #eeece4}.resource-related-item{grid-template-columns:72px minmax(0,1fr);align-items:start}.resource-related-item>img,.resource-related-placeholder{width:72px;height:52px}.resource-related-open{display:none}}
+
+/* Center the projects and library intros to match the courses hero. */
+.owned-projects-hero{position:relative;display:block;min-height:410px;padding:54px 8% 48px;text-align:center}
+.owned-projects-hero>div:first-child{position:relative;z-index:1;display:flex;max-width:800px;margin-inline:auto;flex-direction:column;align-items:center}
+.owned-projects-hero h1{margin:15px 0 18px}
+.owned-projects-hero p{margin:0 auto 27px}
+.owned-projects-art{position:absolute;inset:0;z-index:0;min-height:0;opacity:.24;pointer-events:none}
+.owned-projects-art>svg{position:absolute;top:50%;right:12%;width:118px;height:118px;transform:translateY(-50%)}
+.owned-projects-art>span{right:7%;bottom:6%}
+.owned-catalog-hero{text-align:center}
+.owned-catalog-hero>.maker-kicker{position:relative;z-index:1}
+.owned-catalog-hero h1,.owned-catalog-hero p{margin-right:auto;margin-left:auto}
+.owned-catalog-hero:after{right:calc(50% - 180px);top:-185px;opacity:.65;pointer-events:none}
+@media(max-width:800px){.owned-projects-hero{display:block;min-height:330px;padding:40px 7%}.owned-projects-hero>div:first-child{display:flex}.owned-projects-art>svg{right:5%;width:95px;height:95px}}
+@media(max-width:600px){.owned-projects-hero{min-height:0;padding:32px 20px}.owned-projects-hero>div:first-child{display:flex}.owned-projects-art{display:none}.owned-catalog-hero{padding:31px 22px 27px}.owned-catalog-hero:after{right:calc(50% - 180px);top:-160px}}
