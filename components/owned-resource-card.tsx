@@ -14,7 +14,7 @@ export function OwnedResourceCard({item, featured = false}: {item: ResourceCardD
       {item.coverUrl ? <img src={item.coverUrl} alt="" loading="lazy"/> : <span className="owned-resource-art"><Icon size={featured ? 48 : 35} strokeWidth={1.15}/><small>LEARNWITHRICH</small></span>}
       <span className="owned-resource-type">{labels[item.type]}</span><span className="owned-resource-arrow"><ArrowUpRight size={19}/></span>
     </Link>
-    <div className="owned-resource-copy"><div className="owned-resource-meta"><span>{item.access === 'PUBLIC' ? 'Open resource' : item.access === 'PAID' ? 'Premium access' : 'Free account'}</span>{item.type === 'PROJECT' && <span>Build & learn</span>}<SaveButton slug={item.slug}/></div><h3><Link href={`/resources/${item.slug}`}>{item.title}</Link></h3><p>{item.summary || 'A new resource from the LearnWithRich collection.'}</p>
+    <div className="owned-resource-copy"><div className="owned-resource-meta"><span>{labels[item.type]}</span><span>{item.access === 'PUBLIC' ? 'Open access' : item.access === 'PAID' ? 'Premium' : 'Free account'}</span><SaveButton slug={item.slug}/></div><h3><Link href={`/resources/${item.slug}`}>{item.title}</Link></h3><p>{item.summary || 'A new resource from the LearnWithRich collection.'}</p>
       {!!item.tags.length && <div className="owned-resource-tags">{item.tags.slice(0, 3).map(tag => <span key={tag}>{tag}</span>)}</div>}
       <div className="owned-resource-bottom"><span>{item.access === 'PAID' ? money(item.priceMinor, item.currency) : item.access === 'FREE_ACCOUNT' ? 'Free with an account' : 'Free to explore'}</span><Link href={`/resources/${item.slug}`} aria-label={`Explore ${item.title}`}>Explore <ArrowUpRight size={15}/></Link></div>
     </div>
