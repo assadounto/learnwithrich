@@ -250,8 +250,8 @@ function parseResourcePackage(zip: Buffer): ParsedResourcePackage {
     }
     for (const match of body.matchAll(/!\[([^\]]*)\]\(package-file:([^\s)]+)\)/g)) {
       const path = packagePath(match[2], `${label} Markdown media`);
-      const label = match[1].trim().toLowerCase();
-      const type = label.startsWith('audio:') ? 'audio' : label.startsWith('video:') ? 'video' : 'image';
+      const altText = match[1].trim().toLowerCase();
+      const type = altText.startsWith('audio:') ? 'audio' : altText.startsWith('video:') ? 'video' : 'image';
       typedFileReferences.push({path, type});
     }
     const uniqueRefs = new Set(fileReferences);
