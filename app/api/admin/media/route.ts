@@ -6,12 +6,14 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try { await requireOwner(); } catch { return Response.json({error: 'Sign in to the creator studio.'}, {status: 401}); }
-  const folderId = new URL(request.url).searchParams.get('folderId');
+  const params = new URL(request.url).searchParams;
+  const folderId = params.get('folderId');
+  const query = params.get('q')?.trim().slice(0, 180);
   try {
     const db = database();
     const [folders, assets] = await Promise.all([
       db.mediaFolder.findMany({orderBy: {name: 'asc'}, select: {_count: {select: {assets: true}}, createdAt: true, id: true, name: true}}),
-      db.mediaAsset.findMany({where: folderId === 'all' ? {} : {folderId: folderId || null}, orderBy: {createdAt: 'desc'}, take: 120, select: {createdAt: true, folderId: true, id: true, mimeType: true, originalName: true, sizeBytes: true}}),
+      db.mediaAsset.findMany({where: {...(folderId === 'all' ? {} : {folderId: folderId || null}), ...(query ? {originalName: {contains: query, mode: 'insensitive'}} : {})}, orderBy: {createdAt: 'desc'}, take: 120, select: {createdAt: true, folderId: true, id: true, mimeType: true, originalName: true, sizeBytes: true}}),
     ]);
     return Response.json({folders, assets}, {headers: {'Cache-Control': 'no-store'}});
   } catch { return Response.json({error: 'Could not load the media library.'}, {status: 500}); }
