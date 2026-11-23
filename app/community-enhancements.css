@@ -111,8 +111,6 @@
 .community-testimonial-heading { margin: 0 auto 30px; text-align: center; }
 .community-testimonial-heading .maker-kicker { margin-bottom: 12px; color: #6b796d; font-size: 11px; letter-spacing: .14em; }
 .community-testimonial-heading :is(h1,h2) { margin: 0; color: #202a23; font: 850 clamp(32px, 3.7vw, 46px)/1.02 var(--sans); letter-spacing: -.055em; }
-.community-review-page-panel .community-testimonial-heading > p { max-width: 580px; margin: 14px auto 0; color: #59625b; font-size: 15px; line-height: 1.6; }
-.community-review-page-panel .community-page-count { margin-top: 16px; }
 .community-testimonial-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .community-testimonial-card { display: flex; min-width: 0; flex-direction: column; align-items: stretch; padding: 12px 12px 16px; border: 1px solid #e7e9e4; border-radius: 12px; background: #fff; text-align: left; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
 .community-testimonial-card:hover { transform: translateY(-2px); border-color: #d5ddd5; box-shadow: 0 8px 24px rgb(24 34 27 / 7%); }
@@ -137,10 +135,21 @@
 .community-testimonial-actions .button { min-height: 42px; padding: 10px 15px; font-size: 13px; }
 .community-testimonial-empty { padding: 40px 20px; color: #59625b; text-align: center; }
 .community-testimonial-empty p { margin: 0 0 14px; font-size: 15px; }
-.community-review-page-panel + .review-page-form { position: static; max-width: 720px; margin: 22px auto 0; }
+/* Keep the full reviews page aligned with the guestbook's form and entry layout. */
+.reviews-page-layout { grid-template-columns: minmax(270px, .76fr) minmax(0, 1.24fr); }
+.reviews-page-layout > .review-page-form { position: static; top: auto; }
+.community-review-list .community-review-card { display: grid; grid-template-columns: 31px minmax(0, 1fr); gap: 13px; padding: 16px; border: 1px solid #deddd6; border-radius: 8px; background: #fff; }
+.community-review-list .community-review-person { margin-bottom: 12px; }
+.community-review-list .community-review-person > div > strong { color: #253128; font-size: 12px; }
+.community-review-list .community-review-person > div > small { color: #737b74; font-size: 11px; }
+.community-review-list .community-review-person time { color: #929187; font-size: 9px; }
+.community-review-list .review-stars { color: #b94820; }
+.community-review-list .community-card-title { margin-bottom: 7px; color: #253128; font-size: 14px; }
+.community-review-list .community-review-card blockquote { margin: 0; color: #38382f; font: italic 16px/1.55 var(--serif); overflow-wrap: anywhere; }
 @media (max-width: 900px) {
   .community-testimonial-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .community-testimonial-grid { gap: 12px; }
+  .community-review-list .community-review-card { padding: 13px; }
 }
 @media (max-width: 560px) {
   .community-home { padding: 44px 0 50px; }
