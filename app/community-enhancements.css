@@ -107,7 +107,7 @@
 
 /* Reviews use the same clean white surfaces and warm accent as the rest of the site. */
 .community-home { padding: 72px 0 78px; background: #fff; border-block: 1px solid #e9e9e5; }
-.community-testimonial-panel { max-width: 1180px; margin-inline: auto; padding: 40px 36px 0; border: 1px solid #e8e8e3; border-radius: 16px; background: #fff; box-shadow: 0 12px 40px rgb(24 34 27 / 5%); }
+.community-testimonial-panel { max-width: 1200px; margin-inline: auto; padding: 40px 36px 0;  background: #fff; }
 .community-testimonial-heading { margin: 0 auto 30px; text-align: center; }
 .community-testimonial-heading .maker-kicker { margin-bottom: 12px; color: #6b796d; font-size: 11px; letter-spacing: .14em; }
 .community-testimonial-heading :is(h1,h2) { margin: 0; color: #202a23; font: 850 clamp(32px, 3.7vw, 46px)/1.02 var(--sans); letter-spacing: -.055em; }
