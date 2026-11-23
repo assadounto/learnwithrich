@@ -5,7 +5,7 @@ import type {Prisma} from '../../generated/prisma/client';
 import {assertOwner} from '../identity/owner';
 import {assertSessionMfa} from '../identity/mfa';
 import {adminDraft, editToken} from './input';
-import {ResourceInputError, resourceId, text, enumValue, resourceTypes, type ResourceDraft, type ResourceKind} from '../resources/validation';
+import {ResourceInputError, resourceId, text, enumValue, resourceTypes, validateDraft, type ResourceDraft, type ResourceKind} from '../resources/validation';
 import {defaultHomepageHero, defaultHomepageSections, validateHomepageHero, validateHomepageSections, type HomepageHeroPreset} from './homepage';
 export class EditConflictError extends Error {}
 export type PackageMediaAssetInput = {id: string; originalName: string; storageKey: string; mimeType: string; sizeBytes: number};
@@ -14,6 +14,16 @@ export type PackageResourceInput = {
   sections: {key: string; title: string}[]; items: {resource: string; section: string | null}[];
   media: {mediaAssetId: string; title: string; priceMinor: number}[];
 };
+export function packageSlugConflicts(db: Pick<Database, 'resource'>, slugs: string[]) {
+  return db.resource.findMany({where: {slug: {in: slugs}}, select: {slug: true}, orderBy: {slug: 'asc'}});
+}
+
+export function packageSlugConflictMessage(conflicts: {slug: string}[]) {
+  const shown = conflicts.slice(0, 10).map(resource => resource.slug).join(', ');
+  const remaining = conflicts.length > 10 ? ` and ${conflicts.length - 10} more` : '';
+  return `Import blocked because these resource slugs already exist: ${shown}${remaining}. Use new slugs to import a separate copy.`;
+}
+
 const fullResource = {
   content: true, tags: {include: {tag: true}},
   sections: {orderBy: {position: 'asc' as const}}, items: {orderBy: {position: 'asc' as const}},
@@ -26,9 +36,13 @@ async function snapshot(tx: Prisma.TransactionClient, id: string, actorId: strin
 }
 // Server callers always pass the session ID; trusted operator/tests may use
 // owner authorization directly without a browser session.
-export function adminRepository(db: Database, actorId: string, sessionId?: string) {
-  async function authorize(target: Database | Prisma.TransactionClient) {
+export function adminRepository(db: Database, actorId: string, sessionId?: string, automation?: (target: Database | Prisma.TransactionClient) => Promise<void>) {
+  async function authorize(target: Database | Prisma.TransactionClient, allowAutomation = false) {
     await assertOwner(target, actorId);
+    if (automation) {
+      if (!allowAutomation) throw new ResourceInputError('Use a signed-in studio session.');
+      await automation(target);
+    }
     if (sessionId) await assertSessionMfa(target, {userId: actorId, sessionId});
   }
   return {
@@ -52,20 +66,29 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
       await authorize(db);
       return db.resource.findMany({select: {id: true, title: true, type: true, status: true}, orderBy: {title: 'asc'}, take: 500});
     },
-    async importPackage(input: {assets: PackageMediaAssetInput[]; resources: PackageResourceInput[]}) {
-      await authorize(db);
+    async importPackage(input: {assets: PackageMediaAssetInput[]; resources: PackageResourceInput[]; folderName: string}) {
+      await authorize(db, true);
       if (!Array.isArray(input.assets) || !Array.isArray(input.resources) || !input.resources.length || input.resources.length > 500) throw new ResourceInputError('Invalid resource package.');
       const keys = new Set(input.resources.map(resource => resource.key));
       if (keys.size !== input.resources.length) throw new ResourceInputError('Resource package keys must be unique.');
       const ids = new Map(input.resources.map(resource => [resource.key, randomUUID()]));
       return db.$transaction(async tx => {
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(18427651)`;
-        if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
-        await authorize(tx);
+        if (sessionId || automation) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
+        await authorize(tx, true);
         const slugs = input.resources.map(resource => resource.draft.slug);
-        const existing = await tx.resource.findMany({where: {slug: {in: slugs}}, select: {slug: true}});
-        if (existing.length) throw new EditConflictError(`These slugs already exist: ${existing.map(resource => resource.slug).join(', ')}.`);
-        if (input.assets.length) await tx.mediaAsset.createMany({data: input.assets.map(asset => ({...asset, folderId: null}))});
+        const existing = await packageSlugConflicts(tx, slugs);
+        if (existing.length) throw new EditConflictError(packageSlugConflictMessage(existing));
+        let mediaFolder: {id: string; name: string} | null = null;
+        if (input.assets.length) {
+          const id = randomUUID();
+          const created = await tx.mediaFolder.createMany({data: {id, name: input.folderName}, skipDuplicates: true});
+          const suffix = ` (${id})`;
+          const name = created.count ? input.folderName : Array.from(input.folderName).slice(0, 80 - suffix.length).join('').trimEnd() + suffix;
+          if (!created.count) await tx.mediaFolder.create({data: {id, name}});
+          mediaFolder = {id, name};
+          await tx.mediaAsset.createMany({data: input.assets.map(asset => ({...asset, folderId: id}))});
+        }
 
         for (const resource of input.resources) {
           const id = ids.get(resource.key)!;
@@ -108,7 +131,7 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
           await snapshot(tx, id, actorId, 'IMPORTED');
           imported.push({id, key: resource.key, title: resource.draft.title, slug: resource.draft.slug, type: resource.draft.type as ResourceKind});
         }
-        return imported;
+        return {resources: imported, mediaFolder};
       }, {timeout: 60000});
     },
     async homepageSettings() {
@@ -160,6 +183,57 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
         await tx.homepageSettings.upsert({where: {id: 1}, create: {id: 1, sections: sections as Prisma.InputJsonValue}, update: {sections: sections as Prisma.InputJsonValue}});
         return sections;
       });
+    },
+    async getAutomationDraft(id: string) {
+      if (!automation) throw new ResourceInputError('A resource API token is required.');
+      await authorize(db, true);
+      return db.resource.findUnique({
+        where: {id: resourceId(id), status: 'DRAFT'},
+        include: {content: true, tags: {include: {tag: true}}},
+      });
+    },
+    async patchAutomationDraft(id: string, input: unknown) {
+      if (!automation) throw new ResourceInputError('A resource API token is required.');
+      await authorize(db, true);
+      resourceId(id);
+      if (!input || typeof input !== 'object' || Array.isArray(input)) throw new ResourceInputError('Send a JSON object.');
+      const {version, updatedAt, ...changes} = input as Record<string, unknown>;
+      const expected = editToken(version, updatedAt);
+      if (!Object.keys(changes).length || Object.keys(changes).some(key => !['title', 'summary', 'bodyMarkdown', 'tags', 'details'].includes(key))) {
+        throw new ResourceInputError('Supply one or more of title, summary, bodyMarkdown, tags or details.');
+      }
+      return db.$transaction(async tx => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(18427651)`;
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
+        await authorize(tx, true);
+        const row = await tx.resource.findUnique({where: {id}, include: {content: true, tags: {include: {tag: true}}}});
+        if (!row || row.status !== 'DRAFT') return null;
+        if (row.version !== expected.version || row.updatedAt.getTime() !== expected.updatedAt.getTime()) {
+          throw new EditConflictError('This resource changed. Fetch the current draft before editing.');
+        }
+        const draft = validateDraft({...row,
+          bodyMarkdown: row.content?.bodyMarkdown ?? '',
+          details: row.content?.details ?? {},
+          tags: row.tags.map(link => link.tag.name),
+          ...changes,
+        });
+        const update = await tx.resource.updateMany({where: {id, status: 'DRAFT', ...expected}, data: {
+          title: draft.title, summary: draft.summary, version: {increment: 1},
+        }});
+        if (!update.count) throw new EditConflictError('This resource changed. Fetch the current draft before editing.');
+        if ('bodyMarkdown' in changes || 'details' in changes) {
+          const content = {bodyMarkdown: draft.bodyMarkdown, details: draft.details};
+          await tx.resourceContent.upsert({where: {resourceId: id}, create: {resourceId: id, ...content}, update: content});
+        }
+        if ('tags' in changes) {
+          await tx.resourceTag.deleteMany({where: {resourceId: id}});
+          for (const name of draft.tags) {
+            const tag = await tx.tag.upsert({where: {name}, create: {name}, update: {}});
+            await tx.resourceTag.create({data: {resourceId: id, tagId: tag.id}});
+          }
+        }
+        return snapshot(tx, id, actorId, 'UPDATED');
+      }, {timeout: 15000});
     },
     async save(input: unknown) {
       // Authorization before parsing ensures non-owners cannot probe private mutations.

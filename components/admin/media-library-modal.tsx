@@ -11,9 +11,9 @@ const accepted: Record<Filter, string> = {any: `image/jpeg,image/png,image/webp,
 function icon(mime: string) {return mime.startsWith('image/') ? <FileImage size={18}/> : mime.startsWith('audio/') ? <FileAudio2 size={18}/> : mime.startsWith('video/') ? <FileVideo2 size={18}/> : <FileText size={18}/>;}
 function size(bytes: number) {return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;}
 
-export function MediaLibraryModal({open, filter, onClose, onSelect, embedded = false}: {embedded?: boolean; open: boolean; filter: Filter; onClose: () => void; onSelect: (url: string, asset: Asset) => void}) {
+export function MediaLibraryModal({open, filter, onClose, onSelect, embedded = false, initialFolderId}: {embedded?: boolean; initialFolderId?: string; open: boolean; filter: Filter; onClose: () => void; onSelect: (url: string, asset: Asset) => void}) {
   const [payload, setPayload] = useState<Payload>({folders: [], assets: []});
-  const [folderId, setFolderId] = useState(embedded ? 'all' : '');
+  const [folderId, setFolderId] = useState(initialFolderId ?? (embedded ? 'all' : ''));
   const [folderName, setFolderName] = useState('');
   const [showFolder, setShowFolder] = useState(false);
   const [search, setSearch] = useState('');

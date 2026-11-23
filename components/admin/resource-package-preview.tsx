@@ -23,11 +23,12 @@ export function ResourcePackagePreview() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [imported, setImported] = useState<{id: string; key: string; title: string; slug: string; type: string}[] | null>(null);
+  const [mediaFolder, setMediaFolder] = useState<{id: string; name: string} | null>(null);
   const packageFiles = Object.fromEntries((preview?.files ?? []).map(file => [file.path, file.previewDataUrl ?? `#${packageFileAnchor(file.path)}`]));
 
   async function inspect(file?: File) {
     if (!file) return;
-    setPreview(null); setImported(null); setError(''); setFileName(file.name); setSelectedFile(file);
+    setPreview(null); setImported(null); setMediaFolder(null); setError(''); setFileName(file.name); setSelectedFile(file);
     if (!file.name.toLowerCase().endsWith('.zip')) { setError('Choose a .zip package.'); return; }
     const form = new FormData(); form.append('file', file);
     setBusy(true);
@@ -47,8 +48,13 @@ export function ResourcePackagePreview() {
     try {
       const response = await fetch('/api/admin/resource-packages/import', {method: 'POST', body: form});
       const body = await response.json();
+      if (response.status === 409 && body.error) {
+        setPreview(current => current && {...current, valid: false, errors: [...current.errors, body.error]});
+        return;
+      }
       if (!response.ok) throw new Error(body.error || 'Could not import this package.');
       setImported(body.resources);
+      setMediaFolder(body.mediaFolder);
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Could not import this package.'); }
     finally { setBusy(false); }
   }
@@ -56,7 +62,7 @@ export function ResourcePackagePreview() {
   return <div className={styles.root}>
     <section className={`admin-panel ${styles.upload}`}>
       <div className="admin-panel-heading"><FileArchive size={19}/><h2>Choose a resource package</h2></div>
-      <p className="admin-help">Upload a ZIP with a root <code>manifest.json</code> and any referenced files under <code>files/</code>. One resource and a complete course or path bundle use the same format. Packages up to 100 MB are accepted; each media file may be up to 50 MB. <a href="https://github.com/assadounto/learnwithrich/blob/main/docs/resource-package.md" target="_blank" rel="noreferrer">Read the package format and examples</a>.</p>
+      <p className="admin-help">Upload a ZIP with a root <code>manifest.json</code> and any referenced files under <code>files/</code>. One resource and a complete course or path bundle use the same format. Packages up to 100 MB are accepted; each media file may be up to 50 MB. <a href="/resource-package" target="_blank" rel="noreferrer">Read the package format and examples</a>. <Link href="/admin/resource-api">API tokens and commands</Link>.</p>
       <input ref={input} type="file" accept=".zip,application/zip" hidden onChange={event => {void inspect(event.currentTarget.files?.[0]); event.currentTarget.value = '';}}/>
       <button className="button button-dark" type="button" disabled={busy} onClick={() => input.current?.click()}>{busy ? <LoaderCircle className="service-spin" size={16}/> : <Upload size={16}/>} {busy ? 'Inspecting package…' : preview ? 'Choose another ZIP' : 'Choose ZIP file'}</button>
       {fileName && <p className={styles.filename}>{fileName}</p>}
@@ -66,7 +72,7 @@ export function ResourcePackagePreview() {
       <section className={`admin-panel ${styles.results}`} aria-live="polite">
         <div className="admin-panel-heading">{preview.valid ? <CheckCircle2 size={19}/> : <AlertTriangle size={19}/>}<h2>{preview.valid ? 'Package checks passed' : 'Package needs changes'}</h2></div>
         <p className="admin-help">{imported ? `Imported ${imported.length} draft resources with their referenced package files.` : 'Review the resource details and files below, then import them as drafts.'}</p>
-        {imported && <div className={styles.imported}><strong>Drafts created</strong><ul>{imported.map(resource => <li key={resource.id}><Link href={`/admin/resources/${resource.id}`}>{resource.title}</Link> <span>({resource.type.replaceAll('_', ' ')} · /{resource.slug})</span></li>)}</ul></div>}
+        {imported && <div className={styles.imported}><strong>Drafts created</strong><ul>{imported.map(resource => <li key={resource.id}><Link href={`/admin/resources/${resource.id}`}>{resource.title}</Link> <span>({resource.type.replaceAll('_', ' ')} · /{resource.slug})</span></li>)}</ul>{mediaFolder && <p><Link href={`/admin/files?folderId=${mediaFolder.id}`}>Open {mediaFolder.name} in Files</Link></p>}</div>}
         {preview.errors.length > 0 && <div className="admin-alert"><strong>Fix these issues before import:</strong><ul>{preview.errors.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul></div>}
         <h3>Resources ({preview.resources.length})</h3>
         <div className={styles.resourceList}>{preview.resources.map(resource => <article className={styles.resource} key={resource.key}>

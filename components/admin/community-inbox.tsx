@@ -1,8 +1,9 @@
 'use client';
 import {useState, useTransition} from 'react';
 import {useRouter} from 'next/navigation';
-import {Check, Clock3, Mail, MessageSquareQuote, Save, Star, UserRound, X, FileText, Paperclip, Send, CircleCheck} from 'lucide-react';
+import {Check, ChevronRight, Clock3, Inbox, Mail, MessageSquareQuote, Save, Search, UserRound, X, FileText, Paperclip, Send} from 'lucide-react';
 import {MediaLibraryModal} from '@/components/admin/media-library-modal';
+import styles from './community-inbox.module.css';
 
 type Kind = 'guestbook'|'reviews'|'service-requests';
 type RevisionFile = {mediaAsset:{id:string;originalName:string;mimeType:string;sizeBytes:number}};
@@ -13,38 +14,219 @@ const requestStatuses = ['NEW','REVIEWING','QUOTED','ACCEPTED','DECLINED','COMPL
 const pretty = (value:string) => value.replaceAll('_',' ').toLowerCase().replace(/\b\w/g, letter => letter.toUpperCase());
 function dateLabel(value:string) {return new Intl.DateTimeFormat('en-GH',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value));}
 
-export function CommunityInbox({kind, initialRows}: {kind:Kind; initialRows:Row[]}) {
-  const [rows, setRows] = useState(initialRows), [busy, setBusy] = useState(''), [error, setError] = useState('');
-  const [selectedRequest, setSelectedRequest] = useState(initialRows[0]?.id ?? '');
-  const [requestFilter, setRequestFilter] = useState('ALL');
-  const [pending, startTransition] = useTransition();
-  function update(id:string, payload:Record<string,unknown>) {setBusy(id); setError(''); startTransition(async()=>{try{const response=await fetch(`/api/admin/community/${kind}/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json();if(!response.ok)throw new Error(result.error||'Could not update.');setRows(current=>current.map(row=>row.id===id?{...row,...payload,status:String(payload.status??row.status),quoteMinor:payload.quoteMinor===''?null:payload.quoteMinor as number|null,quoteNote:payload.quoteNote as string|null??row.quoteNote}:row));}catch(reason){setError(reason instanceof Error?reason.message:'Could not update.');}finally{setBusy('');}});}
-  if (!rows.length) return <div className="community-admin-empty"><MessageSquareQuote size={27}/><h2>Nothing waiting here.</h2><p>New {kind==='guestbook'?'guest book notes':kind==='reviews'?'reviews':'service requests'} will show up when they arrive.</p></div>;
-  if (kind === 'service-requests') {
-    const matchesFilter = (row: Row, filter: string) => filter === 'ALL'
-      || filter === 'NEEDS_REPLY' && ['NEW','REVIEWING'].includes(row.status)
-      || filter === 'WAITING' && ['QUOTED','PAYMENT_PENDING'].includes(row.status)
-      || filter === 'IN_PROGRESS' && row.status === 'ACCEPTED'
-      || filter === 'CLOSED' && ['DECLINED','COMPLETED'].includes(row.status);
-    const filters = [
-      {id:'ALL',label:'All requests'}, {id:'NEEDS_REPLY',label:'Needs review'},
-      {id:'WAITING',label:'Waiting on learner'}, {id:'IN_PROGRESS',label:'In progress'}, {id:'CLOSED',label:'Closed'},
-    ];
-    const visibleRows = rows.filter(row => matchesFilter(row, requestFilter));
-    const selectedRow = visibleRows.find(row => row.id === selectedRequest);
-    return <div className="service-admin-workspace">
-      {error&&<p role="alert" className="admin-alert">{error}</p>}
-      <div className="service-admin-tabs" role="group" aria-label="Filter service requests">{filters.map(filter=>{const count=rows.filter(row=>matchesFilter(row,filter.id)).length;return <button type="button" aria-pressed={requestFilter===filter.id} key={filter.id} onClick={()=>{setRequestFilter(filter.id);setSelectedRequest(rows.find(row=>matchesFilter(row,filter.id))?.id??'');}}>{filter.label}<span>{count}</span></button>;})}</div>
-      <div className="service-admin-table-wrap"><table className="service-admin-table"><thead><tr><th>Request</th><th>Learner</th><th>Budget</th><th>Received</th><th>Status</th><th><span className="sr-only">Details</span></th></tr></thead><tbody>{visibleRows.map(row=><tr key={row.id} aria-current={selectedRequest===row.id?'true':undefined}><th scope="row"><span>{pretty(row.serviceType??'OTHER')}</span><small>#{row.id.slice(0,8).toUpperCase()}</small></th><td><strong>{row.name}</strong><small>{row.email}</small></td><td>{row.budgetMinor==null?'Not set':`${(row.budgetMinor/100).toFixed(2)} ${row.currency}`}</td><td>{dateLabel(row.createdAt)}</td><td><span className={`admin-status admin-status-${row.status.toLowerCase()}`}>{statusLabels[row.status]??pretty(row.status)}</span></td><td><button type="button" className="button button-dark service-admin-open" aria-expanded={selectedRequest===row.id} onClick={()=>setSelectedRequest(row.id)}>{selectedRequest===row.id?'Open':'Details'}</button></td></tr>)}</tbody></table>{!visibleRows.length&&<p className="service-admin-empty-filter">No requests in this status yet.</p>}</div>
-      {selectedRow&&<ServiceRequestCard key={selectedRow.id} row={selectedRow} busy={pending||busy===selectedRow.id} onSave={update} onClose={()=>setSelectedRequest('')}/>}
-    </div>;
-  }
-  return <div className="community-inbox">{error&&<p role="alert" className="admin-alert">{error}</p>}{rows.map(row=><article className="community-admin-card" key={row.id}><div className="community-admin-card-heading"><div><span className={`admin-status admin-status-${row.status.toLowerCase()}`}>{statusLabels[row.status]??pretty(row.status)}</span><time>{dateLabel(row.createdAt)}</time></div>{kind==='reviews'&&<span className="community-rating" aria-label={`${row.rating} out of 5`}>{'★'.repeat(row.rating??5)}<small>{row.rating}/5</small></span>}</div>{row.imageAssetId&&<img className="community-admin-photo" src={`/api/media/${row.imageAssetId}`} alt="" width="48" height="48"/>}{row.title&&<h3 className="community-admin-title">{row.title}</h3>}<blockquote>{row.message}</blockquote><div className="community-admin-person"><UserRound size={15}/><strong>{row.name}</strong>{row.country&&<span className="community-admin-country">{row.country}</span>}{row.email&&<a href={`mailto:${row.email}`}><Mail size={13}/>{row.email}</a>}</div><div className="community-admin-actions">{row.status!=='APPROVED'?<button className="button button-dark" disabled={pending||busy===row.id} onClick={()=>update(row.id,{status:'APPROVED'})}><Check size={15}/>Approve and show on site</button>:<button className="button button-outline" disabled={pending||busy===row.id} onClick={()=>update(row.id,{status:'HIDDEN'})}><X size={15}/>Hide from site</button>}{row.status!=='PENDING'&&<button className="admin-text-button" disabled={pending||busy===row.id} onClick={()=>update(row.id,{status:'PENDING'})}><Clock3 size={14}/>Return to pending</button>}</div></article>)}</div>;
+const inboxCopy = {
+  guestbook: {title: 'Guest book', description: 'Review notes before they appear on the public site.', item: 'notes'},
+  reviews: {title: 'Community reviews', description: 'Review ratings and feedback before they appear on the public site.', item: 'reviews'},
+  'service-requests': {title: 'Service requests', description: 'Review briefs, send quotes, and manage delivery and revisions.', item: 'requests'},
+};
+const moderationFilters = [
+  {id: 'ALL', label: 'All', statuses: []},
+  {id: 'PENDING', label: 'Pending', statuses: ['PENDING']},
+  {id: 'APPROVED', label: 'Approved', statuses: ['APPROVED']},
+  {id: 'HIDDEN', label: 'Hidden', statuses: ['HIDDEN']},
+];
+const serviceFilters = [
+  {id: 'ALL', label: 'All', statuses: []},
+  {id: 'NEEDS_REPLY', label: 'Needs review', statuses: ['NEW', 'REVIEWING']},
+  {id: 'WAITING', label: 'Waiting on learner', statuses: ['QUOTED', 'PAYMENT_PENDING']},
+  {id: 'IN_PROGRESS', label: 'In progress', statuses: ['ACCEPTED']},
+  {id: 'CLOSED', label: 'Closed', statuses: ['DECLINED', 'COMPLETED']},
+];
+
+function Status({value}: {value: string}) {
+  return <span className={`admin-status admin-status-${value.toLowerCase()}`}>{statusLabels[value] ?? pretty(value)}</span>;
 }
-function ServiceRequestCard({row,busy,onSave,onClose}:{row:Row;busy:boolean;onSave:(id:string,payload:Record<string,unknown>)=>void;onClose?:()=>void}) {
-  const [status,setStatus]=useState(row.status), [quote,setQuote]=useState(row.quoteMinor==null?'':(row.quoteMinor/100).toFixed(2)), [note,setNote]=useState(row.quoteNote??''),[included,setIncluded]=useState(String(row.includedRevisions??1)),[extra,setExtra]=useState(row.extraRevisionPriceMinor?(row.extraRevisionPriceMinor/100).toFixed(2):'');
-  const revisions=row.revisions??[];
-  return <article className="community-admin-card service-admin-card"><div className="community-admin-card-heading"><div><span className={`admin-status admin-status-${status.toLowerCase()}`}>{statusLabels[status]??pretty(status)}</span><time>{dateLabel(row.createdAt)}</time></div><span className="service-admin-type">{pretty(row.serviceType??'OTHER')}</span>{onClose&&<button type="button" className="button button-dark service-admin-close" onClick={onClose}>Close details</button>}</div><div className="service-admin-contact"><strong>{row.name}</strong><a href={`mailto:${row.email}`}><Mail size={14}/>{row.email}</a><a href={`tel:${row.phone}`}><span aria-hidden="true">☎</span>{row.phone}</a></div><p className="service-admin-description">{row.description}</p><dl className="service-admin-facts"><div><dt>Budget offered</dt><dd>{row.budgetMinor==null?'Not specified':`${(row.budgetMinor/100).toFixed(2)} ${row.currency}`}</dd></div>{row.timeline&&<div><dt>Timeline</dt><dd>{row.timeline}</dd></div>}<div><dt>Request code</dt><dd>{row.id.slice(0,8).toUpperCase()}</dd></div></dl>{row.files&&row.files.length>0&&<section className="service-admin-request-files"><strong>Files from requester · {row.files.length}</strong><div>{row.files.map(({mediaAsset})=><a key={mediaAsset.id} href={`/api/service-request-files/${row.id}/${mediaAsset.id}`} target="_blank" rel="noreferrer"><FileText size={14}/><span>{mediaAsset.originalName}<small>{(mediaAsset.sizeBytes/1024/1024).toFixed(1)} MB</small></span></a>)}</div></section>}<form onSubmit={event=>{event.preventDefault();const numeric=quote.trim()?Math.round(Number(quote)*100):null;const revisionPrice=extra.trim()?Math.round(Number(extra)*100):0;const includedCount=Number(included);if(quote.trim()&&(!Number.isSafeInteger(numeric)||numeric!<0)||!Number.isSafeInteger(revisionPrice)||revisionPrice<0||!Number.isSafeInteger(includedCount)||includedCount<0||includedCount>50)return;onSave(row.id,{status,quoteMinor:numeric,quoteNote:note,includedRevisions:includedCount,extraRevisionPriceMinor:revisionPrice});}} className="service-admin-quote"><div className="service-admin-quote-heading"><span><MessageSquareQuote size={15}/>Quote & revision terms</span><small>A sent quote appears in the learner’s account with a secure Paystack payment button.</small></div><div className="service-admin-quote-fields"><label>Request status<select value={status} onChange={event=>setStatus(event.target.value)}>{requestStatuses.map(value=><option key={value} value={value}>{statusLabels[value]}</option>)}</select></label><label>Project quote ({row.currency})<input inputMode="decimal" value={quote} onChange={event=>setQuote(event.target.value)} placeholder="e.g. 2500.00"/></label><label>Included revisions<input type="number" min="0" max="50" value={included} onChange={event=>setIncluded(event.target.value)}/></label><label>Price per extra revision ({row.currency})<input inputMode="decimal" value={extra} onChange={event=>setExtra(event.target.value)}/></label></div><label>Scope, deliverables & quote note<textarea rows={4} maxLength={5000} value={note} onChange={event=>setNote(event.target.value)} placeholder="What is included in the quote? Mention assumptions, deliverables, and the revision terms…"/></label><button className="button button-dark" disabled={busy} type="submit"><Save size={14}/>{busy?'Saving…':status==='QUOTED'?'Save and send quote':'Save request update'}</button></form><section className="admin-service-revisions"><header><div><span className="admin-kicker">WORKSPACE</span><h3>Revision drafts & approvals</h3></div><span>{revisions.length} total</span></header>{revisions.length?revisions.map(revision=><article className="admin-service-revision" key={revision.id}><div className="admin-revision-top"><strong>{revision.revisionNumber===0?'Initial delivery':`Revision ${revision.revisionNumber}`}</strong><span className={`admin-status admin-status-${revision.status.toLowerCase()}`}>{pretty(revision.status)}</span></div>{revision.requesterNote&&<p><b>Learner asked for:</b> {revision.requesterNote}</p>}{revision.requesterFeedback&&<p><b>Requested changes:</b> {revision.requesterFeedback}</p>}{revision.status==='AWAITING_APPROVAL'||revision.status==='APPROVED'?<><h4>{revision.title}</h4><p>{revision.summary}</p><p><b>What changed:</b> {revision.changesMade}</p>{revision.files.map(({mediaAsset})=><a className="admin-revision-file" key={mediaAsset.id} href={`/api/service-revision-files/${revision.id}/${mediaAsset.id}`} target="_blank" rel="noreferrer"><FileText size={14}/>{mediaAsset.originalName}</a>)}</>:<ServiceRevisionEditor requestId={row.id} revision={revision}/>}</article>):row.status==='ACCEPTED'?<CreateInitialDelivery requestId={row.id}/>:<p className="admin-revision-empty">After the quote is paid, prepare the initial delivery here. Learner-requested revisions will also appear here as draft work.</p>}</section></article>;
+
+export function CommunityInbox({kind, initialRows}: {kind: Kind; initialRows: Row[]}) {
+  const router = useRouter();
+  const [changes, setChanges] = useState<Record<string, Partial<Row>>>({});
+  const [busy, setBusy] = useState('');
+  const [feedback, setFeedback] = useState<{error: boolean; text: string} | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState(initialRows[0]?.id ?? '');
+  const [filter, setFilter] = useState('ALL');
+  const [query, setQuery] = useState('');
+  const [pending, startTransition] = useTransition();
+  const service = kind === 'service-requests';
+  const filters = service ? serviceFilters : moderationFilters;
+  const copy = inboxCopy[kind];
+  const rows = initialRows.map(row => ({...row, ...changes[row.id]}));
+  const search = query.trim().toLowerCase();
+  const matching = rows.filter(row => !search || [
+    row.name, row.email, row.title, row.country, row.message, row.description,
+    row.serviceType ? pretty(row.serviceType) : undefined, row.id,
+  ].some(value => value?.toLowerCase().includes(search)));
+  const activeFilter = filters.find(item => item.id === filter) ?? filters[0];
+  const visibleRows = matching.filter(row => !activeFilter.statuses.length || activeFilter.statuses.includes(row.status));
+  const selectedRow = visibleRows.find(row => row.id === selectedRequest);
+
+  function update(id: string, payload: Partial<Row>) {
+    setBusy(id);
+    setFeedback(null);
+    startTransition(async () => {
+      try {
+        const response = await fetch(`/api/admin/community/${kind}/${id}`, {
+          method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not save the change.');
+        if (service) router.refresh();
+        else setChanges(current => ({...current, [id]: {...current[id], ...payload}}));
+        setFeedback({error: false, text: service ? 'Request updated.' : 'Moderation status updated.'});
+      } catch (error) {
+        setFeedback({error: true, text: error instanceof Error ? error.message : 'Could not save the change.'});
+      } finally { setBusy(''); }
+    });
+  }
+
+  return <div className={styles.root}>
+    <header className={styles.pageHeader}>
+      <div><h1>{copy.title}</h1><p>{copy.description}</p></div>
+      <span className={styles.total}><Inbox size={16}/>{rows.length} recent {copy.item}</span>
+    </header>
+    <section className={styles.inbox} aria-label={`${copy.title} inbox`}>
+      <div className={styles.toolbar}>
+        <div className={styles.filters} role="group" aria-label="Filter by status">
+          {filters.map(item => <button type="button" key={item.id} aria-pressed={filter === item.id} onClick={() => {
+            setFilter(item.id);
+            setSelectedRequest(matching.find(row => !item.statuses.length || item.statuses.includes(row.status))?.id ?? '');
+          }}>{item.label}<span>{matching.filter(row => !item.statuses.length || item.statuses.includes(row.status)).length}</span></button>)}
+        </div>
+        <label className={styles.search}><Search size={16}/><span className="sr-only">{`Search ${copy.item}`}</span>
+          <input type="search" placeholder={`Search ${copy.item}…`} value={query} onChange={event => setQuery(event.target.value)}/>
+        </label>
+      </div>
+      {feedback && <p className={feedback.error ? 'admin-alert' : 'admin-success'} role={feedback.error ? 'alert' : 'status'}>{feedback.text}</p>}
+      {!visibleRows.length ? <div className={styles.empty}>
+        <Inbox size={24}/><h2>{rows.length ? 'No matching results' : `No ${copy.item} yet`}</h2>
+        {rows.length > 0 && <button type="button" className="button button-outline" onClick={() => {setQuery(''); setFilter('ALL'); setSelectedRequest(rows[0]?.id ?? '');}}>Clear filters</button>}
+      </div> : service ? <div className={styles.serviceGrid}>
+        <nav className={styles.requestList} aria-label="Service request inbox">
+          {visibleRows.map(row => <button type="button" key={row.id} aria-current={row.id === selectedRequest ? 'true' : undefined}
+            aria-controls="service-request-detail" onClick={() => setSelectedRequest(row.id)}>
+            <span className={styles.requestTitle}><strong>{pretty(row.serviceType ?? 'OTHER')}</strong><ChevronRight size={16}/></span>
+            <span className={styles.requestMeta}>{row.name} · <time dateTime={row.createdAt}>{dateLabel(row.createdAt)}</time></span>
+            <Status value={row.status}/>
+          </button>)}
+        </nav>
+        <div id="service-request-detail" className={styles.detail}>
+          {selectedRow ? <ServiceRequestCard key={selectedRow.id} row={selectedRow} busy={pending || busy === selectedRow.id} onSave={update}/>
+            : <div className={styles.empty}><FileText size={22}/><h2>Select a request</h2><p>Open a request to see its brief, quote, and delivery.</p></div>}
+        </div>
+      </div> : <div className={styles.moderationList}>
+        {visibleRows.map(row => <article className={styles.moderationCard} key={row.id}>
+          <header className={styles.cardHeader}>
+            <div className={styles.person}>
+              {row.imageAssetId ? <img src={`/api/media/${row.imageAssetId}`} alt="" width="40" height="40" loading="lazy"/> : <span className={styles.avatar}><UserRound size={18}/></span>}
+              <div><strong>{row.name}</strong><span>{row.country ? `${row.country} · ` : ''}<time dateTime={row.createdAt}>{dateLabel(row.createdAt)}</time></span></div>
+            </div>
+            <Status value={row.status}/>
+          </header>
+          <div className={styles.message}>
+            {kind === 'reviews' && row.rating !== undefined && <p className={styles.rating}><span aria-hidden="true">{'★'.repeat(row.rating)}{'☆'.repeat(5 - row.rating)}</span> {row.rating}/5</p>}
+            {row.title && <h2>{row.title}</h2>}
+            <blockquote>{row.message}</blockquote>
+          </div>
+          <footer className={styles.cardActions}>
+            {row.email && <a href={`mailto:${row.email}`} className={styles.email}><Mail size={15}/>{row.email}</a>}
+            {row.status !== 'APPROVED' ? <button type="button" className="button button-dark" disabled={pending} onClick={() => update(row.id, {status: 'APPROVED'})}><Check size={15}/>Approve</button>
+              : <button type="button" className="button button-outline" disabled={pending} onClick={() => update(row.id, {status: 'HIDDEN'})}><X size={15}/>Hide</button>}
+            {row.status !== 'PENDING' && <button type="button" className="button button-outline" disabled={pending} onClick={() => update(row.id, {status: 'PENDING'})}><Clock3 size={14}/>Return to pending</button>}
+          </footer>
+        </article>)}
+      </div>}
+    </section>
+  </div>;
+}
+function ServiceRequestCard({row, busy, onSave}: {row: Row; busy: boolean; onSave: (id: string, payload: Partial<Row>) => void}) {
+  const [status, setStatus] = useState(row.status);
+  const [quote, setQuote] = useState(row.quoteMinor == null ? '' : (row.quoteMinor / 100).toFixed(2));
+  const [note, setNote] = useState(row.quoteNote ?? '');
+  const [included, setIncluded] = useState(String(row.includedRevisions ?? 1));
+  const [extra, setExtra] = useState(row.extraRevisionPriceMinor ? (row.extraRevisionPriceMinor / 100).toFixed(2) : '');
+  const [quoteError, setQuoteError] = useState('');
+  const [panel, setPanel] = useState('Brief');
+  const revisions = row.revisions ?? [];
+
+  function saveQuote(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const quoteMinor = quote.trim() ? Math.round(Number(quote) * 100) : null;
+    const extraRevisionPriceMinor = extra.trim() ? Math.round(Number(extra) * 100) : 0;
+    const includedRevisions = Number(included);
+    const amounts = quoteMinor === null ? [extraRevisionPriceMinor] : [quoteMinor, extraRevisionPriceMinor];
+    if (amounts.some(amount => !Number.isSafeInteger(amount) || amount < 0)
+      || !Number.isSafeInteger(includedRevisions) || includedRevisions < 0 || includedRevisions > 50) {
+      setQuoteError('Enter valid quote and revision amounts, and between 0 and 50 included revisions.');
+      return;
+    }
+    setQuoteError('');
+    onSave(row.id, {status, quoteMinor, quoteNote: note, includedRevisions, extraRevisionPriceMinor});
+  }
+
+  return <article>
+    <header className={styles.detailHeader}>
+      <div><h2>{pretty(row.serviceType ?? 'OTHER')}</h2><p>{row.name} · #{row.id.slice(0, 8).toUpperCase()}</p></div>
+      <Status value={row.status}/>
+    </header>
+    <div className={styles.detailTabs} role="group" aria-label="Request sections">
+      {['Brief', 'Quote', 'Delivery'].map(section => <button key={section} type="button" aria-pressed={panel === section}
+        aria-controls={`service-panel-${section.toLowerCase()}`} onClick={() => setPanel(section)}>{section}</button>)}
+    </div>
+    <div id="service-panel-brief" hidden={panel !== 'Brief'}>
+      <div className="service-admin-contact">
+        <strong>{row.name}</strong>
+        {row.email && <a href={`mailto:${row.email}`}><Mail size={14}/>{row.email}</a>}
+        {row.phone && <a href={`tel:${row.phone}`}><span aria-hidden="true">☎</span>{row.phone}</a>}
+      </div>
+      <p className="service-admin-description">{row.description}</p>
+      <dl className="service-admin-facts">
+        <div><dt>Budget offered</dt><dd>{row.budgetMinor == null ? 'Not specified' : `${(row.budgetMinor / 100).toFixed(2)} ${row.currency}`}</dd></div>
+        {row.timeline && <div><dt>Timeline</dt><dd>{row.timeline}</dd></div>}
+        <div><dt>Received</dt><dd><time dateTime={row.createdAt}>{dateLabel(row.createdAt)}</time></dd></div>
+      </dl>
+      {!!row.files?.length && <section className="service-admin-request-files">
+        <strong>Files from requester · {row.files.length}</strong>
+        <div>{row.files.map(({mediaAsset}) => <a key={mediaAsset.id} href={`/api/service-request-files/${row.id}/${mediaAsset.id}`} target="_blank" rel="noreferrer">
+          <FileText size={14}/><span>{mediaAsset.originalName}<small>{(mediaAsset.sizeBytes / 1024 / 1024).toFixed(1)} MB</small></span>
+        </a>)}</div>
+      </section>}
+    </div>
+    <div id="service-panel-quote" hidden={panel !== 'Quote'}>
+      <form onSubmit={saveQuote} className="service-admin-quote">
+        <div className="service-admin-quote-heading">
+          <span><MessageSquareQuote size={15}/>Quote & revision terms</span>
+          <small>A sent quote appears in the learner’s account with a Paystack payment button.</small>
+        </div>
+        <div className="service-admin-quote-fields">
+          <label>Request status<select value={status} onChange={event => setStatus(event.target.value)}>
+            {!requestStatuses.includes(status) && <option value={status} disabled>{statusLabels[status] ?? pretty(status)}</option>}
+            {requestStatuses.map(value => <option key={value} value={value}>{statusLabels[value]}</option>)}
+          </select></label>
+          <label>Project quote ({row.currency})<input inputMode="decimal" value={quote} onChange={event => setQuote(event.target.value)} placeholder="e.g. 2500.00"/></label>
+          <label>Included revisions<input type="number" min="0" max="50" value={included} onChange={event => setIncluded(event.target.value)}/></label>
+          <label>Price per extra revision ({row.currency})<input inputMode="decimal" value={extra} onChange={event => setExtra(event.target.value)}/></label>
+        </div>
+        <label>Scope, deliverables & quote note<textarea rows={4} maxLength={5000} value={note} onChange={event => setNote(event.target.value)} placeholder="What is included in the quote?"/></label>
+        {quoteError && <p role="alert" className="admin-alert">{quoteError}</p>}
+        <button className="button button-dark" disabled={busy} type="submit"><Save size={14}/>{busy ? 'Saving…' : status === 'QUOTED' ? 'Save and send quote' : 'Save request update'}</button>
+      </form>
+    </div>
+    <div id="service-panel-delivery" hidden={panel !== 'Delivery'}>
+      <section className="admin-service-revisions">
+        <header><h3>Revision drafts & approvals</h3><span>{revisions.length} total</span></header>
+        {revisions.length ? revisions.map(revision => <article className="admin-service-revision" key={revision.id}>
+          <div className="admin-revision-top"><strong>{revision.revisionNumber === 0 ? 'Initial delivery' : `Revision ${revision.revisionNumber}`}</strong><Status value={revision.status}/></div>
+          {revision.requesterNote && <p><b>Learner asked for:</b> {revision.requesterNote}</p>}
+          {revision.requesterFeedback && <p><b>Requested changes:</b> {revision.requesterFeedback}</p>}
+          {['AWAITING_APPROVAL', 'APPROVED'].includes(revision.status) ? <>
+            <h4>{revision.title}</h4><p>{revision.summary}</p><p><b>What changed:</b> {revision.changesMade}</p>
+            {revision.files.map(({mediaAsset}) => <a className="admin-revision-file" key={mediaAsset.id}
+              href={`/api/service-revision-files/${revision.id}/${mediaAsset.id}`} target="_blank" rel="noreferrer"><FileText size={14}/>{mediaAsset.originalName}</a>)}
+          </> : <ServiceRevisionEditor requestId={row.id} revision={revision}/>}
+        </article>) : row.status === 'ACCEPTED' ? <CreateInitialDelivery requestId={row.id}/>
+          : <p className="admin-revision-empty">After the quote is paid, prepare the initial delivery here. Learner-requested revisions will also appear here.</p>}
+      </section>
+    </div>
+  </article>;
 }
 
 function ServiceRevisionEditor({requestId,revision}:{requestId:string;revision:Revision}) {

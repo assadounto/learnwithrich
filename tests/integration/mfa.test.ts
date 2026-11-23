@@ -103,7 +103,7 @@ test('five failures share an account-wide lock across sessions and factors', asy
   await mfa.verify(context, await otp(setup.secret));
   assert.equal((await db.ownerMfa.findUniqueOrThrow({where: {userId: ownerId}})).failedAttempts, 0);
 });
-test('verification expires after 15 minutes, is session-bound and does not survive revocation', async () => {
+test('verification expires after 30 minutes, is session-bound and does not survive revocation', async () => {
   await enroll();
   const other = await session();
   await assert.rejects(assertSessionMfa(db, other));

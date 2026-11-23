@@ -180,6 +180,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   audits        ResourceAudit[]
+  resourceTokens ResourceApiToken[]
   purchases     Purchase[]
   savedResources SavedResource[]
   reviews       Review[]
@@ -187,6 +188,22 @@ model User {
   servicePayments ServicePayment[]
 
   @@map("users")
+}
+
+model ResourceApiToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  ownerId   String    @map("owner_id")
+  label     String    @db.VarChar(80)
+  digest    String    @unique @db.Char(64)
+  hint      String    @db.Char(8)
+  canEdit   Boolean   @default(false) @map("can_edit")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, createdAt])
+  @@map("resource_api_tokens")
 }
 
 model OwnerMfa {

@@ -9,8 +9,9 @@ try {
   await db.$transaction(async tx => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${userId}, 18427653))`;
     await assertOwner(tx, userId);
+    await tx.resourceApiToken.updateMany({where: {ownerId: userId, revokedAt: null}, data: {revokedAt: new Date()}});
     await tx.ownerMfa.deleteMany({where: {userId}});
     await tx.session.deleteMany({where: {userId}});
   });
-  console.log('Owner MFA reset. All sessions revoked. Sign in with Google and enroll a new authenticator.');
+  console.log('Owner MFA reset. All sessions and resource API tokens revoked. Sign in with Google and enroll a new authenticator.');
 } finally { await db.$disconnect(); }

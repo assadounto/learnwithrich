@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import assert from 'node:assert/strict';
-import {randomBytes, randomUUID} from 'node:crypto';
+import {createHash, randomBytes, randomUUID} from 'node:crypto';
+import {crc32} from 'node:zlib';
 import {createServer} from 'node:net';
 import {spawn} from 'node:child_process';
 import {readFile} from 'node:fs/promises';
@@ -43,6 +44,28 @@ async function expectRedirect(response: Response, destination: string) {
   assert.ok(response.headers.get('location')?.endsWith(destination) || streamed, `Missing redirect to ${destination}`);
   assert.doesNotMatch(body, /Private until published/);
 }
+function zipManifest(value: unknown) {
+  const name = Buffer.from('manifest.json');
+  const data = Buffer.from(JSON.stringify(value));
+  const local = Buffer.alloc(30);
+  const central = Buffer.alloc(46);
+  const end = Buffer.alloc(22);
+  local.writeUInt32LE(0x04034b50, 0);
+  local.writeUInt16LE(20, 4);
+  local.writeUInt32LE(crc32(data), 14);
+  local.writeUInt32LE(data.length, 18);
+  local.writeUInt32LE(data.length, 22);
+  local.writeUInt16LE(name.length, 26);
+  central.writeUInt32LE(0x02014b50, 0);
+  central.writeUInt16LE(20, 4);
+  local.copy(central, 6, 4, 28);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(1, 8);
+  end.writeUInt16LE(1, 10);
+  end.writeUInt32LE(central.length + name.length, 12);
+  end.writeUInt32LE(local.length + name.length + data.length, 16);
+  return Buffer.concat([local, name, data, central, name, end]);
+}
 try {
   for (let attempt = 0; attempt < 100; attempt++) {
     try {if ((await request('/api/health')).ok) break;} catch {}
@@ -63,7 +86,8 @@ try {
     if (!entry) throw new Error(`Missing server action ${name}`); return entry[0];
   };
   const action = async (name: string, args: unknown[], sessionCookie: string, source = origin) => {
-    const response = await fetch(origin + (name === 'mfaAction' ? '/admin/security' : '/admin/resources/new'), {method: 'POST', headers: {'Next-Action': actionId(name), 'Content-Type': 'text/plain;charset=UTF-8', origin: source, cookie: sessionCookie}, body: JSON.stringify(args), redirect: 'manual'});
+    const page = name === 'mfaAction' ? '/admin/security' : ['createResourceToken', 'revokeResourceToken'].includes(name) ? '/admin/resource-api' : '/admin/resources/new';
+    const response = await fetch(origin + page, {method: 'POST', headers: {'Next-Action': actionId(name), 'Content-Type': 'text/plain;charset=UTF-8', origin: source, cookie: sessionCookie}, body: JSON.stringify(args), redirect: 'manual'});
     return {status: response.status, body: await response.text()};
   };
   const payload = {title: 'HTTP resource', slug: prefix, type: 'ARTICLE', summary: 'A practical test resource.', details: {author: 'HTTP test creator', readingMinutes: 7}, bodyMarkdown: 'Private until published', sections: [], items: []};
@@ -111,11 +135,54 @@ try {
   assert.match(stale.body, /another tab/); assert.equal((await db.resource.findUniqueOrThrow({where: {id: row.id}})).title, 'HTTP resource');
   await action('changeResourceStatus', [row.id, current.version, current.updatedAt.toISOString(), 'UNPUBLISH'], ownerCookie);
   assert.equal((await request(`/api/catalog/${prefix}`)).status, 404);
-  await db.session.updateMany({where: {userId: ownerId}, data: {mfaVerifiedAt: new Date(Date.now() - 16 * 60_000)}});
+  await db.session.updateMany({where: {userId: ownerId}, data: {mfaVerifiedAt: new Date(Date.now() - 31 * 60_000)}});
   await expectRedirect(await request('/admin', ownerCookie), '/admin/security');
   await action('mfaAction', ['verify', codes[1], true], ownerCookie);
+  const tokenPage = await request('/admin/resource-api', ownerCookie);
+  assert.match(await tokenPage.text(), /Generate an API token/);
+  const createToken = async (allowEdit: boolean) => {
+    const result = await action('createResourceToken', ['HTTP automation fixture', 1, allowEdit], ownerCookie);
+    const token = result.body.match(/"token":"(lwr_res_[A-Za-z0-9_-]{43})"/)?.[1];
+    assert.ok(token, 'The owner should receive a new token once');
+    return token;
+  };
+  const uploadToken = await createToken(false);
+  const editApiToken = await createToken(true);
+  const auth = (token: string) => ({Authorization: `Bearer ${token}`});
+  const packageSlug = `${prefix}-zip`;
+  const archive = zipManifest({format: 'learnwithrich-resource', version: 1, resources: [{
+    key: 'article', type: 'ARTICLE', title: 'ZIP fixture', slug: packageSlug, bodyMarkdown: 'Draft body',
+  }]});
+  const uploadZip = (stage: 'preview' | 'import', token: string) => {
+    const form = new FormData();
+    form.append('file', new Blob([new Uint8Array(archive)]), 'automation.zip');
+    return fetch(`${origin}/api/admin/resource-packages/${stage}`, {method: 'POST', headers: auth(token), body: form});
+  };
+  const preview = await uploadZip('preview', uploadToken);
+  assert.equal(preview.status, 200);
+  assert.equal((await preview.json()).preview.valid, true);
+  const imported = await uploadZip('import', uploadToken);
+  assert.equal(imported.status, 201);
+  const draftId = (await imported.json()).resources[0].id;
+  const draftUrl = `${origin}/api/admin/resource-drafts/${draftId}`;
+  assert.equal((await uploadZip('import', uploadToken)).status, 409);
+  assert.equal((await fetch(draftUrl, {headers: auth(uploadToken)})).status, 403);
+  const draft = await fetch(draftUrl, {headers: auth(editApiToken)});
+  assert.equal(draft.status, 200);
+  const {version, updatedAt} = (await draft.json()).draft;
+  const patchDraft = () => fetch(draftUrl, {method: 'PATCH', headers: {...auth(editApiToken), 'Content-Type': 'application/json'},
+    body: JSON.stringify({version, updatedAt, title: 'Updated by automation'})});
+  const updated = await patchDraft();
+  assert.equal(updated.status, 200);
+  assert.equal((await updated.json()).draft.title, 'Updated by automation');
+  assert.equal((await patchDraft()).status, 409);
+  assert.equal((await db.resource.findUniqueOrThrow({where: {id: draftId}})).status, 'DRAFT');
+  const tokenRecord = await db.resourceApiToken.findUniqueOrThrow({where: {digest: createHash('sha256').update(editApiToken).digest('hex')}});
+  await action('revokeResourceToken', [tokenRecord.id], ownerCookie);
+  assert.equal((await fetch(draftUrl, {headers: auth(editApiToken)})).status, 401);
   await db.user.update({where: {id: ownerId}, data: {role: 'LEARNER'}});
   await expectRedirect(await request('/admin', ownerCookie), '/admin/access-denied');
+  assert.equal((await uploadZip('preview', uploadToken)).status, 401);
   console.log('PASS standalone admin: signed sessions, MFA enrollment/recovery/expiry, Google-only mutation denial, protected pages/actions, cross-origin denial, draft editing, publishing, stale-write protection and role revocation');
 } finally {
   server.kill('SIGTERM');

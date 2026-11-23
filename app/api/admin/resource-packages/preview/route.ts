@@ -1,4 +1,5 @@
-import {requireOwner} from '@/lib/server/identity/access';
+import {packageSlugConflictMessage, packageSlugConflicts} from '@/lib/server/admin/repository';
+import {resourceApiAccess, ResourceTokenError} from '@/lib/server/identity/resource-token';
 import {database} from '@/lib/server/database';
 import {MAX_RESOURCE_PACKAGE_BYTES, previewResourcePackage} from '@/lib/server/resources/package-import';
 import {ResourceInputError} from '@/lib/server/resources/validation';
@@ -6,10 +7,10 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
-  try { await requireOwner(); } catch { return Response.json({error: 'Sign in to the creator studio.'}, {status: 401}); }
   const contentLength = Number(request.headers.get('content-length') || 0);
   if (contentLength > MAX_RESOURCE_PACKAGE_BYTES + 1024 * 1024) return Response.json({error: 'ZIP packages must be 100 MB or smaller.'}, {status: 413});
   try {
+    await resourceApiAccess(request, 'upload', true);
     const form = await request.formData();
     const file = form.get('file');
     if (!(file instanceof File)) return Response.json({error: 'Choose a ZIP package to preview.'}, {status: 400});
@@ -19,13 +20,14 @@ export async function POST(request: Request) {
     const preview = previewResourcePackage(Buffer.from(await file.arrayBuffer()));
     const slugs = preview.resources.map(resource => resource.slug).filter(Boolean);
     if (slugs.length) {
-      const conflicts = await database().resource.findMany({where: {slug: {in: slugs}}, select: {slug: true}});
-      for (const resource of preview.resources) if (conflicts.some(row => row.slug === resource.slug)) preview.errors.push(`The slug already exists on this site: ${resource.slug}.`);
+      const conflicts = await packageSlugConflicts(database(), slugs);
+      if (conflicts.length) preview.errors.push(packageSlugConflictMessage(conflicts));
     }
     preview.errors = [...new Set(preview.errors)];
     preview.valid = preview.errors.length === 0;
     return Response.json({preview}, {headers: {'Cache-Control': 'no-store'}});
   } catch (error) {
+    if (error instanceof ResourceTokenError) return Response.json({error: error.message}, {status: error.status, headers: {'Cache-Control': 'no-store'}});
     if (error instanceof ResourceInputError) return Response.json({error: error.message}, {status: 400, headers: {'Cache-Control': 'no-store'}});
     console.error('Resource package preview failed', error instanceof Error ? error.name : 'UnknownError');
     return Response.json({error: 'Could not preview this package. Please try again.'}, {status: 500, headers: {'Cache-Control': 'no-store'}});

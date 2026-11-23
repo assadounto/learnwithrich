@@ -1,7 +1,7 @@
 import {randomUUID} from 'node:crypto';
-import {requireOwner} from '@/lib/server/identity/access';
+import {resourceApiAccess, ResourceTokenError} from '@/lib/server/identity/resource-token';
 import {database} from '@/lib/server/database';
-import {adminRepository, EditConflictError, type PackageMediaAssetInput, type PackageResourceInput} from '@/lib/server/admin/repository';
+import {adminRepository, EditConflictError, packageSlugConflictMessage, packageSlugConflicts, type PackageMediaAssetInput, type PackageResourceInput} from '@/lib/server/admin/repository';
 import {cleanOriginalName, checkMediaStorage, deleteMediaObject, detectMediaMime, mediaExtension, putMediaObject} from '@/lib/server/media/library';
 import {readResourcePackageForImport, MAX_RESOURCE_PACKAGE_BYTES} from '@/lib/server/resources/package-import';
 import {ResourceInputError, validateDraft} from '@/lib/server/resources/validation';
@@ -10,15 +10,21 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
-  let owner: Awaited<ReturnType<typeof requireOwner>>;
-  try { owner = await requireOwner(); } catch { return Response.json({error: 'Sign in to the creator studio.'}, {status: 401}); }
   const contentLength = Number(request.headers.get('content-length') || 0);
   if (contentLength > MAX_RESOURCE_PACKAGE_BYTES + 1024 * 1024) return Response.json({error: 'ZIP packages must be 100 MB or smaller.'}, {status: 413});
   const uploaded: string[] = [];
   try {
+    const owner = await resourceApiAccess(request, 'upload', true);
     const form = await request.formData(), file = form.get('file');
     if (!(file instanceof File) || !file.size || file.size > MAX_RESOURCE_PACKAGE_BYTES || !/\.zip$/i.test(file.name)) throw new ResourceInputError('Choose a ZIP package up to 100 MB.');
     const parsed = readResourcePackageForImport(Buffer.from(await file.arrayBuffer()));
+    const db = database();
+    const existing = await packageSlugConflicts(db, parsed.resources.map(resource => resource.slug));
+    if (existing.length) throw new EditConflictError(packageSlugConflictMessage(existing));
+
+    const folderLabel = parsed.resources.length === 1 ? parsed.resources[0].title : file.name.replace(/\.zip$/i, '');
+    const folderName = Array.from(folderLabel.replace(/[\p{Cc}\p{Cf}]/gu, ' ').replace(/\s+/g, ' ').trim() || 'Resource package').slice(0, 80).join('').trimEnd();
+    const sourceById = new Map<string, Buffer>();
     const assetIds = new Map<string, string>(), assets: PackageMediaAssetInput[] = [];
     for (const row of parsed.preview.files) {
       if (!row.referencedBy.length) continue;
@@ -27,6 +33,7 @@ export async function POST(request: Request) {
       if (!mimeType || !extension) throw new ResourceInputError(`Unsupported package media: ${row.path}.`);
       const id = randomUUID(), storageKey = `assets/${id}${extension}`;
       assetIds.set(row.path, id);
+      sourceById.set(id, source.bytes);
       assets.push({id, originalName: cleanOriginalName(row.path), storageKey, mimeType, sizeBytes: source.bytes.byteLength});
     }
     const byId = new Map(assets.map(asset => [asset.id, asset]));
@@ -55,15 +62,16 @@ export async function POST(request: Request) {
       for (const attachment of entry.attachments ?? []) add(attachment.path, attachment.title, attachment.priceMinor ?? 0);
       return {key: entry.key, draft, bodyMarkdown: draft.bodyMarkdown, details: draft.details, sections: entry.sections ?? [], items: (entry.items ?? []).map(item => ({resource: item.resource, section: item.section ?? null})), media: [...refs.values()]};
     });
-    await checkMediaStorage();
+    if (assets.length) await checkMediaStorage();
     for (const asset of assets) {
-      await putMediaObject(asset.storageKey, parsed.files.get([...assetIds].find(([, id]) => id === asset.id)![0])!.bytes, asset.mimeType);
+      await putMediaObject(asset.storageKey, sourceById.get(asset.id)!, asset.mimeType);
       uploaded.push(asset.storageKey);
     }
-    const imported = await adminRepository(database(), owner.id, owner.sessionId).importPackage({assets, resources});
-    return Response.json({resources: imported}, {status: 201, headers: {'Cache-Control': 'no-store'}});
+    const imported = await adminRepository(db, owner.id, owner.sessionId, owner.automation).importPackage({assets, resources, folderName});
+    return Response.json(imported, {status: 201, headers: {'Cache-Control': 'no-store'}});
   } catch (error) {
     if (uploaded.length) await Promise.all(uploaded.map(key => deleteMediaObject(key).catch(() => undefined)));
+    if (error instanceof ResourceTokenError) return Response.json({error: error.message}, {status: error.status, headers: {'Cache-Control': 'no-store'}});
     if (error instanceof ResourceInputError) return Response.json({error: error.message}, {status: 400, headers: {'Cache-Control': 'no-store'}});
     if (error instanceof EditConflictError) return Response.json({error: error.message}, {status: 409, headers: {'Cache-Control': 'no-store'}});
     console.error('Resource package import failed', error instanceof Error ? error.name : 'UnknownError');
