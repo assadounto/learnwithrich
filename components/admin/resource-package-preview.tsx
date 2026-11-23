@@ -3,15 +3,17 @@ import {useRef, useState} from 'react';
 import {AlertTriangle, CheckCircle2, FileArchive, FileText, LoaderCircle, Upload} from 'lucide-react';
 import styles from './resource-package.module.css';
 import Link from 'next/link';
+import {RichMarkdown} from '@/components/rich-markdown';
 
 type Preview = {
   valid: boolean;
-  resources: {key: string; type: string; title: string; slug: string; summary: string; itemCount: number; items: {key: string; title: string; section: string | null}[]; readiness: string[]; externalLinks: string[]}[];
-  files: {path: string; sizeBytes: number; mimeType: string; referencedBy: string[]}[];
+  resources: {key: string; type: string; title: string; slug: string; summary: string; bodyMarkdown: string; itemCount: number; items: {key: string; title: string; section: string | null}[]; readiness: string[]; externalLinks: string[]}[];
+  files: {path: string; sizeBytes: number; mimeType: string; referencedBy: string[]; previewDataUrl?: string}[];
   errors: string[];
   warnings: string[];
 };
 function size(bytes: number) { return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`; }
+function packageFileAnchor(path: string) { return `package-file-${Array.from(new TextEncoder().encode(path), byte => byte.toString(16).padStart(2, '0')).join('')}`; }
 
 export function ResourcePackagePreview() {
   const input = useRef<HTMLInputElement>(null);
@@ -21,6 +23,7 @@ export function ResourcePackagePreview() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [imported, setImported] = useState<{id: string; key: string; title: string; slug: string; type: string}[] | null>(null);
+  const packageFiles = Object.fromEntries((preview?.files ?? []).map(file => [file.path, file.previewDataUrl ?? `#${packageFileAnchor(file.path)}`]));
 
   async function inspect(file?: File) {
     if (!file) return;
@@ -67,11 +70,11 @@ export function ResourcePackagePreview() {
         {preview.errors.length > 0 && <div className="admin-alert"><strong>Fix these issues before import:</strong><ul>{preview.errors.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul></div>}
         <h3>Resources ({preview.resources.length})</h3>
         <div className={styles.resourceList}>{preview.resources.map(resource => <article className={styles.resource} key={resource.key}>
-          <div><span className="admin-resource-kind">{resource.type.replaceAll('_', ' ')}</span><h4>{resource.title}</h4><small>/{resource.slug} · key: {resource.key}{['COURSE', 'PATH'].includes(resource.type) ? ` · ${resource.itemCount} items` : ''}</small>{resource.summary && <p>{resource.summary}</p>}{resource.items.length > 0 && <ol className={styles.collectionItems}>{resource.items.map(item => <li key={item.key}>{item.title}{item.section ? ` · ${item.section}` : ''}</li>)}</ol>}{resource.externalLinks.length > 0 && <div className={styles.externalLinks}><strong>HTTPS links</strong>{resource.externalLinks.map(url => <a key={url} href={url} target="_blank" rel="noreferrer">{url}</a>)}</div>}</div>
+          <div><span className="admin-resource-kind">{resource.type.replaceAll('_', ' ')}</span><h4>{resource.title}</h4><small>/{resource.slug} · key: {resource.key}{['COURSE', 'PATH'].includes(resource.type) ? ` · ${resource.itemCount} items` : ''}</small>{resource.summary && <p>{resource.summary}</p>}{resource.bodyMarkdown && <details className={styles.markdownPreview}><summary>Preview resource content</summary><RichMarkdown text={resource.bodyMarkdown} packageFiles={packageFiles} className="guide-rich-text"/></details>}{resource.items.length > 0 && <ol className={styles.collectionItems}>{resource.items.map(item => <li key={item.key}>{item.title}{item.section ? ` · ${item.section}` : ''}</li>)}</ol>}{resource.externalLinks.length > 0 && <div className={styles.externalLinks}><strong>HTTPS links</strong>{resource.externalLinks.map(url => <a key={url} href={url} target="_blank" rel="noreferrer">{url}</a>)}</div>}</div>
           <div className={styles.readiness}><strong>{resource.readiness.length ? 'Draft readiness' : 'Ready to publish'}</strong>{resource.readiness.length > 0 && <ul>{resource.readiness.map(item => <li key={item}>{item}</li>)}</ul>}</div>
         </article>)}</div>
         <h3>Package files ({preview.files.length})</h3>
-        {preview.files.length ? <ul className={styles.fileList}>{preview.files.map(file => <li key={file.path}><FileText size={15}/><span><strong>{file.path}</strong><small>{file.mimeType} · {size(file.sizeBytes)}{file.referencedBy.length ? ` · used by ${file.referencedBy.join(', ')}` : ' · not referenced'}</small></span></li>)}</ul> : <p className="admin-help">No media files included.</p>}
+        {preview.files.length ? <ul className={styles.fileList}>{preview.files.map(file => <li id={packageFileAnchor(file.path)} key={file.path}>{file.previewDataUrl ? <img className={styles.inlineFileThumb} src={file.previewDataUrl} alt=""/> : <FileText size={15}/>}<span><strong>{file.path}</strong><small>{file.mimeType} · {size(file.sizeBytes)}{file.referencedBy.length ? ` · used by ${file.referencedBy.join(', ')}` : ' · not referenced'}</small></span></li>)}</ul> : <p className="admin-help">No media files included.</p>}
         {preview.warnings.length > 0 && <div className={styles.warnings}><strong>Warnings</strong><ul>{preview.warnings.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul></div>}
         {preview.valid && !imported && <button className="button button-dark" type="button" disabled={busy} onClick={() => void importPackage()}>{busy ? <LoaderCircle className="service-spin" size={16}/> : <Upload size={16}/>} {busy ? 'Importing drafts…' : `Import ${preview.resources.length} draft${preview.resources.length === 1 ? '' : 's'}`}</button>}
       </section>

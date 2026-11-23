@@ -16,8 +16,8 @@ for (let n = 0; n < 256; n++) {
 
 export type PackagePreview = {
   valid: boolean;
-  resources: {key: string; type: ResourceKind; title: string; slug: string; summary: string; itemCount: number; items: {key: string; title: string; section: string | null}[]; readiness: string[]; externalLinks: string[]}[];
-  files: {path: string; sizeBytes: number; mimeType: string; referencedBy: string[]}[];
+  resources: {key: string; type: ResourceKind; title: string; slug: string; summary: string; bodyMarkdown: string; itemCount: number; items: {key: string; title: string; section: string | null}[]; readiness: string[]; externalLinks: string[]}[];
+  files: {path: string; sizeBytes: number; mimeType: string; referencedBy: string[]; previewDataUrl?: string}[];
   errors: string[];
   warnings: string[];
 };
@@ -276,7 +276,7 @@ function parseResourcePackage(zip: Buffer): ParsedResourcePackage {
       const section = Array.isArray(raw.sections) ? raw.sections.find(value => record(value) && value.key === item.section) : undefined;
       return {key: String(item.resource), title: child && typeof child.title === 'string' ? child.title : String(item.resource), section: record(section) && typeof section.title === 'string' ? section.title : null};
     }) : [];
-    if (key) summaryRows.push({key, type, title: typeof raw.title === 'string' ? raw.title : label, slug, summary: typeof raw.summary === 'string' ? raw.summary : '', itemCount, items: collectionItems, readiness: md, externalLinks: [...externalLinks]});
+    if (key) summaryRows.push({key, type, title: typeof raw.title === 'string' ? raw.title : label, slug, summary: typeof raw.summary === 'string' ? raw.summary : '', bodyMarkdown: body, itemCount, items: collectionItems, readiness: md, externalLinks: [...externalLinks]});
 
     const sections = raw.sections === undefined ? [] : raw.sections, items = raw.items === undefined ? [] : raw.items;
     if (!['COURSE', 'PATH'].includes(type) && ((Array.isArray(sections) && sections.length) || (Array.isArray(items) && items.length))) errors.push(`${label}: only courses and paths can have sections or items.`);
@@ -315,13 +315,22 @@ function parseResourcePackage(zip: Buffer): ParsedResourcePackage {
   }
   for (const key of collectionGraph.keys()) visit(key);
 
+  const markdownImagePaths = new Set<string>();
+  for (const resource of resources) if (typeof resource?.bodyMarkdown === 'string') {
+    for (const match of resource.bodyMarkdown.matchAll(/!\[[^\]]*\]\(package-file:([^\s)]+)\)/g)) {
+      try { markdownImagePaths.add(packagePath(match[1], 'Markdown media')); } catch { /* Validation errors are reported above. */ }
+    }
+  }
   const fileRows: PackagePreview['files'] = [];
+  let inlinePreviewBytes = 0;
   for (const file of archiveFiles) {
     if (file.path === 'manifest.json') continue;
     const mimeType = detectMediaMime(file.bytes, file.path);
     const referencedBy = [...(fileUsers.get(file.path) ?? [])];
     if (!referencedBy.length) warnings.push(`Unreferenced file: ${file.path}. It will not be imported unless attached or referenced.`);
-    fileRows.push({path: file.path, sizeBytes: file.bytes.length, mimeType: mimeType ?? 'unsupported', referencedBy});
+    const includeInlinePreview = markdownImagePaths.has(file.path) && /^(image|audio|video)\//.test(mimeType ?? '') && file.bytes.length <= 1024 * 1024 && inlinePreviewBytes + file.bytes.length <= 4 * 1024 * 1024;
+    fileRows.push({path: file.path, sizeBytes: file.bytes.length, mimeType: mimeType ?? 'unsupported', referencedBy, ...(includeInlinePreview ? {previewDataUrl: `data:${mimeType};base64,${file.bytes.toString('base64')}`} : {})});
+    if (includeInlinePreview) inlinePreviewBytes += file.bytes.length;
   }
   const preview = {valid: errors.length === 0, resources: summaryRows, files: fileRows, errors: [...new Set(errors)], warnings: [...new Set(warnings)]};
   return {preview, resources, files: byPath};
