@@ -5,6 +5,9 @@ import {LearnerSignIn} from '@/components/learner-signin';
 import {currentUser} from '@/lib/server/identity/current-user';
 import {learnerDestination} from '@/lib/identity/learner-destination';
 export const metadata: Metadata = {title: 'Learner sign in', robots: {index: false, follow: false}};
+// Identity settings are available at runtime, including in standalone deployments.
+export const dynamic = 'force-dynamic';
+
 export default async function SignInPage({searchParams}: {searchParams: Promise<{next?: string}>}) {
   if (await currentUser()) {
     const rawNext = (await searchParams).next || '/account';
