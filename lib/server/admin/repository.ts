@@ -5,9 +5,15 @@ import type {Prisma} from '../../generated/prisma/client';
 import {assertOwner} from '../identity/owner';
 import {assertSessionMfa} from '../identity/mfa';
 import {adminDraft, editToken} from './input';
-import {ResourceInputError, resourceId, text, enumValue, resourceTypes} from '../resources/validation';
+import {ResourceInputError, resourceId, text, enumValue, resourceTypes, type ResourceDraft, type ResourceKind} from '../resources/validation';
 import {defaultHomepageHero, defaultHomepageSections, validateHomepageHero, validateHomepageSections, type HomepageHeroPreset} from './homepage';
 export class EditConflictError extends Error {}
+export type PackageMediaAssetInput = {id: string; originalName: string; storageKey: string; mimeType: string; sizeBytes: number};
+export type PackageResourceInput = {
+  key: string; draft: ResourceDraft; bodyMarkdown: string; details: ResourceDetails;
+  sections: {key: string; title: string}[]; items: {resource: string; section: string | null}[];
+  media: {mediaAssetId: string; title: string; priceMinor: number}[];
+};
 const fullResource = {
   content: true, tags: {include: {tag: true}},
   sections: {orderBy: {position: 'asc' as const}}, items: {orderBy: {position: 'asc' as const}},
@@ -45,6 +51,65 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
     async choices() {
       await authorize(db);
       return db.resource.findMany({select: {id: true, title: true, type: true, status: true}, orderBy: {title: 'asc'}, take: 500});
+    },
+    async importPackage(input: {assets: PackageMediaAssetInput[]; resources: PackageResourceInput[]}) {
+      await authorize(db);
+      if (!Array.isArray(input.assets) || !Array.isArray(input.resources) || !input.resources.length || input.resources.length > 500) throw new ResourceInputError('Invalid resource package.');
+      const keys = new Set(input.resources.map(resource => resource.key));
+      if (keys.size !== input.resources.length) throw new ResourceInputError('Resource package keys must be unique.');
+      const ids = new Map(input.resources.map(resource => [resource.key, randomUUID()]));
+      return db.$transaction(async tx => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(18427651)`;
+        if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
+        await authorize(tx);
+        const slugs = input.resources.map(resource => resource.draft.slug);
+        const existing = await tx.resource.findMany({where: {slug: {in: slugs}}, select: {slug: true}});
+        if (existing.length) throw new EditConflictError(`These slugs already exist: ${existing.map(resource => resource.slug).join(', ')}.`);
+        if (input.assets.length) await tx.mediaAsset.createMany({data: input.assets.map(asset => ({...asset, folderId: null}))});
+
+        for (const resource of input.resources) {
+          const id = ids.get(resource.key)!;
+          const draft = resource.draft;
+          await tx.resource.create({data: {
+            id, slug: draft.slug, type: draft.type, title: draft.title, summary: draft.summary,
+            coverUrl: draft.coverUrl, status: 'DRAFT', access: draft.access, priceMinor: draft.priceMinor,
+            currency: draft.currency, version: 1, content: {create: {bodyMarkdown: resource.bodyMarkdown, details: resource.details}},
+          }});
+          for (const name of draft.tags) {
+            const tag = await tx.tag.upsert({where: {name}, create: {name}, update: {}});
+            await tx.resourceTag.create({data: {resourceId: id, tagId: tag.id}});
+          }
+        }
+
+        const sectionIds = new Map<string, Map<string, string>>();
+        for (const resource of input.resources) {
+          const resourceId = ids.get(resource.key)!;
+          const byKey = new Map<string, string>(); sectionIds.set(resource.key, byKey);
+          for (const [position, section] of resource.sections.entries()) {
+            const id = randomUUID(); byKey.set(section.key, id);
+            await tx.resourceSection.create({data: {id, resourceId, title: section.title, position}});
+          }
+          if (resource.media.length) await tx.resourceMedia.createMany({data: resource.media.map((item, position) => ({resourceId, mediaAssetId: item.mediaAssetId, title: item.title, priceMinor: item.priceMinor, position}))});
+        }
+
+        for (const resource of input.resources) {
+          const collectionId = ids.get(resource.key)!;
+          if (resource.items.length) await tx.resourceItem.createMany({data: resource.items.map((item, position) => {
+            const childId = ids.get(item.resource);
+            if (!childId) throw new ResourceInputError(`Missing resource key: ${item.resource}.`);
+            const sectionId = item.section ? sectionIds.get(resource.key)?.get(item.section) : null;
+            if (item.section && !sectionId) throw new ResourceInputError(`Missing section key: ${item.section}.`);
+            return {collectionId, resourceId: childId, position, sectionId};
+          })});
+        }
+        const imported = [];
+        for (const resource of input.resources) {
+          const id = ids.get(resource.key)!;
+          await snapshot(tx, id, actorId, 'IMPORTED');
+          imported.push({id, key: resource.key, title: resource.draft.title, slug: resource.draft.slug, type: resource.draft.type as ResourceKind});
+        }
+        return imported;
+      }, {timeout: 60000});
     },
     async homepageSettings() {
       await authorize(db);

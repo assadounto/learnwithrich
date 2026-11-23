@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learnwithrich.com/schemas/resource-package-v1.schema.json",
+  "title": "Learn with Rich resource package manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "resources"],
+  "properties": {
+    "format": {"const": "learnwithrich-resource"},
+    "version": {"const": 1},
+    "resources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/resource"}}
+  },
+  "$defs": {
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "type", "title", "slug"],
+      "properties": {
+        "key": {"$ref": "#/$defs/key"},
+        "type": {"enum": ["PROJECT", "ARTICLE", "COURSE", "PATH", "LESSON", "DOWNLOAD", "BOOK", "GUIDE", "ILLUSTRATION"]},
+        "title": {"type": "string", "minLength": 1, "maxLength": 180},
+        "slug": {"$ref": "#/$defs/key"},
+        "summary": {"type": "string", "maxLength": 2000, "default": ""},
+        "bodyMarkdown": {"type": "string", "maxLength": 200000, "default": ""},
+        "tags": {"type": "array", "maxItems": 20, "items": {"type": "string", "minLength": 1, "maxLength": 60}, "default": []},
+        "details": {"type": "object", "description": "The exact allowed properties depend on type; see the type-specific conditions below.", "default": {}},
+        "access": {"enum": ["PUBLIC", "FREE_ACCOUNT", "PAID"], "default": "PUBLIC"},
+        "priceMinor": {"type": "integer", "minimum": 0, "maximum": 2147483647, "default": 0},
+        "currency": {"type": "string", "pattern": "^[A-Z]{3}$", "default": "GHS"},
+        "cover": {"$ref": "#/$defs/fileOrHttps"},
+        "attachments": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/attachment"}},
+        "sections": {"type": "array", "maxItems": 40, "items": {"$ref": "#/$defs/section"}},
+        "items": {"type": "array", "maxItems": 200, "items": {"$ref": "#/$defs/item"}}
+      },
+      "allOf": [
+        {"if": {"properties": {"type": {"const": "PROJECT"}}, "required": ["type"]}, "then": {"properties": {"details": {"$ref": "#/$defs/projectDetails"}}}},
+        {"if": {"properties": {"type": {"const": "ARTICLE"}}, "required": ["type"]}, "then": {"properties": {"details": {"$ref": "#/$defs/articleDetails"}}}},
+        {"if": {"properties": {"type": {"const": "COURSE"}}, "required": ["type"]}, "then": {"properties": {"details": {"$ref": "#/$defs/courseDetails"}}}},
+        {"if": {"properties": {"type": {"const": "PATH"}}, "required": ["type"]}, "then": {"properties": {"details": {"$ref": "#/$defs/pathDetails"}}}},
+        {"if": {"properties": {"type": {"const": "LESSON"}}, "required": ["type"]}, "then": {"properties": {"details": {"$ref": "#/$defs/lessonDetails"}}}},
+        {"if": {"properties": {"type": {"const": "DOWNLOAD"}}, "required": ["type"]}, "then": {"properties": {"details": {"$ref": "#/$defs/downloadDetails"}}}},
+        {"if": {"properties": {"type": {"const": "BOOK"}}, "required": ["type"]}, "then": {"properties": {"details": {"$ref": "#/$defs/bookDetails"}}}},
+        {"if": {"properties": {"type": {"const": "GUIDE"}}, "required": ["type"]}, "then": {"properties": {"details": {"$ref": "#/$defs/guideDetails"}}}},
+        {"if": {"properties": {"type": {"const": "ILLUSTRATION"}}, "required": ["type"]}, "then": {"properties": {"details": {"$ref": "#/$defs/illustrationDetails"}}}},
+        {"if": {"properties": {"type": {"enum": ["PROJECT", "ARTICLE", "LESSON", "DOWNLOAD", "BOOK", "GUIDE", "ILLUSTRATION"]}}, "required": ["type"]}, "then": {"properties": {"items": {"maxItems": 0}, "sections": {"maxItems": 0}}}},
+        {"if": {"properties": {"access": {"const": "PAID"}}, "required": ["access"]}, "then": {"properties": {"priceMinor": {"type": "integer", "minimum": 1}}}, "else": {"properties": {"priceMinor": {"const": 0}}}}
+      ]
+    },
+    "key": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 120},
+    "filePath": {"type": "string", "pattern": "^files/(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\\\u0000-\\u001f]+$"},
+    "fileOrHttps": {"maxLength": 2048, "oneOf": [{"$ref": "#/$defs/filePath"}, {"type": "string", "format": "uri", "pattern": "^https://(?!(?:[^/@]+)@)[^\\s]+$"}]},
+    "packageMediaOrHttps": {"maxLength": 2048, "oneOf": [{"$ref": "#/$defs/fileOrHttps"}, {"type": "string", "pattern": "^package-file:files/(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\\\u0000-\\u001f]+$"}]},
+    "headings": {
+      "type": "object",
+      "properties": {
+        "_sectionTitleEssentials": {"type": "string", "minLength": 1, "maxLength": 80},
+        "_sectionTitleBody": {"type": "string", "minLength": 1, "maxLength": 80},
+        "_sectionTitleDetails": {"type": "string", "minLength": 1, "maxLength": 80},
+        "_sectionTitleMedia": {"type": "string", "minLength": 1, "maxLength": 80},
+        "_sectionTitleCollection": {"type": "string", "minLength": 1, "maxLength": 80},
+        "_sectionTitleCover": {"type": "string", "minLength": 1, "maxLength": 80},
+        "_sectionTitlePricing": {"type": "string", "minLength": 1, "maxLength": 80},
+        "_sectionTitlePublishing": {"type": "string", "minLength": 1, "maxLength": 80},
+        "_sectionTitleHistory": {"type": "string", "minLength": 1, "maxLength": 80}
+      }
+    },
+    "difficulty": {"type": "string", "enum": ["Beginner", "Intermediate", "Advanced"]},
+    "positiveNumber": {"type": "integer", "minimum": 1},
+    "shortText": {"type": "string", "maxLength": 1000},
+    "detailList": {"type": "array", "maxItems": 30, "items": {"type": "string", "minLength": 1, "maxLength": 500}},
+    "resourceUrl": {"$ref": "#/$defs/packageMediaOrHttps"},
+    "commonLearningDetails": {
+      "type": "object",
+      "properties": {
+        "difficulty": {"$ref": "#/$defs/difficulty"},
+        "durationMinutes": {"allOf": [{"$ref": "#/$defs/positiveNumber"}, {"maximum": 100000}]},
+        "outcomes": {"$ref": "#/$defs/detailList"},
+        "prerequisites": {"$ref": "#/$defs/detailList"}
+      }
+    },
+    "projectDetails": {"allOf": [{"$ref": "#/$defs/headings"}, {"$ref": "#/$defs/commonLearningDetails"}, {"type": "object", "properties": {"materials": {"$ref": "#/$defs/detailList"}, "repositoryUrl": {"$ref": "#/$defs/resourceUrl"}, "demoUrl": {"$ref": "#/$defs/resourceUrl"}}}], "unevaluatedProperties": false},
+    "articleDetails": {"allOf": [{"$ref": "#/$defs/headings"}, {"type": "object", "properties": {"author": {"$ref": "#/$defs/shortText"}, "readingMinutes": {"allOf": [{"$ref": "#/$defs/positiveNumber"}, {"maximum": 10000}]}, "audioUrl": {"$ref": "#/$defs/resourceUrl"}, "sourceUrl": {"$ref": "#/$defs/resourceUrl"}}}], "unevaluatedProperties": false},
+    "courseDetails": {"allOf": [{"$ref": "#/$defs/headings"}, {"$ref": "#/$defs/commonLearningDetails"}], "unevaluatedProperties": false},
+    "pathDetails": {"allOf": [{"$ref": "#/$defs/headings"}, {"$ref": "#/$defs/commonLearningDetails"}], "unevaluatedProperties": false},
+    "lessonDetails": {"allOf": [{"$ref": "#/$defs/headings"}, {"type": "object", "properties": {"durationMinutes": {"allOf": [{"$ref": "#/$defs/positiveNumber"}, {"maximum": 100000}]}, "outcomes": {"$ref": "#/$defs/detailList"}, "audioUrl": {"$ref": "#/$defs/resourceUrl"}, "videoUrl": {"$ref": "#/$defs/resourceUrl"}}}], "unevaluatedProperties": false},
+    "downloadDetails": {"allOf": [{"$ref": "#/$defs/headings"}, {"type": "object", "properties": {"fileUrl": {"$ref": "#/$defs/resourceUrl"}, "fileName": {"$ref": "#/$defs/shortText"}, "fileFormat": {"$ref": "#/$defs/shortText"}, "version": {"$ref": "#/$defs/shortText"}, "license": {"$ref": "#/$defs/shortText"}}}], "unevaluatedProperties": false},
+    "bookDetails": {"allOf": [{"$ref": "#/$defs/headings"}, {"type": "object", "properties": {"fileUrl": {"$ref": "#/$defs/resourceUrl"}, "author": {"$ref": "#/$defs/shortText"}, "audioUrl": {"$ref": "#/$defs/resourceUrl"}, "isbn": {"$ref": "#/$defs/shortText"}, "pageCount": {"allOf": [{"$ref": "#/$defs/positiveNumber"}, {"maximum": 100000}]}, "edition": {"$ref": "#/$defs/shortText"}, "license": {"$ref": "#/$defs/shortText"}}}], "unevaluatedProperties": false},
+    "guideDetails": {"allOf": [{"$ref": "#/$defs/headings"}, {"$ref": "#/$defs/commonLearningDetails"}, {"type": "object", "properties": {"fileUrl": {"$ref": "#/$defs/resourceUrl"}, "audioUrl": {"$ref": "#/$defs/resourceUrl"}}}], "unevaluatedProperties": false},
+    "illustrationDetails": {"allOf": [{"$ref": "#/$defs/headings"}, {"type": "object", "properties": {"fileUrl": {"$ref": "#/$defs/resourceUrl"}, "fileFormat": {"$ref": "#/$defs/shortText"}, "altText": {"$ref": "#/$defs/shortText"}, "width": {"allOf": [{"$ref": "#/$defs/positiveNumber"}, {"maximum": 100000}]}, "height": {"allOf": [{"$ref": "#/$defs/positiveNumber"}, {"maximum": 100000}]}, "license": {"$ref": "#/$defs/shortText"}}}], "unevaluatedProperties": false},
+    "attachment": {"type": "object", "additionalProperties": false, "required": ["path", "title"], "properties": {"path": {"$ref": "#/$defs/filePath"}, "title": {"type": "string", "minLength": 1, "maxLength": 180}, "priceMinor": {"type": "integer", "minimum": 0, "maximum": 2147483647}}},
+    "section": {"type": "object", "additionalProperties": false, "required": ["key", "title"], "properties": {"key": {"$ref": "#/$defs/key"}, "title": {"type": "string", "minLength": 1, "maxLength": 180}}},
+    "item": {"type": "object", "additionalProperties": false, "required": ["resource"], "properties": {"resource": {"$ref": "#/$defs/key"}, "section": {"oneOf": [{"$ref": "#/$defs/key"}, {"type": "null"}]}}}
+  }
+}

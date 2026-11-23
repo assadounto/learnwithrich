@@ -1,0 +1,26 @@
+{
+  "format": "learnwithrich-resource",
+  "version": 1,
+  "resources": [
+    {
+      "key": "smart-plant-watering",
+      "type": "PROJECT",
+      "title": "Smart Plant Watering",
+      "slug": "smart-plant-watering",
+      "summary": "Build a sensor that waters a plant when its soil is dry.",
+      "tags": ["electronics", "esp32"],
+      "bodyMarkdown": "## What you’ll build\n\nA simple automatic watering system.\n\n## Materials and tools\n\nGather an ESP32, a soil moisture sensor, and a small water pump.\n\n## Build steps\n\n1. Connect the sensor to the ESP32.\n2. Connect and test the pump.\n3. Upload the program and test with dry soil.\n\n## Test your build\n\nConfirm that the pump runs when the soil is dry and stops when it is moist.\n\nSee the [source code](https://github.com/example/plant-watering).",
+      "details": {
+        "difficulty": "Beginner",
+        "durationMinutes": 90,
+        "outcomes": ["Read soil moisture with a microcontroller", "Control a small pump"] ,
+        "materials": ["ESP32", "Soil moisture sensor", "Small water pump"],
+        "repositoryUrl": "https://github.com/example/plant-watering"
+      },
+      "cover": "files/cover.jpg",
+      "attachments": [
+        {"path": "files/wiring-guide.pdf", "title": "Wiring guide"}
+      ]
+    }
+  ]
+}

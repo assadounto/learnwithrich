@@ -42,7 +42,7 @@ function inline(text: string, resourceSlug?: string, adminPreview = false): Reac
       else if (src) out.push(<img className="rich-markdown-image" key={key} src={src} alt={image[1] || 'Resource image'} loading="lazy"/>);
       else out.push(image[1]);
     } else if (link) {
-      const href = safeHttps(link[2]);
+      const href = safeHttps(link[2]) ?? mediaUrl(link[2], resourceSlug, adminPreview);
       if (href) out.push(<a key={key} href={href} target="_blank" rel="noreferrer">{link[1]}</a>);
       else out.push(link[1]);
     } else if (value.startsWith('**')) out.push(<strong key={key}>{value.slice(2, -2)}</strong>);

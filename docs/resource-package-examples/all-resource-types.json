@@ -1,0 +1,168 @@
+{
+  "format": "learnwithrich-resource",
+  "version": 1,
+  "resources": [
+    {
+      "key": "smart-plant-watering",
+      "type": "PROJECT",
+      "title": "Smart Plant Watering",
+      "slug": "smart-plant-watering",
+      "summary": "Build a moisture-sensing plant watering system with an ESP32.",
+      "bodyMarkdown": "## What you’ll build\n\nA small pump that waters a plant when its soil is dry.\n\n## Materials and tools\n\nGather an ESP32, moisture sensor, pump, tubing, and a small pot.\n\n## Build steps\n\n1. Connect the sensor to the ESP32.\n2. Connect the pump through a suitable driver.\n3. Upload the program and test with dry soil.\n\n## Test your build\n\nConfirm that the pump turns on in dry soil and stops when the soil is moist.\n\n## Troubleshooting\n\nCheck the sensor wiring and pump power if watering does not start.",
+      "tags": ["electronics", "esp32", "gardening"],
+      "details": {
+        "difficulty": "Beginner",
+        "durationMinutes": 90,
+        "outcomes": ["Read soil moisture with a microcontroller", "Control a small pump safely"],
+        "prerequisites": ["Basic computer skills", "Access to a USB cable"],
+        "materials": ["ESP32 development board", "Soil moisture sensor", "Small water pump", "Tubing and plant pot"],
+        "repositoryUrl": "https://github.com/example/smart-plant-watering",
+        "demoUrl": "https://example.com/smart-plant-watering-demo",
+        "_sectionTitleBody": "Build instructions"
+      }
+    },
+    {
+      "key": "why-small-projects-work",
+      "type": "ARTICLE",
+      "title": "Why Small Projects Work",
+      "slug": "why-small-projects-work",
+      "summary": "A practical case for learning through small, finished projects.",
+      "bodyMarkdown": "## Introduction\n\nSmall projects make progress visible.\n\n## The idea\n\nA short build gives you a clear goal, quick feedback, and a finished result you can explain.\n\n## Key takeaways\n\n- Choose one useful outcome.\n- Keep the first version small.\n- Reflect on what you learned.",
+      "tags": ["learning", "projects"],
+      "details": {
+        "author": "Richmond A. Nto",
+        "readingMinutes": 4,
+        "audioUrl": "https://example.com/audio/why-small-projects-work.mp3",
+        "sourceUrl": "https://example.com/research/learning-by-making"
+      }
+    },
+    {
+      "key": "beginner-electronics",
+      "type": "COURSE",
+      "title": "Beginner Electronics",
+      "slug": "beginner-electronics",
+      "summary": "Learn core circuit ideas through guided lessons and hands-on practice.",
+      "bodyMarkdown": "## About this course\n\nStart with voltage, current, and resistance, then build a working LED circuit.\n\n## What you’ll learn\n\n- Read a simple circuit diagram.\n- Choose a resistor for an LED.\n- Build and test a basic circuit.\n\n## How to follow along\n\nComplete the lessons in order and try each activity.",
+      "tags": ["electronics", "beginner"],
+      "details": {
+        "difficulty": "Beginner",
+        "durationMinutes": 60,
+        "outcomes": ["Read a simple circuit diagram", "Build and test an LED circuit"],
+        "prerequisites": ["No electronics experience required"]
+      },
+      "sections": [{"key": "circuit-basics", "title": "Circuit basics"}],
+      "items": [{"resource": "understanding-ohms-law", "section": "circuit-basics"}]
+    },
+    {
+      "key": "maker-foundations-path",
+      "type": "PATH",
+      "title": "Maker Foundations",
+      "slug": "maker-foundations",
+      "summary": "A guided route from learning circuit basics to building a useful device.",
+      "bodyMarkdown": "## Your learning journey\n\nRead the short article, complete the electronics course, then build the plant watering project.\n\n## Who this path is for\n\nCurious beginners who want to learn by making.\n\n## Before you start\n\nSet aside time to try the activities and take notes.",
+      "tags": ["learning-path", "maker"],
+      "details": {
+        "difficulty": "Beginner",
+        "durationMinutes": 160,
+        "outcomes": ["Explain a basic circuit", "Plan and build a small connected device"],
+        "prerequisites": ["Curiosity", "A computer with internet access"]
+      },
+      "sections": [
+        {"key": "learn-the-basics", "title": "Learn the basics"},
+        {"key": "make-something", "title": "Make something"}
+      ],
+      "items": [
+        {"resource": "why-small-projects-work", "section": "learn-the-basics"},
+        {"resource": "beginner-electronics", "section": "learn-the-basics"},
+        {"resource": "smart-plant-watering", "section": "make-something"},
+        {"resource": "practice-worksheet", "section": "make-something"},
+        {"resource": "electronics-handbook", "section": "learn-the-basics"},
+        {"resource": "microcontroller-setup-guide", "section": "make-something"},
+        {"resource": "circuit-symbols-poster", "section": "learn-the-basics"}
+      ]
+    },
+    {
+      "key": "understanding-ohms-law",
+      "type": "LESSON",
+      "title": "Understanding Ohm’s Law",
+      "slug": "understanding-ohms-law",
+      "summary": "Understand how voltage, current, and resistance relate in a circuit.",
+      "bodyMarkdown": "## In this lesson\n\nUse Ohm’s law to predict what happens in a simple circuit.\n\n## Explanation\n\nVoltage equals current multiplied by resistance: V = I × R.\n\n## Try it yourself\n\nA 9 V battery is connected to a 1,000 Ω resistor. Calculate the current.\n\n## Check your understanding\n\nThe current is 0.009 A, or 9 mA.",
+      "tags": ["electronics", "circuits"],
+      "details": {
+        "durationMinutes": 15,
+        "outcomes": ["Use V = I × R to solve for a missing value"],
+        "audioUrl": "https://example.com/audio/ohms-law.mp3",
+        "videoUrl": "https://www.youtube.com/watch?v=example"
+      }
+    },
+    {
+      "key": "practice-worksheet",
+      "type": "DOWNLOAD",
+      "title": "Circuit Practice Worksheet",
+      "slug": "circuit-practice-worksheet",
+      "summary": "A printable worksheet for practicing simple circuit calculations.",
+      "bodyMarkdown": "## What’s included\n\nPractice questions for voltage, current, resistance, and LED resistor selection.\n\n## How to use it\n\nWork through the questions after the Beginner Electronics course.\n\n## Requirements\n\nA calculator and a pencil are helpful.",
+      "tags": ["worksheet", "electronics"],
+      "details": {
+        "fileUrl": "https://example.com/downloads/circuit-practice-worksheet.pdf",
+        "fileName": "circuit-practice-worksheet.pdf",
+        "fileFormat": "PDF",
+        "version": "1.0",
+        "license": "For personal learning and classroom use"
+      }
+    },
+    {
+      "key": "electronics-handbook",
+      "type": "BOOK",
+      "title": "The Beginner’s Electronics Handbook",
+      "slug": "beginners-electronics-handbook",
+      "summary": "A compact reference for circuits, components, and safe experiments.",
+      "bodyMarkdown": "## About the book\n\nA beginner-friendly reference that explains common components and simple circuits.\n\n## Table of contents\n\n- Voltage, current, and resistance\n- Components and symbols\n- Building and testing circuits\n\n## Who it’s for\n\nNew makers, students, and hobbyists.",
+      "tags": ["book", "electronics"],
+      "details": {
+        "fileUrl": "https://example.com/books/beginners-electronics-handbook.pdf",
+        "author": "Richmond A. Nto",
+        "audioUrl": "https://example.com/audio/electronics-handbook.m4a",
+        "isbn": "978-1-23456-789-0",
+        "pageCount": 84,
+        "edition": "First edition",
+        "license": "Personal use; classroom use with attribution"
+      }
+    },
+    {
+      "key": "microcontroller-setup-guide",
+      "type": "GUIDE",
+      "title": "Set Up Your Microcontroller Workspace",
+      "slug": "microcontroller-workspace-setup",
+      "summary": "Install the tools and connect a board before starting a project.",
+      "bodyMarkdown": "## Before you begin\n\nPrepare a computer, USB cable, and microcontroller board.\n\n## Step-by-step instructions\n\n1. Install the board software.\n2. Connect the board over USB.\n3. Select the board and port.\n4. Upload a simple test program.\n\n## Checklist\n\n- The board appears in the device list.\n- The test program uploads successfully.\n\n## Next steps\n\nContinue to the Smart Plant Watering project.",
+      "tags": ["guide", "microcontrollers"],
+      "details": {
+        "difficulty": "Beginner",
+        "durationMinutes": 25,
+        "outcomes": ["Install the development software", "Upload a test program to a board"],
+        "prerequisites": ["A compatible computer", "A microcontroller board and USB cable"],
+        "fileUrl": "https://example.com/guides/microcontroller-workspace-setup.pdf",
+        "audioUrl": "https://example.com/audio/microcontroller-workspace-setup.mp3"
+      }
+    },
+    {
+      "key": "circuit-symbols-poster",
+      "type": "ILLUSTRATION",
+      "title": "Basic Circuit Symbols Poster",
+      "slug": "basic-circuit-symbols-poster",
+      "summary": "A visual reference to common symbols used in beginner circuit diagrams.",
+      "bodyMarkdown": "## About this illustration\n\nA labeled reference poster for common circuit symbols.\n\n## Suggested uses\n\n- Keep it beside a workbench.\n- Use it when reading a circuit diagram.\n\n## Attribution\n\nCreated for Learn with Rich.",
+      "tags": ["illustration", "circuits"],
+      "details": {
+        "fileUrl": "https://example.com/illustrations/basic-circuit-symbols.png",
+        "fileFormat": "PNG",
+        "altText": "Poster showing labeled symbols for a battery, resistor, LED, switch, and ground connection.",
+        "width": 2400,
+        "height": 1600,
+        "license": "CC BY 4.0"
+      }
+    }
+  ]
+}
