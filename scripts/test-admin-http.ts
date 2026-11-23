@@ -23,6 +23,7 @@ const db = createDatabase(process.env.TEST_DATABASE_URL);
 const prefix = `http-admin-${randomUUID()}`;
 const ownerId = `${prefix}-owner`, learnerId = `${prefix}-learner`;
 const ids: string[] = [];
+const newsletterEmail = `${prefix}@example.test`;
 let output = '';
 const server = spawn(process.execPath, ['.next/standalone/server.js'], {env: {
   ...process.env, NODE_ENV: 'production', HOSTNAME: '127.0.0.1', PORT: String(port),
@@ -95,7 +96,7 @@ try {
     if (!entry) throw new Error(`Missing server action ${name}`); return entry[0];
   };
   const action = async (name: string, args: unknown[], sessionCookie: string, source = origin) => {
-    const page = name === 'mfaAction' ? '/admin/security' : ['createResourceToken', 'revokeResourceToken'].includes(name) ? '/admin/resource-api' : '/admin/resources/new';
+    const page = name === 'updateNewsletterSignup' ? '/admin/community/newsletter' : name === 'mfaAction' ? '/admin/security' : ['createResourceToken', 'revokeResourceToken'].includes(name) ? '/admin/resource-api' : '/admin/resources/new';
     const response = await fetch(origin + page, {method: 'POST', headers: {'Next-Action': actionId(name), 'Content-Type': 'text/plain;charset=UTF-8', origin: source, cookie: sessionCookie}, body: JSON.stringify(args), redirect: 'manual'});
     return {status: response.status, body: await response.text()};
   };
@@ -147,6 +148,26 @@ try {
   await db.session.updateMany({where: {userId: ownerId}, data: {mfaVerifiedAt: new Date(Date.now() - 31 * 60_000)}});
   await expectRedirect(await request('/admin', ownerCookie), '/admin/security');
   await action('mfaAction', ['verify', codes[1], true], ownerCookie);
+  const newsletter = '/admin/community/newsletter';
+  const subscribe = (email: string, website = '') => fetch(`${origin}/api/newsletter`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, website}),
+  });
+  assert.equal((await subscribe('bad-address')).status, 400);
+  assert.equal((await subscribe(newsletterEmail, 'bot')).status, 202);
+  assert.equal(await db.newsletterSignup.count({where: {email: newsletterEmail}}), 0);
+  assert.equal((await subscribe(newsletterEmail)).status, 202);
+  assert.equal((await subscribe(newsletterEmail.toUpperCase())).status, 202);
+  assert.equal(await db.newsletterSignup.count({where: {email: newsletterEmail}}), 1);
+  await expectRedirect(await request(newsletter, learnerCookie), '/admin/access-denied');
+  const newsletterPage = await request(newsletter, ownerCookie);
+  assert.equal(newsletterPage.status, 200);
+  assert.ok((await newsletterPage.text()).includes(newsletterEmail));
+  await action('updateNewsletterSignup', [newsletterEmail, 'verify'], learnerCookie);
+  assert.equal((await db.newsletterSignup.findUniqueOrThrow({where: {email: newsletterEmail}})).verifiedAt, null);
+  await action('updateNewsletterSignup', [newsletterEmail, 'verify'], ownerCookie);
+  assert.ok((await db.newsletterSignup.findUniqueOrThrow({where: {email: newsletterEmail}})).verifiedAt);
+  await action('updateNewsletterSignup', [newsletterEmail, 'remove'], ownerCookie);
+  assert.equal(await db.newsletterSignup.count({where: {email: newsletterEmail}}), 0);
   const tokenPage = await request('/admin/resource-api', ownerCookie);
   assert.match(await tokenPage.text(), /Generate an API token/);
   const createToken = async (allowEdit: boolean) => {
@@ -202,5 +223,6 @@ try {
   await db.resourceAudit.deleteMany({where: {resourceId: {in: resourceIds}}});
   await db.resource.deleteMany({where: {id: {in: resourceIds}}});
   await db.user.deleteMany({where: {id: {in: [ownerId, learnerId]}}});
+  await db.newsletterSignup.deleteMany({where: {email: newsletterEmail}});
   await db.$disconnect();
 }

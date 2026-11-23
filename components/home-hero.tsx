@@ -18,71 +18,81 @@ function HeroCopy({className, hidden = false}: {className: string; hidden?: bool
 
 export function HomeHero({preset, imageUrl, videoUrl, delaySeconds}: {preset: Preset; imageUrl: string | null; videoUrl: string | null; delaySeconds: number}) {
   const video = useRef<HTMLVideoElement>(null);
-  const [phase, setPhase] = useState(preset === 'CENTERED' ? 'centered-static' : 'intro');
+  const [playingSource, setPlayingSource] = useState<string | null>(null);
 
   useEffect(() => {
-    if (preset !== 'CINEMATIC' || !videoUrl) return;
-    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (motion.matches) return;
     const player = video.current;
-    if (!player) return;
+    if (preset !== 'CINEMATIC' || !videoUrl || !player) return;
+    const source = videoUrl;
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const connection = (navigator as Navigator & {connection?: {saveData?: boolean}}).connection;
+    let visible = !('IntersectionObserver' in window);
     let delayElapsed = false;
-    let videoReady = player.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA;
-    let transitionStarted = false;
-    let playTimer: ReturnType<typeof setTimeout> | undefined;
-    const beginTransition = () => {
-      if (!delayElapsed || !videoReady || transitionStarted) return;
-      transitionStarted = true;
-      setPhase('center-copy');
-      playTimer = setTimeout(() => {
-        void player.play().then(() => setPhase('video')).catch(() => {player.pause(); setPhase('intro');});
-      }, 1250);
-    };
-    const onCanPlayThrough = () => {
-      videoReady = true;
-      beginTransition();
-    };
-    const onBufferedCanPlay = () => {
-      const bufferedEnd = player.buffered.length ? player.buffered.end(player.buffered.length - 1) : 0;
-      const hasWholeClip = Number.isFinite(player.duration) && player.duration > 0 && bufferedEnd >= player.duration - 0.35;
-      if (player.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA || hasWholeClip) {
-        videoReady = true;
-        beginTransition();
+    let failed = false;
+    let starting = false;
+    let disposed = false;
+
+    const canPlay = () => !disposed && !failed && visible && !document.hidden && !motion.matches && !connection?.saveData;
+    const sync = () => {
+      if (!delayElapsed || !canPlay()) {
+        player.pause();
+        if (motion.matches) setPlayingSource(null);
+        return;
       }
+      if (starting || !player.paused) return;
+      starting = true;
+      if (!player.getAttribute('src')) player.src = source;
+      void player.play().catch((error: unknown) => {
+        if (disposed || (error instanceof DOMException && error.name === 'AbortError')) return;
+        failed = true;
+        setPlayingSource(null);
+      }).finally(() => {
+        starting = false;
+      });
     };
-    const onVideoError = () => {
-      videoReady = false;
-      player.pause();
-      if (transitionStarted) {if (playTimer) clearTimeout(playTimer); setPhase('intro');}
-    };
-    player.addEventListener('canplaythrough', onCanPlayThrough);
-    player.addEventListener('canplay', onBufferedCanPlay);
-    player.addEventListener('progress', onBufferedCanPlay);
-    player.addEventListener('error', onVideoError);
-    if (videoReady) onCanPlayThrough();
-    const startTimer = setTimeout(() => {delayElapsed = true; beginTransition();}, Math.max(3, Math.min(delaySeconds, 12)) * 1000);
+    const onPlaying = () => { if (canPlay()) setPlayingSource(source); };
+    const onError = () => { failed = true; setPlayingSource(null); };
+    const observer = 'IntersectionObserver' in window ? new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      sync();
+    }, {threshold: 0.08}) : null;
+    if (player.parentElement) observer?.observe(player.parentElement);
+    player.addEventListener('playing', onPlaying);
+    player.addEventListener('error', onError);
+    document.addEventListener('visibilitychange', sync);
+    motion.addEventListener('change', sync);
+    const timer = setTimeout(() => {
+      delayElapsed = true;
+      sync();
+    }, Math.max(3, Math.min(delaySeconds, 12)) * 1000);
+
     return () => {
-      player.removeEventListener('canplaythrough', onCanPlayThrough);
-      player.removeEventListener('canplay', onBufferedCanPlay);
-      player.removeEventListener('progress', onBufferedCanPlay);
-      player.removeEventListener('error', onVideoError);
-      clearTimeout(startTimer);
-      if (playTimer) clearTimeout(playTimer);
+      disposed = true;
+      observer?.disconnect();
+      clearTimeout(timer);
+      player.removeEventListener('playing', onPlaying);
+      player.removeEventListener('error', onError);
+      document.removeEventListener('visibilitychange', sync);
+      motion.removeEventListener('change', sync);
       player.pause();
+      player.removeAttribute('src');
+      player.load();
     };
   }, [preset, videoUrl, delaySeconds]);
 
   const active = preset === 'CINEMATIC' && !!videoUrl;
-  const centeredImage = preset === 'CENTERED' ? imageUrl : null;
-  return <section className={`reference-hero home-hero-preset-${preset.toLowerCase()}${preset !== 'CLASSIC' ? ' home-hero-fullbleed' : ''}${active ? ' home-hero-cinematic' : ''}`} data-hero-phase={active ? phase : preset === 'CENTERED' ? 'centered-static' : 'intro'}>
+  const showVideo = active && playingSource === videoUrl;
+  const layoutPreset = preset === 'CINEMATIC' && !active ? 'CLASSIC' : preset;
+  const centeredImage = preset === 'CENTERED' ? imageUrl ?? '/images/hero-collage.webp' : null;
+  return <section className={`reference-hero home-hero-preset-${layoutPreset.toLowerCase()}${layoutPreset !== 'CLASSIC' ? ' home-hero-fullbleed' : ''}${active ? ' home-hero-cinematic' : ''}`} data-hero-phase={showVideo ? 'video' : preset === 'CENTERED' ? 'centered-static' : 'intro'}>
     {centeredImage && <div className="home-hero-image" role="img" aria-label="Selected LearnWithRich hero background" style={{backgroundImage: `url("${centeredImage}")`}}/>}
-    {preset === 'CINEMATIC' && videoUrl && <div className="home-hero-video" aria-hidden="true"><video ref={video} src={videoUrl} muted playsInline loop preload="auto"/></div>}
+    {preset === 'CINEMATIC' && videoUrl && <div className="home-hero-video" aria-hidden="true"><video ref={video} muted playsInline loop preload="none"/></div>}
     <div className="ref-container ref-hero-inner">
       {active ? <>
-        <HeroCopy className="ref-hero-copy hero-copy-intro" hidden={phase !== 'intro'}/>
-        <HeroCopy className={`ref-hero-copy hero-copy-arriving${phase !== 'intro' ? ' is-visible' : ''}`} hidden={phase === 'intro'}/>
+        <HeroCopy className="ref-hero-copy hero-copy-intro" hidden={showVideo}/>
+        <HeroCopy className={`ref-hero-copy hero-copy-arriving${showVideo ? ' is-visible' : ''}`} hidden={!showVideo}/>
       </> : <HeroCopy className="ref-hero-copy"/>}
-      {(preset === 'CLASSIC' || active) && <div className="ref-hero-art" role="img" aria-label="Maker collage with an ESP32 board, Practical Maker book, African portrait illustrations and a project notebook"/>}
+      {(layoutPreset === 'CLASSIC' || active) && <div className="ref-hero-art" role="img" aria-label="Maker collage with an ESP32 board, Practical Maker book, African portrait illustrations and a project notebook"/>}
     </div>
   </section>;
 }

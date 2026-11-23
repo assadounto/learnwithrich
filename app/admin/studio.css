@@ -248,3 +248,18 @@
 .resource-api-tokens { padding: 0; margin: 0; list-style: none; }
 .resource-api-tokens li { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 0; border-top: 1px solid #d9dce1; }
 .resource-api-tokens li > div { display: grid; flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+
+.newsletter-admin-toolbar, .newsletter-admin-pages, .newsletter-admin-list li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.newsletter-admin-toolbar { align-items: flex-end; margin-bottom: 18px; }
+.newsletter-admin-toolbar label { flex: 1 1 160px; margin: 0; }
+.newsletter-admin-toolbar label:last-of-type { flex-grow: 0; margin: 0; }
+.newsletter-admin-list { padding: 0; margin: 0 0 14px; list-style: none; }
+.newsletter-admin-list li { border-block-start: 1px solid #d9dce1; padding: 12px 0; }
+.newsletter-admin-list li > div { flex: 1 1 210px; min-width: 0; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.newsletter-admin-list details summary { cursor: pointer; font-size: 13px; }
+.newsletter-admin-pages span { flex: 1 1 160px; font-size: 13px; }

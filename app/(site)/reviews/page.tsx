@@ -11,7 +11,7 @@ export default async function ReviewsPage() {
   const reviews = await database().review.findMany({where: {status: 'APPROVED'}, orderBy: {createdAt: 'desc'}, select: {id: true, displayName: true, title: true, country: true, imageAssetId: true, message: true, rating: true, createdAt: true}});
   const averageRating = reviews.length ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length : 0;
 
-  return <div className="community-page ref-container">
+  return <div className="community-page reviews-page ref-container">
     <Link href="/" className="community-back-link"><ArrowLeft size={15}/>Back to LearnWithRich</Link>
     <header className="community-page-heading">
       <span className="maker-kicker">COMMUNITY REVIEWS</span>
@@ -38,8 +38,7 @@ export default async function ReviewsPage() {
           <span>{reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</span>
         </header>
         {reviews.length ? <div className="community-review-list">
-          {reviews.map((review, index) => <article className="community-review-card" key={review.id}>
-            <span className="community-entry-number">{String(reviews.length - index).padStart(2, '0')}</span>
+          {reviews.map(review => <article className="community-review-card" key={review.id}>
             <div>
               <div className="community-review-person">
                 {review.imageAssetId ? <img src={`/api/public-media/${review.imageAssetId}`} alt="" width="38" height="38"/> : <span className="community-review-avatar" aria-hidden="true">{review.displayName.slice(0, 1).toUpperCase()}</span>}

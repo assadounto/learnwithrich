@@ -19,7 +19,7 @@ import { HomeMotion } from '@/components/home-motion';
 import { ArrowRight, Cpu, Code2, Layers, Pencil } from 'lucide-react';
 import {CreatorPortrait} from '@/components/creator-portrait';
 import { DrawnUnderline, AccentRays } from '@/components/decorative-marks';
-import { SearchForm, Newsletter } from '@/components/site-shell';
+import { SearchForm } from '@/components/site-shell';
 import {CommunityHome} from '@/components/community-home';
 import {database} from '@/lib/server/database';
 import {HomeHero} from '@/components/home-hero';
@@ -33,4 +33,4 @@ async function HomeContent(){const [homepage,reviews]=await Promise.all([resourc
 <SkillsPlayground/>
 <CommunityHome reviews={reviews.map(item=>({...item,createdAt:item.createdAt.toISOString()}))}/>
 
-<section className="ref-about"><div className="ref-container ref-about-inner"><div className="ref-stamp"><CreatorPortrait variant="intro"/></div><div className="ref-about-copy"><h2>Hi, I’m Richmond.<br/><span>I build things—and share the process.</span></h2><p>Software, electronics and the lessons in between.</p><Link href="/about" className="text-link">Meet the maker <ArrowRight size={15}/></Link></div><span className="about-ticks" aria-hidden="true"><svg viewBox="0 0 50 40" fill="none"><path d="M5 27 23 5M24 31 40 13" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg></span><div className="ref-grid-paper" aria-hidden="true"/></div></section><Newsletter/></HomeMotion>}
+<section className="ref-about"><div className="ref-container ref-about-inner"><div className="ref-stamp"><CreatorPortrait variant="intro"/></div><div className="ref-about-copy"><h2>Hi, I’m Richmond.<br/><span>I build things—and share the process.</span></h2><p>Software, electronics and the lessons in between.</p><Link href="/about" className="text-link">Meet the maker <ArrowRight size={15}/></Link></div><span className="about-ticks" aria-hidden="true"><svg viewBox="0 0 50 40" fill="none"><path d="M5 27 23 5M24 31 40 13" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg></span><div className="ref-grid-paper" aria-hidden="true"/></div></section></HomeMotion>}
