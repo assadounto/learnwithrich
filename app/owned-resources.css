@@ -231,3 +231,30 @@
 .owned-catalog-hero:after{right:calc(50% - 180px);top:-185px;opacity:.65;pointer-events:none}
 @media(max-width:800px){.owned-projects-hero{display:block;min-height:330px;padding:40px 7%}.owned-projects-hero>div:first-child{display:flex}.owned-projects-art>svg{right:5%;width:95px;height:95px}}
 @media(max-width:600px){.owned-projects-hero{min-height:0;padding:32px 20px}.owned-projects-hero>div:first-child{display:flex}.owned-projects-art{display:none}.owned-catalog-hero{padding:31px 22px 27px}.owned-catalog-hero:after{right:calc(50% - 180px);top:-160px}}
+
+@media(max-width:600px){
+  .owned-resource-card{display:grid;grid-template-columns:clamp(96px,31vw,118px) minmax(0,1fr);grid-template-areas:"cover meta" "cover title" "description description" "tags tags" "bottom bottom";column-gap:12px;row-gap:0;min-height:0;padding:10px}
+  .owned-resource-cover{grid-area:cover;align-self:start;aspect-ratio:1;width:100%;height:auto;min-height:0;border-radius:6px}
+  .owned-resource-type{left:5px;top:5px;padding:3px 5px;font-size:7px}
+  .owned-resource-arrow{right:5px;bottom:5px;width:25px;height:25px}
+  .owned-resource-arrow svg{width:14px}
+  .owned-resource-copy{display:contents}
+  .owned-resource-meta{grid-area:meta;align-self:center;min-width:0;justify-content:flex-start;gap:5px;margin:0;font-size:7px;line-height:1.25;letter-spacing:0}
+  .owned-resource-meta>span{min-width:0}
+  .owned-resource-meta .save-button{width:30px;height:30px;min-width:30px;min-height:30px;margin-left:auto;padding:5px}
+  .owned-resource-meta .save-button svg{width:17px;height:17px}
+  .owned-resource-copy h3{grid-area:title;align-self:start;min-width:0;margin:4px 0 0;font-size:18px;line-height:1.08;letter-spacing:-.35px}
+  .owned-resource-copy>p{grid-area:description;margin:11px 0 8px;max-width:none;font-size:12px;line-height:1.5}
+  .owned-resource-tags{grid-area:tags;gap:5px;margin:0 0 8px}
+  .owned-resource-tags span{padding:4px 7px;font-size:9px}
+  .owned-resource-bottom{grid-area:bottom;min-width:0;margin:0;padding-top:7px;font-size:9px}
+  .owned-resource-bottom>a{font-size:10px;min-height:30px}
+  .owned-resource-bottom>a svg{width:14px}
+}
+@media(max-width:380px){
+  .owned-resource-card{grid-template-columns:92px minmax(0,1fr);column-gap:10px;padding:9px}
+  .owned-resource-copy h3{font-size:16px}
+  .owned-resource-meta{font-size:6.5px;gap:4px}
+  .owned-resource-copy>p{font-size:11px}
+  .owned-resource-bottom{font-size:8px}
+}
