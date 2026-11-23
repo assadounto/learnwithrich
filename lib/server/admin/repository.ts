@@ -14,6 +14,16 @@ export type PackageResourceInput = {
   sections: {key: string; title: string}[]; items: {resource: string; section: string | null}[];
   media: {mediaAssetId: string; title: string; priceMinor: number}[];
 };
+export function packageSlugConflicts(db: Pick<Database, 'resource'>, slugs: string[]) {
+  return db.resource.findMany({where: {slug: {in: slugs}}, select: {slug: true}, orderBy: {slug: 'asc'}});
+}
+
+export function packageSlugConflictMessage(conflicts: {slug: string}[]) {
+  const shown = conflicts.slice(0, 10).map(resource => resource.slug).join(', ');
+  const remaining = conflicts.length > 10 ? ` and ${conflicts.length - 10} more` : '';
+  return `Import blocked because these resource slugs already exist: ${shown}${remaining}. Use new slugs to import a separate copy.`;
+}
+
 const fullResource = {
   content: true, tags: {include: {tag: true}},
   sections: {orderBy: {position: 'asc' as const}}, items: {orderBy: {position: 'asc' as const}},
@@ -52,7 +62,7 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
       await authorize(db);
       return db.resource.findMany({select: {id: true, title: true, type: true, status: true}, orderBy: {title: 'asc'}, take: 500});
     },
-    async importPackage(input: {assets: PackageMediaAssetInput[]; resources: PackageResourceInput[]}) {
+    async importPackage(input: {assets: PackageMediaAssetInput[]; resources: PackageResourceInput[]; folderName: string}) {
       await authorize(db);
       if (!Array.isArray(input.assets) || !Array.isArray(input.resources) || !input.resources.length || input.resources.length > 500) throw new ResourceInputError('Invalid resource package.');
       const keys = new Set(input.resources.map(resource => resource.key));
@@ -63,9 +73,18 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
         if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
         await authorize(tx);
         const slugs = input.resources.map(resource => resource.draft.slug);
-        const existing = await tx.resource.findMany({where: {slug: {in: slugs}}, select: {slug: true}});
-        if (existing.length) throw new EditConflictError(`These slugs already exist: ${existing.map(resource => resource.slug).join(', ')}.`);
-        if (input.assets.length) await tx.mediaAsset.createMany({data: input.assets.map(asset => ({...asset, folderId: null}))});
+        const existing = await packageSlugConflicts(tx, slugs);
+        if (existing.length) throw new EditConflictError(packageSlugConflictMessage(existing));
+        let mediaFolder: {id: string; name: string} | null = null;
+        if (input.assets.length) {
+          const id = randomUUID();
+          const created = await tx.mediaFolder.createMany({data: {id, name: input.folderName}, skipDuplicates: true});
+          const suffix = ` (${id})`;
+          const name = created.count ? input.folderName : Array.from(input.folderName).slice(0, 80 - suffix.length).join('').trimEnd() + suffix;
+          if (!created.count) await tx.mediaFolder.create({data: {id, name}});
+          mediaFolder = {id, name};
+          await tx.mediaAsset.createMany({data: input.assets.map(asset => ({...asset, folderId: id}))});
+        }
 
         for (const resource of input.resources) {
           const id = ids.get(resource.key)!;
@@ -108,7 +127,7 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
           await snapshot(tx, id, actorId, 'IMPORTED');
           imported.push({id, key: resource.key, title: resource.draft.title, slug: resource.draft.slug, type: resource.draft.type as ResourceKind});
         }
-        return imported;
+        return {resources: imported, mediaFolder};
       }, {timeout: 60000});
     },
     async homepageSettings() {

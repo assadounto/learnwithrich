@@ -1,3 +1,4 @@
+import {packageSlugConflictMessage, packageSlugConflicts} from '@/lib/server/admin/repository';
 import {requireOwner} from '@/lib/server/identity/access';
 import {database} from '@/lib/server/database';
 import {MAX_RESOURCE_PACKAGE_BYTES, previewResourcePackage} from '@/lib/server/resources/package-import';
@@ -19,8 +20,8 @@ export async function POST(request: Request) {
     const preview = previewResourcePackage(Buffer.from(await file.arrayBuffer()));
     const slugs = preview.resources.map(resource => resource.slug).filter(Boolean);
     if (slugs.length) {
-      const conflicts = await database().resource.findMany({where: {slug: {in: slugs}}, select: {slug: true}});
-      for (const resource of preview.resources) if (conflicts.some(row => row.slug === resource.slug)) preview.errors.push(`The slug already exists on this site: ${resource.slug}.`);
+      const conflicts = await packageSlugConflicts(database(), slugs);
+      if (conflicts.length) preview.errors.push(packageSlugConflictMessage(conflicts));
     }
     preview.errors = [...new Set(preview.errors)];
     preview.valid = preview.errors.length === 0;
