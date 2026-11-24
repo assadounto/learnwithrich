@@ -154,6 +154,7 @@ function StudioWorkspace({name, email, resources, children}: WorkspaceProps) {
     ?? tabs.find(tab => tab.href === path)?.label ?? (path === '/admin/project-ideas/new' ? 'New project idea' : path.startsWith('/admin/project-ideas/') ? 'Edit project idea' : path.startsWith('/admin/files/') ? 'File preview' : 'Resource editor');
   const newType = path === '/admin/resources/new' ? params.get('type') ?? undefined : undefined;
   const activeTab = path === home || tabPath.test(path) ? path : home;
+  const homeSelection = path === home && params.size ? `${home}?${params}` : home;
   const matching = resources.filter(row => row.title.toLowerCase().includes(query.trim().toLowerCase()));
 
   useEffect(() => {
@@ -260,7 +261,7 @@ function StudioWorkspace({name, email, resources, children}: WorkspaceProps) {
   }
 
   function openExplorerCommands(event: MouseEvent<HTMLElement>) {
-    const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null;
+    const anchor = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href]') : null;
     const url = anchor && new URL(anchor.href);
     const item = url && url.origin === window.location.origin && (url.pathname === home || tabPath.test(url.pathname));
     openCommands(event, item ? {href: url.pathname + url.search, label: anchor?.textContent?.trim() || 'Studio item'} : {label: 'Explorer'});
@@ -357,14 +358,14 @@ function StudioWorkspace({name, email, resources, children}: WorkspaceProps) {
       </aside>
       <div className="workspace-main" inert={drawer}>
         <nav ref={tabStrip} className="studio-tabs" aria-label="Open workspace tabs">
-          <div className="studio-tab" onContextMenu={event => openCommands(event, {href: home, label: 'Resources'})}><Link href={home} aria-current={activeTab === home ? 'page' : undefined}><Library size={15}/>Resources</Link></div>
+          <div className="studio-tab" onContextMenu={event => openCommands(event, {href: homeSelection, label: 'Resources'})}><Link href={home} aria-current={activeTab === home ? 'page' : undefined}><Library size={15}/>Resources</Link></div>
           {tabs.map(tab => <div className="studio-tab" key={tab.href} onContextMenu={event => openCommands(event, {href: tabDestination(tab), label: tab.label})}>
             <Link href={tabDestination(tab)} title={tab.label} prefetch={false} aria-current={activeTab === tab.href ? 'page' : undefined}><FileText size={14}/><span>{tab.label}</span></Link>
             <button type="button" aria-label={`Close ${tab.label}`} onClick={() => closeTab(tab.href)}>{dirty && activeTab === tab.href ? <span className="studio-dirty-dot"/> : <X size={15}/>}</button>
           </div>)}
           <button type="button" className="studio-pane-action studio-tab-options" aria-label="Active tab options" onClick={event => {
             const current = tabs.find(tab => tab.href === activeTab);
-            openCommands(event, {href: current ? tabDestination(current) : path === home ? home + (params.size ? '?' + params.toString() : '') : home, label});
+            openCommands(event, {href: current ? tabDestination(current) : homeSelection, label});
           }}><Ellipsis size={18}/></button>
         </nav>
         <div className={pane ? `studio-split pane-${pane.side}` : undefined}>
