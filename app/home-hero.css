@@ -3,8 +3,9 @@
 .home-hero-fullbleed .ref-hero-inner { position: relative; z-index: 2; width: calc(100% - 6.7%); height: clamp(440px, 48vw, 691px); min-height: clamp(440px, 48vw, 691px); padding-block: 0; }
 .home-hero-image, .home-hero-video { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
 .home-hero-image { background-color: #34372f; }
-.home-hero-image > img, .ref-hero-art > img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.ref-hero-art > img { object-fit: contain; }
+.home-hero-picture, .home-hero-picture > img { display: block; width: 100%; height: 100%; }
+.home-hero-picture > img { object-fit: cover; }
+.ref-hero-art .home-hero-picture > img { object-fit: contain; }
 .home-hero-image::after, .home-hero-video::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #10120fa8 0%, #10120f4f 55%, #10120f38 100%), linear-gradient(0deg, #10120f55, transparent 46%); }
 .home-hero-video { z-index: 1; opacity: 0; transition: opacity .65s ease-out; }
 .home-hero-video video { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -19,7 +20,7 @@
 .home-hero-cinematic .hero-copy-arriving .ref-hero-actions { justify-content: center; }
 .home-hero-cinematic .hero-copy-arriving > p { margin-inline: auto; }
 .home-hero-cinematic .hero-copy-arriving .ref-eyebrow .orange-scribble { left: 50%; transform: translateX(-50%) rotate(-3deg); }
-.home-hero-cinematic[data-hero-phase="video"] .home-hero-video { opacity: 1; }
+.reference-hero[data-hero-phase="video"] .home-hero-video { opacity: 1; }
 .home-hero-cinematic .ref-hero-art { transition: opacity .65s ease-out, transform .65s ease-out; }
 .home-hero-cinematic[data-hero-phase="video"] .ref-hero-art { animation: none; opacity: 0; transform: scale(1.025); }
 .home-hero-cinematic[data-hero-phase="video"] .hero-copy-arriving,
@@ -86,4 +87,58 @@
   .home-hero-cinematic .hero-copy-intro,
   .home-hero-cinematic .hero-copy-arriving,
   .home-hero-video { transition: none !important; }
+}
+
+.home-hero-image, .home-hero-video { pointer-events: none; }
+.ref-hero-art .home-hero-video { border-radius: 14px; }
+.ref-hero-art .home-hero-video::after { content: none; }
+.home-hero-preset-classic .ref-hero-art > .home-hero-video { inset: 8%; }
+
+.home-hero-preset-spotlight .ref-hero-inner { display: flex; align-items: center; }
+.home-hero-preset-spotlight .ref-hero-copy { width: min(100%, 710px); }
+.home-hero-preset-spotlight .ref-hero-copy h1 { white-space: normal; transform: none; }
+.home-hero-preset-spotlight .ref-hero-copy,
+.home-hero-preset-spotlight .ref-hero-copy h1,
+.home-hero-preset-spotlight .ref-hero-copy h1 i,
+.home-hero-preset-spotlight .ref-hero-copy > p,
+.home-hero-preset-spotlight .ref-eyebrow,
+.home-hero-preset-spotlight .ref-hero-copy .text-link { color: #fffdf7; border-color: #fffdf7; }
+.home-hero-preset-spotlight .hero-rays { display: none; }
+
+.home-hero-preset-editorial .ref-hero-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(24px, 5vw, 72px);
+  padding-block: clamp(28px, 5vw, 68px);
+}
+.home-hero-preset-editorial .ref-hero-art {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  align-self: center;
+  background: var(--surface);
+}
+.home-hero-preset-editorial .ref-hero-copy { grid-column: 2; grid-row: 1; width: 100%; min-width: 0; }
+.home-hero-preset-editorial .ref-hero-art { grid-column: 1; grid-row: 1; }
+.home-hero-preset-editorial .ref-hero-copy h1 {
+  font-size: clamp(36px, 5vw, 72px);
+  white-space: normal;
+  transform: none;
+}
+.home-hero-preset-editorial .ref-hero-actions { flex-wrap: wrap; }
+.home-hero-preset-editorial .hero-rays { display: none; }
+
+@media (max-width: 580px) {
+  .home-hero-preset-spotlight .ref-hero-inner { min-height: 440px; justify-content: center; padding-block: 40px; }
+  .home-hero-preset-editorial .ref-hero-inner { grid-template-columns: minmax(0, 1fr); }
+  .home-hero-preset-editorial .ref-hero-copy,
+  .home-hero-preset-editorial .ref-hero-art { grid-column: auto; grid-row: auto; }
+  .home-hero-preset-classic .ref-hero-art > .home-hero-video { inset: 4%; }
 }

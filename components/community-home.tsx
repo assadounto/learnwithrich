@@ -1,7 +1,8 @@
 "use client";
 import {publicImageAttributes} from '@/lib/image-sizes';
 import Link from "@/components/navigation-link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import {useSiteAccount} from "./site-account";
 import { ArrowRight, ArrowUpRight, Heart, PenLine, Star } from "lucide-react";
 import { COMMUNITY_COUNTRIES } from "@/lib/community-countries";
 
@@ -143,33 +144,11 @@ export function GuestbookForm() {
 }
 
 export function ReviewForm() {
-  const [signedIn, setSignedIn] = useState<boolean | null>(null),
-    [name, setName] = useState(""),
+  const account = useSiteAccount();
+  const [name, setName] = useState<string>(),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
     [error, setError] = useState("");
-  useEffect(() => {
-    let active = true;
-    fetch("/api/account/me", { cache: "no-store" })
-      .then(async (response) => {
-        if (!active) return;
-        if (!response.ok) {
-          setSignedIn(false);
-          return;
-        }
-        const result = await response.json();
-        if (active) {
-          setName(result.user?.name || "");
-          setSignedIn(true);
-        }
-      })
-      .catch(() => {
-        if (active) setSignedIn(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -197,9 +176,9 @@ export function ReviewForm() {
       setBusy(false);
     }
   }
-  if (signedIn === null)
+  if (account === undefined)
     return <p className="community-muted">Checking sign-in…</p>;
-  if (!signedIn)
+  if (!account)
     return (
       <p className="community-signin-note">
         Want to leave a review?{" "}
@@ -219,7 +198,7 @@ export function ReviewForm() {
         Your name
         <input
           name="displayName"
-          value={name}
+          value={name ?? account.name}
           onChange={(event) => setName(event.target.value)}
           required
           minLength={2}

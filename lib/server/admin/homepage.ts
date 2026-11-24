@@ -1,3 +1,5 @@
+import {homepageHeroMedia, homepageHeroPresets, type HomepageHeroEditor, type HomepageHeroSettings} from '../../home-hero.ts';
+import type {Database} from '../database-client';
 import {resourceId, resourceTypes, ResourceInputError, text, enumValue} from '../resources/validation.ts';
 
 export type HomepageSection = {
@@ -22,21 +24,60 @@ export const defaultHomepageSections: HomepageSection[] = [{
   limit: 9,
 }];
 
-export type HomepageHeroPreset = 'CLASSIC' | 'CENTERED' | 'CINEMATIC';
-export type HomepageHeroSettings = {preset: HomepageHeroPreset; imageAssetId: string | null; videoAssetId: string | null; delaySeconds: number};
-export const defaultHomepageHero: HomepageHeroSettings = {preset: 'CLASSIC', imageAssetId: null, videoAssetId: null, delaySeconds: 5};
+export const defaultHomepageHero: HomepageHeroSettings = {
+  preset: 'CLASSIC', imageAssetId: null, mobileImageAssetId: null,
+  videoAssetId: null, mobileVideoAssetId: null, delaySeconds: 5, videoEnabled: false,
+};
 
 export function validateHomepageHero(input: unknown): HomepageHeroSettings {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new ResourceInputError('Invalid homepage hero settings.');
   const row = input as Record<string, unknown>;
-  const preset = enumValue(row.preset, ['CLASSIC', 'CENTERED', 'CINEMATIC'] as const, 'hero preset');
-  const imageAssetId = row.imageAssetId == null || row.imageAssetId === '' ? null : resourceId(row.imageAssetId);
-  const videoAssetId = row.videoAssetId == null || row.videoAssetId === '' ? null : resourceId(row.videoAssetId);
+  const preset = enumValue(row.preset, homepageHeroPresets, 'hero preset');
+  const hero = {...defaultHomepageHero, preset};
+  for (const slot of homepageHeroMedia) {
+    const value = row[slot.field];
+    hero[slot.field] = value == null || value === '' ? null : resourceId(value);
+  }
   const delaySeconds = row.delaySeconds;
-  if (typeof delaySeconds !== 'number' || !Number.isInteger(delaySeconds) || delaySeconds < 3 || delaySeconds > 12) throw new ResourceInputError('Choose a hero transition delay from 3 to 12 seconds.');
-  if (preset === 'CINEMATIC' && !videoAssetId) throw new ResourceInputError('Choose a background video for the cinematic preset.');
-  if (preset === 'CENTERED' && !imageAssetId) throw new ResourceInputError('Choose a background image for the centered preset.');
-  return {preset, imageAssetId, videoAssetId, delaySeconds};
+  if (typeof delaySeconds !== 'number' || !Number.isInteger(delaySeconds) || delaySeconds < 3 || delaySeconds > 12) throw new ResourceInputError('Choose a hero video delay from 3 to 12 seconds.');
+  if (preset === 'CINEMATIC' && !hero.videoAssetId && !hero.mobileVideoAssetId) throw new ResourceInputError('Choose at least one video for the cinematic preset.');
+  if (row.videoEnabled !== undefined && typeof row.videoEnabled !== 'boolean') throw new ResourceInputError('Choose whether to play hero video.');
+  return {...hero, delaySeconds, videoEnabled: preset === 'CINEMATIC' || row.videoEnabled === true};
+}
+
+export const homepageHeroSelect = {
+  heroPreset: true, heroImageAssetId: true, heroMobileImageAssetId: true,
+  heroVideoAssetId: true, heroMobileVideoAssetId: true, heroVideoEnabled: true, heroDelaySeconds: true,
+} as const;
+
+type HeroRow = Record<(typeof homepageHeroMedia)[number]['column'], string | null> & {
+  heroPreset: string;
+  heroDelaySeconds: number;
+  heroVideoEnabled: boolean;
+};
+
+export async function loadHomepageHero(db: Pick<Database, 'mediaAsset'>, settings: HeroRow | null): Promise<HomepageHeroEditor> {
+  const hero: HomepageHeroEditor = {
+    ...defaultHomepageHero, imageName: null, mobileImageName: null, videoName: null, mobileVideoName: null,
+  };
+  if (!settings) return hero;
+  hero.preset = homepageHeroPresets.find(preset => preset === settings.heroPreset) ?? hero.preset;
+  hero.delaySeconds = settings.heroDelaySeconds;
+  hero.videoEnabled = settings.heroVideoEnabled;
+  const ids = homepageHeroMedia.map(slot => settings[slot.column]).filter((id): id is string => id !== null);
+  const assets = ids.length ? await db.mediaAsset.findMany({where: {id: {in: ids}}, select: {id: true, originalName: true, mimeType: true}}) : [];
+  const byId = new Map(assets.map(asset => [asset.id, asset]));
+  for (const slot of homepageHeroMedia) {
+    const asset = byId.get(settings[slot.column] ?? '');
+    if (!asset || !heroMediaMatches(slot.kind, asset.mimeType)) continue;
+    hero[slot.field] = asset.id;
+    hero[slot.name] = asset.originalName;
+  }
+  return hero;
+}
+
+export function heroMediaMatches(kind: 'image' | 'video', mimeType: string | undefined) {
+  return kind === 'image' ? Boolean(mimeType?.startsWith('image/')) : mimeType === 'video/mp4' || mimeType === 'video/webm';
 }
 
 export function validateHomepageSections(input: unknown): HomepageSection[] {

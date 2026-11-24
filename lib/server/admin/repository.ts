@@ -6,7 +6,8 @@ import {assertOwner} from '../identity/owner';
 import {assertSessionMfa} from '../identity/mfa';
 import {adminDraft, editToken} from './input';
 import {ResourceInputError, resourceId, text, enumValue, resourceTypes, validateDraft, type ResourceDraft, type ResourceKind} from '../resources/validation';
-import {defaultHomepageHero, defaultHomepageSections, validateHomepageHero, validateHomepageSections, type HomepageHeroPreset} from './homepage';
+import {defaultHomepageSections, heroMediaMatches, homepageHeroSelect, loadHomepageHero, validateHomepageHero, validateHomepageSections} from './homepage';
+import {homepageHeroMedia} from '../../home-hero';
 export class EditConflictError extends Error {}
 export type PackageMediaAssetInput = {id: string; originalName: string; storageKey: string; mimeType: string; sizeBytes: number};
 export type PackageResourceInput = {
@@ -137,32 +138,38 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
     async homepageSettings() {
       await authorize(db);
       const [settings, resources] = await Promise.all([
-        db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true, heroPreset: true, heroImageAssetId: true, heroVideoAssetId: true, heroDelaySeconds: true}}),
+        db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true, ...homepageHeroSelect}}),
         db.resource.findMany({where: {status: 'PUBLISHED', publishedAt: {lte: new Date()}}, select: {id: true, title: true, type: true, coverUrl: true, summary: true}, orderBy: [{publishedAt: 'desc'}, {title: 'asc'}], take: 500}),
       ]);
-      const [image, video] = await Promise.all([
-        settings?.heroImageAssetId ? db.mediaAsset.findUnique({where: {id: settings.heroImageAssetId}, select: {originalName: true, mimeType: true}}) : null,
-        settings?.heroVideoAssetId ? db.mediaAsset.findUnique({where: {id: settings.heroVideoAssetId}, select: {originalName: true, mimeType: true}}) : null,
-      ]);
-      const hero = settings ? {preset: settings.heroPreset as HomepageHeroPreset, imageAssetId: image?.mimeType.startsWith('image/') ? settings.heroImageAssetId : null, imageName: image?.mimeType.startsWith('image/') ? image.originalName : null, videoAssetId: video?.mimeType.startsWith('video/') ? settings.heroVideoAssetId : null, videoName: video?.mimeType.startsWith('video/') ? video.originalName : null, delaySeconds: settings.heroDelaySeconds} : {...defaultHomepageHero, imageName: null, videoName: null};
+      const hero = await loadHomepageHero(db, settings);
       return {sections: validateHomepageSections(settings?.sections ?? defaultHomepageSections), hero, resources};
     },
     async saveHomepageHero(input: unknown) {
       await authorize(db);
       const hero = validateHomepageHero(input);
-      if (hero.imageAssetId) {
-        const asset = await db.mediaAsset.findUnique({where: {id: hero.imageAssetId}, select: {mimeType: true}});
-        if (!asset?.mimeType.startsWith('image/')) throw new ResourceInputError('Choose an image from the media library.');
-      }
-      if (hero.videoAssetId) {
-        const asset = await db.mediaAsset.findUnique({where: {id: hero.videoAssetId}, select: {mimeType: true}});
-        if (!asset?.mimeType.startsWith('video/')) throw new ResourceInputError('Choose a video from the media library.');
-      }
-      return db.homepageSettings.upsert({
-        where: {id: 1},
-        create: {id: 1, sections: defaultHomepageSections as Prisma.InputJsonValue, heroPreset: hero.preset, heroImageAssetId: hero.imageAssetId, heroVideoAssetId: hero.videoAssetId, heroDelaySeconds: hero.delaySeconds},
-        update: {heroPreset: hero.preset, heroImageAssetId: hero.imageAssetId, heroVideoAssetId: hero.videoAssetId, heroDelaySeconds: hero.delaySeconds},
-        select: {heroPreset: true, heroImageAssetId: true, heroVideoAssetId: true, heroDelaySeconds: true},
+      return db.$transaction(async tx => {
+        if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
+        await authorize(tx);
+        const ids = homepageHeroMedia.map(slot => hero[slot.field]).filter((id): id is string => id !== null);
+        const assets = ids.length ? await tx.mediaAsset.findMany({where: {id: {in: ids}}, select: {id: true, mimeType: true}}) : [];
+        const mimeTypes = new Map(assets.map(asset => [asset.id, asset.mimeType]));
+        for (const slot of homepageHeroMedia) {
+          const id = hero[slot.field];
+          if (id && !heroMediaMatches(slot.kind, mimeTypes.get(id))) {
+            throw new ResourceInputError(`Choose a valid ${slot.label.toLowerCase()} from the media library.`);
+          }
+        }
+        const data = {
+          heroPreset: hero.preset, heroDelaySeconds: hero.delaySeconds, heroVideoEnabled: hero.videoEnabled,
+          heroImageAssetId: hero.imageAssetId, heroMobileImageAssetId: hero.mobileImageAssetId,
+          heroVideoAssetId: hero.videoAssetId, heroMobileVideoAssetId: hero.mobileVideoAssetId,
+        };
+        return tx.homepageSettings.upsert({
+          where: {id: 1},
+          create: {id: 1, sections: defaultHomepageSections as Prisma.InputJsonValue, ...data},
+          update: data,
+          select: homepageHeroSelect,
+        });
       });
     },
     async saveHomepage(input: unknown) {

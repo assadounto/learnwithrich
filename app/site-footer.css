@@ -14,12 +14,6 @@
 .site-policy h1 { margin: 0 0 12px; font: 700 clamp(36px, 6vw, 60px)/1.1 var(--sans); letter-spacing: -.04em; }
 .site-policy h2 { margin: 28px 0 8px; font: 650 22px/1.25 var(--sans); scroll-margin-top: 100px; }
 .site-policy p { margin: 0; font-size: 16px; line-height: 1.7; }
-@media (max-width: 800px) {
-  .ref-footer-inner > nav {
-    flex-wrap: wrap;
-    gap: 4px 14px;
-  }
-}
 @media (max-width: 580px) {
   .reference-newsletter { padding-block: 22px; }
   .ref-newsletter-inner { gap: 16px; }
@@ -40,12 +34,56 @@
     font-size: 13px;
     white-space: nowrap;
   }
-  .ref-footer-inner { gap: 12px; }
-  .ref-footer-inner > nav { justify-content: flex-start; }
-  .ref-footer-inner > nav a { min-height: 36px; font-size: 12px; }
-  .ref-footer-inner > span { text-align: left; font-size: 11px; }
 }
 @media (max-width: 340px) {
   .ref-newsletter-form form { grid-template-columns: minmax(0, 1fr); }
   .ref-newsletter-form form > .button { justify-self: stretch; }
+}
+
+.reference-footer .ref-footer-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+  align-items: start;
+  gap: 24px;
+  padding-block: 28px 18px;
+}
+.reference-footer .ref-footer-inner > nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 24px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ref-footer-group h2 {
+  margin: 0 0 6px;
+  font: 700 14px/1.4 var(--sans);
+  letter-spacing: normal;
+  color: var(--ink);
+}
+.ref-footer-group ul { margin: 0; padding: 0; list-style: none; }
+.reference-footer .ref-footer-group a {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 36px;
+  align-items: center;
+  font-size: 13px;
+}
+.reference-footer .ref-footer-inner > span {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  text-align: left;
+  white-space: normal;
+}
+@media (max-width: 800px) {
+  .reference-footer .ref-footer-inner { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 580px) {
+  .reference-footer .ref-footer-inner { gap: 18px; padding-top: 24px; }
+  .reference-footer .ref-footer-inner > nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reference-footer .ref-footer-group a { min-height: 44px; }
 }

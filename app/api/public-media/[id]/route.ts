@@ -17,7 +17,7 @@ export async function GET(request: Request, context: {params: Promise<{id: strin
       db.resource.findFirst({where: {status: 'PUBLISHED', publishedAt: {lte: new Date()}, coverUrl: url}, select: {id: true}}),
       db.guestbookEntry.findFirst({where: {status: 'APPROVED', imageAssetId: id}, select: {id: true}}),
       db.review.findFirst({where: {status: 'APPROVED', imageAssetId: id}, select: {id: true}}),
-      db.homepageSettings.findFirst({where: {id: 1, heroPreset: 'CENTERED', heroImageAssetId: id}, select: {id: true}}),
+      db.homepageSettings.findFirst({where: {id: 1, OR: [{heroImageAssetId: id}, {heroMobileImageAssetId: id}]}, select: {id: true}}),
     ]);
     const asset = (resource || guestbookEntry || review || homepageSettings) && await db.mediaAsset.findUnique({where: {id}, select: {storageKey: true, originalName: true, mimeType: true, sizeBytes: true}});
     if (!asset || !asset.mimeType.startsWith('image/')) return new Response('Not found', {status: 404});
