@@ -1,4 +1,4 @@
-.admin-experience{--paper:#fff;--ink:#202124;--line:#d9dce1;--muted:#686b70;--orange:var(--primary);min-height:100dvh;background:var(--dark-surface, #fff);color:var(--ink);font-size:16px;line-height:1.55}
+.admin-experience{min-height:100dvh;background:var(--dark-surface, #fff);color:var(--ink);font-size:16px;line-height:1.55}
 .admin-experience :is(h1,h2,h3){font-family:var(--sans);font-weight:650;line-height:1.25;letter-spacing:-.035em;color:var(--dark-text, #202124);transform:none}
 .admin-experience .button{font-size:14px;min-height:44px;border-radius:7px;gap:8px;padding:11px 17px}
 .admin-experience .button:hover{transform:none}
@@ -128,7 +128,7 @@
 .admin-editor-steps a{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:5px;color:var(--dark-muted, #686b70);font-size:11px;text-decoration:none;transition:background .15s,color .15s}
 .admin-editor-steps a:hover{background:var(--dark-surface, #ffffff);color:var(--dark-text, #202124)}
 .admin-editor-steps a span{font-size:9px;font-weight:700;color:var(--dark-muted, #686b70)}
-.admin-heading-customizer{display:grid;grid-template-columns:1fr auto;gap:15px 24px;margin:-10px 0 18px;padding:20px 23px;border:1px solid var(--dark-line, #d9dce1);border-radius:9px;background:linear-gradient(120deg,#ffffff,#fff)}
+.admin-heading-customizer{display:grid;grid-template-columns:1fr auto;gap:15px 24px;margin:-10px 0 18px;padding:20px 23px;border:1px solid var(--dark-line, #d9dce1);border-radius:9px;background:linear-gradient(120deg,var(--dark-surface, #ffffff),var(--dark-surface, #fff))}
 .admin-heading-customizer>div:first-child{display:grid;gap:4px}.admin-heading-customizer>div:first-child strong{font:500 18px var(--serif);color:var(--dark-muted, #686b70)}.admin-heading-customizer>div:first-child span{font-size:11px;color:var(--dark-muted, #686b70)}
 .admin-heading-customizer-fields{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:11px}
 .admin-heading-customizer-fields label{display:flex;flex-direction:column;gap:6px;color:var(--dark-muted, #686b70);font-size:10px;font-weight:650}
