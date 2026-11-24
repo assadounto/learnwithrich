@@ -32,7 +32,7 @@ function tabDestination(tab: WorkspaceTab) {
 }
 const tabStore = 'learnwithrich.studio.tabs';
 const home = '/admin/resources';
-const tabPath = /^\/admin\/(?:resources\/(?:new|import|[a-f0-9-]{36})|files\/[a-f0-9-]{36}|files|homepage|site-contact|community\/(?:guestbook|service-requests|reviews|newsletter)|project-ideas|resource-api|security)$/;
+const tabPath = /^\/admin\/(?:resources\/(?:new|import|[a-f0-9-]{36})|files\/[a-f0-9-]{36}|files|homepage|site-contact|community\/(?:guestbook|service-requests|reviews|newsletter)|project-ideas(?:\/new|\/[a-z0-9-]{1,120}\/edit)?|resource-api|security)$/;
 const WorkspaceContext = createContext({
   trackDirty: (_key: object, _dirty: boolean) => {},
   namePage: (_path: string, _label: string) => {},
@@ -95,7 +95,7 @@ export function WorkspaceShell({name, email, resources, children}: {
 
   const resource = resources.find(row => path === `/admin/resources/${row.id}`);
   const label = labels[path] ?? resource?.title ?? [...sections, ...actions].find(item => item.href === path)?.label
-    ?? tabs.find(tab => tab.href === path)?.label ?? (path.startsWith('/admin/files/') ? 'File preview' : 'Resource editor');
+    ?? tabs.find(tab => tab.href === path)?.label ?? (path === '/admin/project-ideas/new' ? 'New project idea' : path.startsWith('/admin/project-ideas/') ? 'Edit project idea' : path.startsWith('/admin/files/') ? 'File preview' : 'Resource editor');
   const newType = path === '/admin/resources/new' ? params.get('type') ?? undefined : undefined;
   const activeTab = path === home || tabPath.test(path) ? path : home;
   const matching = resources.filter(row => row.title.toLowerCase().includes(query.trim().toLowerCase()));
@@ -239,7 +239,7 @@ export function WorkspaceShell({name, email, resources, children}: {
           })}
         </nav>
         <nav className="studio-tools" aria-label="Studio tools">
-          {sections.slice(1).map(({href, label: title, icon: Icon}) => <Link key={href} className="workspace-nav-item" href={href}
+          {sections.filter(item => item.href !== home).map(({href, label: title, icon: Icon}) => <Link key={href} className="workspace-nav-item" href={href}
             aria-current={path === href || path.startsWith(href + '/') ? 'page' : undefined}><Icon size={16}/>{title}</Link>)}
         </nav>
         <div className="workspace-sidebar-account">
