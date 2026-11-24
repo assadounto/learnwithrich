@@ -1,18 +1,20 @@
 'use client';
 
-import {useRef, useState, type PointerEvent} from 'react';
+import {useRef, useState} from 'react';
 import {ArrowLeft, ArrowRight, ArrowUpRight, Bookmark, Layers} from 'lucide-react';
 import Link from '@/components/navigation-link';
 import {publicImageAttributes} from '@/lib/image-sizes';
 import type {ResourceCardData} from './owned-resource-card';
+import {useSwipeGesture, useSwipeVisibility} from './swipe-gesture';
 import {useResourceBookmark} from './resource-card';
 
 export function ResourceSwipeDeck({items, nextHref}: {items: ResourceCardData[]; nextHref?: string}) {
   const [index, setIndex] = useState(0);
   const [message, setMessage] = useState('');
   const item = items[index];
+  const deck = useSwipeVisibility(index);
 
-  return <section className="swipe-deck" aria-label="Swipe through matching resources">
+  return <section ref={deck} className="swipe-deck" aria-label="Swipe through matching resources">
     <header><div><h2>Find your next build</h2><p>Swipe right to save, left to skip. Tap a card to see the details.</p></div>
       <span>{Math.min(index + 1, items.length)} / {items.length}</span>
     </header>
@@ -33,10 +35,6 @@ export function ResourceSwipeDeck({items, nextHref}: {items: ResourceCardData[];
 }
 
 function SwipeCard({item, advance}: {item: ResourceCardData; advance: (saved: boolean) => void}) {
-  const [offset, setOffset] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const start = useRef<{x: number; y: number; id: number} | null>(null);
-  const suppressClick = useRef(false);
   const deciding = useRef(false);
   const {ready, saved, busy, error, setBookmark} = useResourceBookmark(item.slug);
 
@@ -48,45 +46,12 @@ function SwipeCard({item, advance}: {item: ResourceCardData; advance: (saved: bo
     } finally { deciding.current = false; }
   }
 
-  function begin(event: PointerEvent<HTMLAnchorElement>) {
-    if (!event.isPrimary || event.button !== 0 || deciding.current) return;
-    suppressClick.current = false;
-    start.current = {x: event.clientX, y: event.clientY, id: event.pointerId};
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDragging(true);
-  }
-
-  function move(event: PointerEvent<HTMLAnchorElement>) {
-    const initial = start.current;
-    if (!initial || initial.id !== event.pointerId) return;
-    const dx = event.clientX - initial.x;
-    if (Math.abs(dx) > 8) suppressClick.current = true;
-    setOffset(Math.max(-130, Math.min(130, dx)));
-  }
-
-  function end(event: PointerEvent<HTMLAnchorElement>, cancelled = false) {
-    const initial = start.current;
-    if (!initial || initial.id !== event.pointerId) return;
-    start.current = null;
-    setDragging(false);
-    setOffset(0);
-    if (cancelled) { suppressClick.current = true; return; }
-    const dx = event.clientX - initial.x, dy = event.clientY - initial.y;
-    if (Math.abs(dx) >= 64 && Math.abs(dx) > Math.abs(dy) * 1.25) {
-      suppressClick.current = true;
-      void decide(dx > 0);
-    }
-  }
+  const {offset, dragging, anchorProps} = useSwipeGesture(right => void decide(right), busy);
 
   return <>
     <div className="swipe-stage">
       <Link className={`swipe-card${dragging ? ' is-dragging' : ''}`} href={`/resources/${encodeURIComponent(item.slug)}`} prefetch={false}
-        draggable={false} onDragStart={event => event.preventDefault()}
-        onPointerDown={begin} onPointerMove={move} onPointerUp={end} onPointerCancel={event => end(event, true)}
-        onLostPointerCapture={event => end(event, true)} onClick={event => {
-          if (event.detail !== 0 && suppressClick.current) event.preventDefault();
-          suppressClick.current = false;
-        }}
+        {...anchorProps}
         style={{transform: `translateX(${offset}px) rotate(${offset / 18}deg)`}}>
         <div className="swipe-cover">
           {item.coverUrl ? <img {...publicImageAttributes(item.coverUrl, [384, 768, 1280], '(max-width: 620px) 90vw, 560px')} alt="" decoding="async" draggable={false}/> : <Layers size={54} strokeWidth={1.2} aria-hidden="true"/>}

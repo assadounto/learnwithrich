@@ -1,5 +1,6 @@
 import {Download, FileText} from 'lucide-react';
 import {notFound} from 'next/navigation';
+import {MediaOptimizer} from '@/components/admin/media-optimizer';
 import {WorkspacePageTitle} from '@/components/admin/workspace-shell';
 import {database} from '@/lib/server/database';
 import {requireOwner} from '@/lib/server/identity/access';
@@ -38,5 +39,6 @@ export default async function StudioFile({params}: {params: Promise<{id: string}
       <a className="button button-dark" href={`${base}?download=1`} download={originalName}><Download size={16}/>Download</a>
     </header>
     <div className="studio-file-preview">{preview}</div>
+    {['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'video/mp4', 'video/webm'].includes(mimeType) && <MediaOptimizer id={id} sizeBytes={sizeBytes} video={mimeType.startsWith('video/')}/>}
   </section>;
 }
