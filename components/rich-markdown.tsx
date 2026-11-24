@@ -1,3 +1,4 @@
+import {resourceImageAttributes} from '@/lib/image-sizes';
 import type {ReactNode} from 'react';
 
 const uuid = '[a-f\\d]{8}-(?:[a-f\\d]{4}-){3}[a-f\\d]{12}';
@@ -43,7 +44,7 @@ function inline(text: string, resourceSlug?: string, adminPreview = false, packa
       if (src?.startsWith('#')) out.push(<a key={key} href={src}>{label}</a>);
       else if (src && kind?.[1].toLowerCase() === 'audio') out.push(<figure className="rich-markdown-attachment" key={key}><figcaption>{label}</figcaption><audio controls preload="none" src={src}>Audio playback is not supported by this browser.</audio></figure>);
       else if (src && kind?.[1].toLowerCase() === 'video') out.push(<figure className="rich-markdown-attachment" key={key}><figcaption>{label}</figcaption><video controls preload="metadata" playsInline src={src}>Video playback is not supported by this browser.</video></figure>);
-      else if (src) out.push(<img className="rich-markdown-image" key={key} src={src} alt={image[1] || 'Resource image'} loading="lazy"/>);
+      else if (src) out.push(<img className="rich-markdown-image" key={key} {...resourceImageAttributes(src, [384, 768, 1280], "(max-width: 800px) 92vw, 60vw")} alt={image[1] || 'Resource image'} loading="lazy" decoding="async"/>);
       else out.push(image[1]);
     } else if (link) {
       const href = safeHttps(link[2]) ?? mediaUrl(link[2], resourceSlug, adminPreview, packageFiles);

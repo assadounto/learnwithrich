@@ -2,7 +2,7 @@ import 'server-only';
 import sharp from 'sharp';
 import {GetObjectCommand} from '@aws-sdk/client-s3';
 import {mediaBucket, mediaS3Client} from './library';
-import type {PublicImageWidth} from '@/lib/image-sizes';
+import {publicImageWidths, type PublicImageWidth} from '@/lib/image-sizes';
 
 const maxInputBytes = 12 * 1024 * 1024;
 const cacheBytesLimit = 24 * 1024 * 1024;
@@ -34,7 +34,7 @@ async function resizeImage(storageKey: string, width: PublicImageWidth) {
     .webp({quality: 78, effort: 2}).timeout({seconds: 3}).toBuffer();
 }
 
-export async function publicImageVariant(asset: {storageKey: string; sizeBytes: number; mimeType: string}, width: PublicImageWidth) {
+async function imageVariant(asset: {storageKey: string; sizeBytes: number; mimeType: string}, width: PublicImageWidth) {
   if (asset.sizeBytes > maxInputBytes || !['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(asset.mimeType)) return null;
   const key = `${asset.storageKey}:${width}`;
   const cached = cache.get(key);
@@ -60,4 +60,24 @@ export async function publicImageVariant(asset: {storageKey: string; sizeBytes: 
   }).catch(() => null).finally(() => {inFlight.delete(key);});
   inFlight.set(key, pending);
   return pending;
+}
+
+export function imageWidth(value: string | null) {
+  return publicImageWidths.find(width => String(width) === value);
+}
+
+// Call only after checking access to the source asset. Buffered variants are
+// shared inside the server process, but private responses cannot be cached by clients.
+export async function resizedMediaResponse(
+  asset: {storageKey: string; sizeBytes: number; mimeType: string},
+  width: PublicImageWidth | undefined,
+  cacheControl: 'public, max-age=60' | 'private, no-store',
+) {
+  if (!width) return null;
+  const image = await imageVariant(asset, width);
+  if (!image) return null;
+  return new Response(new Uint8Array(image), {headers: {
+    'Content-Type': 'image/webp', 'Content-Length': String(image.length),
+    'Cache-Control': cacheControl, 'X-Content-Type-Options': 'nosniff',
+  }});
 }
