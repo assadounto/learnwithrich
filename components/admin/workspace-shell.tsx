@@ -11,6 +11,7 @@ const sections = [
   {href: '/admin/project-ideas', label: 'Project ideas', icon: FileText},
   {href: '/admin/resources', label: 'Resources', icon: Library},
   {href: '/admin/files', label: 'Files', icon: FolderOpen},
+  {href: '/admin/site-contact', label: 'Contact & socials', icon: Globe},
   {href: '/admin/homepage', label: 'Homepage', icon: PanelsTopLeft},
   {href: '/admin/community/guestbook', label: 'Guest book', icon: MessageSquareQuote},
   {href: '/admin/community/service-requests', label: 'Service requests', icon: FileText},
@@ -31,7 +32,7 @@ function tabDestination(tab: WorkspaceTab) {
 }
 const tabStore = 'learnwithrich.studio.tabs';
 const home = '/admin/resources';
-const tabPath = /^\/admin\/(?:resources\/(?:new|import|[a-f0-9-]{36})|files\/[a-f0-9-]{36}|files|homepage|community\/(?:guestbook|service-requests|reviews|newsletter)|project-ideas|resource-api|security)$/;
+const tabPath = /^\/admin\/(?:resources\/(?:new|import|[a-f0-9-]{36})|files\/[a-f0-9-]{36}|files|homepage|site-contact|community\/(?:guestbook|service-requests|reviews|newsletter)|project-ideas|resource-api|security)$/;
 const WorkspaceContext = createContext({
   trackDirty: (_key: object, _dirty: boolean) => {},
   namePage: (_path: string, _label: string) => {},

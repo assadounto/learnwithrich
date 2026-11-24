@@ -6,6 +6,8 @@ import {SiteStructuredData} from '@/components/site-structured-data';
 import '../community.css';
 import '../community-enhancements.css';
 import '../site-footer.css';
+export const revalidate = 300;
+
 export default function SiteLayout({children}: {children: React.ReactNode}) {
   return <SiteAccountProvider><SiteStructuredData/><Header/><main id="main-content">{children}</main><Newsletter/><Footer/></SiteAccountProvider>;
 }

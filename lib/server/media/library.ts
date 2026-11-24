@@ -10,7 +10,7 @@ const extForMime: Record<string, string> = {
   'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif',
   'application/pdf': '.pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
   'application/msword': '.doc', 'audio/mpeg': '.mp3', 'audio/mp4': '.m4a', 'audio/wav': '.wav',
-  'audio/ogg': '.ogg', 'video/mp4': '.mp4', 'video/webm': '.webm',
+  'audio/ogg': '.ogg', 'audio/webm': '.weba', 'video/mp4': '.mp4', 'video/webm': '.webm',
   'application/zip': '.zip', 'text/plain': '.txt', 'text/markdown': '.md', 'text/csv': '.csv',
   'application/json': '.json', 'application/yaml': '.yaml', 'application/xml': '.xml',
   'text/x-python': '.py', 'text/javascript': '.js', 'text/typescript': '.ts', 'text/html': '.html',
@@ -86,7 +86,11 @@ export function detectMediaMime(bytes: Uint8Array, name: string) {
   if (b.subarray(0, 3).toString('ascii') === 'ID3' || (b.length > 1 && b[0] === 0xff && (b[1] & 0xe0) === 0xe0)) return 'audio/mpeg';
   if (b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WAVE') return 'audio/wav';
   if (b.subarray(0, 4).toString('ascii') === 'OggS') return 'audio/ogg';
-  if (b.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3])) && /\.webm$/i.test(name)) return 'video/webm';
+  if (b.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3])) && /\.(?:webm|weba)$/i.test(name)) {
+    const header = b.subarray(0, 8192);
+    if (/\.weba$/i.test(name)) return ['A_OPUS', 'A_VORBIS'].some(codec => header.includes(codec)) ? 'audio/webm' : null;
+    return 'video/webm';
+  }
   if (b.toString('ascii', 4, 8) === 'ftyp' && /\.(mp4|m4v)$/i.test(name)) return 'video/mp4';
   if (b.toString('ascii', 4, 8) === 'ftyp' && /\.m4a$/i.test(name)) return 'audio/mp4';
   if (extension === '.svg' && isSafeTextFile(b) && /<svg(?:\s|>)/i.test(b.toString('utf8', 0, Math.min(b.length, 8192)))) return 'application/octet-stream';

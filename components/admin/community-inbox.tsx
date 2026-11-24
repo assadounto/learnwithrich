@@ -1,4 +1,5 @@
 'use client';
+import {serviceLabel} from '@/lib/service-offerings';
 import {SelectMenu} from '@/components/selection-dialog';
 import {useState, useTransition} from 'react';
 import {useRouter} from 'next/navigation';
@@ -54,7 +55,7 @@ export function CommunityInbox({kind, initialRows}: {kind: Kind; initialRows: Ro
   const search = query.trim().toLowerCase();
   const matching = rows.filter(row => !search || [
     row.name, row.email, row.title, row.country, row.message, row.description,
-    row.serviceType ? pretty(row.serviceType) : undefined, row.id,
+    row.serviceType ? serviceLabel(row.serviceType) : undefined, row.id,
   ].some(value => value?.toLowerCase().includes(search)));
   const activeFilter = filters.find(item => item.id === filter) ?? filters[0];
   const visibleRows = matching.filter(row => !activeFilter.statuses.length || activeFilter.statuses.includes(row.status));
@@ -186,9 +187,9 @@ function ServiceRequestCard({row, busy, onSave}: {row: Row; busy: boolean; onSav
       </dl>
       {!!row.files?.length && <section className="service-admin-request-files">
         <strong>Files from requester · {row.files.length}</strong>
-        <div>{row.files.map(({mediaAsset}) => <a key={mediaAsset.id} href={`/api/service-request-files/${row.id}/${mediaAsset.id}`} target="_blank" rel="noreferrer">
+        <div>{row.files.map(({mediaAsset}) => <div className="request-file-entry" key={mediaAsset.id}>{mediaAsset.mimeType.startsWith('audio/') && <audio controls preload="none" aria-label={`Play ${mediaAsset.originalName}`} src={`/api/service-request-files/${row.id}/${mediaAsset.id}?play=1`}/>}<a href={`/api/service-request-files/${row.id}/${mediaAsset.id}`} target="_blank" rel="noreferrer">
           <FileText size={14}/><span>{mediaAsset.originalName}<small>{(mediaAsset.sizeBytes / 1024 / 1024).toFixed(1)} MB</small></span>
-        </a>)}</div>
+        </a></div>)}</div>
       </section>}
     </div>
     <div id="service-panel-quote" hidden={panel !== 'Quote'}>

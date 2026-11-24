@@ -1,16 +1,62 @@
 import type {Metadata} from 'next';
+import {ArrowRight, AudioLines, CircuitBoard, Code2, GraduationCap, MessagesSquare, Presentation} from 'lucide-react';
 import Link from '@/components/navigation-link';
-import {ArrowLeft, ArrowUpRight, BookOpen, CircuitBoard, Code2, GraduationCap, MessageCircle} from 'lucide-react';
 import {ServiceRequestForm} from '@/components/service-request-form';
+import {serviceOfferings} from '@/lib/service-offerings';
+import {database} from '@/lib/server/database';
 import {currentUser} from '@/lib/server/identity/current-user';
-
 import {publishedIdea} from '@/lib/server/project-ideas';
 
-export const metadata: Metadata = {title: 'Request a service', description: 'Share your thesis, software, electronics or project brief and request a quote from LearnWithRich.', alternates: {canonical: '/services/request'}};
+export const metadata: Metadata = {
+  title: 'Work with Richmond',
+  description: 'Request electrical engineering, software, project guidance, or a private one-on-one teaching or conversation session.',
+  alternates: {canonical: '/services/request'},
+};
 export const dynamic = 'force-dynamic';
-export default async function ServiceRequestPage({searchParams}: {searchParams: Promise<{idea?: string}>}) {
-  const {idea: slug} = await searchParams;
-  const [user, idea] = await Promise.all([currentUser(), publishedIdea(slug)]);
-  const next = idea ? `/services/request?idea=${idea.slug}` : '/services/request';
-  return <div className="service-request-page ref-container"><Link className="service-back-link" href="/"><ArrowLeft size={14}/>Back to LearnWithRich</Link><header className="service-page-hero"><span className="maker-kicker">WORK WITH RICH</span><h1>Bring a real idea.<br/><i>Let’s shape the next step.</i></h1><p>From thesis support and software builds to electronics prototypes, share what you have in mind. I’ll review the brief, ask any follow-up questions and send a clear quote you can accept and pay securely.</p><div className="service-trust-points"><span><MessageCircle size={15}/>Thoughtful first conversation</span><span><BookOpen size={15}/>Clear scope and revision terms</span></div><span className="service-hero-mark"><ArrowUpRight size={46}/></span></header><div className="service-request-layout"><aside className="service-offerings"><span className="maker-kicker">AREAS I CAN HELP WITH</span>{[{Icon:GraduationCap,title:'Research & thesis',text:'Structure, technical guidance, review and project support.'},{Icon:Code2,title:'Software projects',text:'Web apps, APIs, prototypes and practical tools.'},{Icon:CircuitBoard,title:'Electronics & IoT',text:'Connected devices, embedded projects and system plans.'}].map(({Icon,title,text})=><article key={title}><Icon size={20}/><div><strong>{title}</strong><p>{text}</p></div></article>)}<p className="service-ethics-note">Academic support is guidance and technical collaboration. You remain the author of your submitted work.</p></aside><ServiceRequestForm key={idea?.slug ?? 'general'} profile={user?{name:user.name,email:user.email}:null} next={next} idea={idea ? {title: idea.title} : undefined}/></div></div>;
+const featured = [
+  {offer: serviceOfferings[0], Icon: CircuitBoard},
+  {offer: serviceOfferings[1], Icon: Presentation},
+  {offer: serviceOfferings[2], Icon: MessagesSquare},
+  {offer: serviceOfferings[4], Icon: Code2},
+  {offer: serviceOfferings[5], Icon: GraduationCap},
+];
+
+export default async function ServiceRequestPage({searchParams}: {searchParams: Promise<{idea?: string; service?: string}>}) {
+  const params = await searchParams;
+  const [user, idea] = await Promise.all([currentUser(), publishedIdea(params.idea)]);
+  const latest = user ? await database().serviceRequest.findFirst({
+    where: {userId: user.id, requesterPhone: {not: ''}},
+    orderBy: [{createdAt: 'desc'}, {id: 'desc'}],
+    select: {requesterPhone: true},
+  }) : null;
+  const service = serviceOfferings.find(item => item.id === params.service)?.id ?? (idea ? 'CAPSTONE' : '');
+  const query = new URLSearchParams();
+  if (idea) query.set('idea', idea.slug);
+  if (service) query.set('service', service);
+  const next = query.size ? `/services/request?${query}` : '/services/request';
+  return <div className="service-request-page service-studio-request ref-container">
+    <header className="service-page-hero service-studio-hero">
+      <div><span className="maker-kicker">WORK WITH RICHMOND</span>
+        <h1>Build something. <i>Learn something.</i></h1>
+        <p>Get help with an engineering or software project, or book time to talk through an idea or learn a topic one on one.</p>
+        <a className="button button-dark" href="#request-brief">Start a request <ArrowRight size={17}/></a>
+      </div>
+      <div className="service-studio-steps"><h2>How it works</h2><ol><li>Send a written brief or voice note.</li><li>We agree on the scope and price.</li><li>Follow the request in your account.</li></ol></div>
+    </header>
+    <div className="service-request-layout">
+      <aside className="service-offerings" aria-labelledby="offerings-heading">
+        <h2 id="offerings-heading">What I can help with</h2>
+        {featured.map(({offer, Icon}) => {
+          const params = new URLSearchParams(query);
+          params.set('service', offer.id);
+          return <article key={offer.id}><Icon size={21} aria-hidden="true"/><div><Link href={`/services/request?${params}#request-brief`}><strong>{offer.label}</strong><ArrowRight size={13}/></Link><p>{offer.detail}</p></div></article>;
+        })}
+        <p className="service-ethics-note">Academic support means guidance and feedback. You remain the author of your work.</p>
+      </aside>
+      <section id="request-brief" aria-label="Request form"><ServiceRequestForm key={idea?.slug ?? 'general'}
+        profile={user ? {name: user.name, email: user.email, phone: latest?.requesterPhone} : null}
+        service={service} next={next} idea={idea ? {title: idea.title} : undefined}/></section>
+    </div>
+    <div className="service-studio-privacy"><AudioLines size={17} aria-hidden="true"/> Your brief is visible to you and the private service workspace.</div>
+  </div>;
 }

@@ -557,3 +557,11 @@ model ProjectIdea {
   @@index([status, discipline, title])
   @@map("project_ideas")
 }
+
+model SiteContactSettings {
+  id        Int      @id @default(1)
+  links     Json     @default("{}")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("site_contact_settings")
+}

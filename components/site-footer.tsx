@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import {PublicContactLinks} from './public-contact-links';
+import {publicContacts} from '@/lib/server/site-contact';
 import {Brand} from './brand';
 
 const groups = [
@@ -7,10 +9,11 @@ const groups = [
   {name: 'Tools & policies', links: [['Saved library', '/library'], ['Resource ZIP format', '/resource-package'], ['Privacy', '/privacy'], ['Terms', '/terms']]},
 ] as const;
 
-export function Footer() {
+export async function Footer() {
+  const contacts = await publicContacts();
   return <footer className="reference-footer">
     <div className="ref-container ref-footer-inner">
-      <Brand/>
+      <div className="footer-contact-block"><Brand/><PublicContactLinks contacts={contacts}/></div>
       <nav aria-label="Footer navigation">
         {groups.map(group => <div className="ref-footer-group" key={group.name}>
           <h2>{group.name}</h2>
