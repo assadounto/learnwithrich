@@ -80,6 +80,7 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
     let playAttempt = 0;
     let disposed = false;
     let repeats = 0;
+    let rewindOnPlay = false;
     let recoveries = 0;
     let introTimer: ReturnType<typeof setTimeout> | undefined;
     let watchdog: ReturnType<typeof setTimeout> | undefined;
@@ -98,7 +99,7 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
       starting = false;
       playAttempt++;
       player.pause();
-      if (player.readyState >= HTMLMediaElement.HAVE_METADATA) player.currentTime = 0;
+      rewindOnPlay = true;
       setPlayingSource(null);
       introTimer = setTimeout(() => {
         delayElapsed = true;
@@ -144,6 +145,8 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
       starting = true;
       const attempt = ++playAttempt;
       if (!player.getAttribute('src')) player.src = playbackSource;
+      if (rewindOnPlay && player.readyState >= HTMLMediaElement.HAVE_METADATA) player.currentTime = 0;
+      rewindOnPlay = false;
       watch();
       void player.play().catch((error: unknown) => {
         if (disposed || attempt !== playAttempt || (error instanceof DOMException && error.name === 'AbortError')) return;
@@ -158,6 +161,7 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
     }
 
     const onPlaying = () => { if (canPlay() && delayElapsed) setPlayingSource(playbackSource); };
+    const onWaiting = () => { if (canPlay() && delayElapsed) watch(); };
     const onEnded = () => {
       repeats++;
       recoveries = 0;
@@ -174,6 +178,7 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
     observer?.observe(player);
     player.addEventListener('playing', onPlaying);
     player.addEventListener('ended', onEnded);
+    player.addEventListener('waiting', onWaiting);
     player.addEventListener('error', recover);
     document.addEventListener('visibilitychange', sync);
     motion.addEventListener('change', sync);
@@ -186,6 +191,7 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
       clearTimeout(watchdog);
       player.removeEventListener('playing', onPlaying);
       player.removeEventListener('ended', onEnded);
+      player.removeEventListener('waiting', onWaiting);
       player.removeEventListener('error', recover);
       document.removeEventListener('visibilitychange', sync);
       motion.removeEventListener('change', sync);
