@@ -96,7 +96,7 @@ try {
     if (!entry) throw new Error(`Missing server action ${name}`); return entry[0];
   };
   const action = async (name: string, args: unknown[], sessionCookie: string, source = origin) => {
-    const page = name === 'updateNewsletterSignup' ? '/admin/community/newsletter' : name === 'mfaAction' ? '/admin/security' : ['createResourceToken', 'revokeResourceToken'].includes(name) ? '/admin/resource-api' : name === 'bulkResourceStatus' ? '/admin/resources' : '/admin/resources/new';
+    const page = name === 'updateNewsletterSignup' ? '/admin/community/newsletter' : name === 'mfaAction' ? '/admin/security' : ['createResourceToken', 'revokeResourceToken'].includes(name) ? '/admin/resource-api' : name === 'deleteIdeas' ? '/admin/project-ideas' : ['bulkResourceStatus', 'deleteResources'].includes(name) ? '/admin/resources' : '/admin/resources/new';
     const response = await fetch(origin + page, {method: 'POST', headers: {'Next-Action': actionId(name), 'Content-Type': 'text/plain;charset=UTF-8', origin: source, cookie: sessionCookie}, body: JSON.stringify(args), redirect: 'manual'});
     return {status: response.status, body: await response.text()};
   };
@@ -269,6 +269,33 @@ try {
   assert.equal((await db.resource.findUniqueOrThrow({where: {id: draftId}})).status, 'PUBLISHED');
   await action('bulkResourceStatus', [snapshots, 'ARCHIVED'], ownerCookie);
   assert.equal(await db.resource.count({where: {id: {in: snapshots.map(row => row.id)}, status: 'ARCHIVED'}}), 2);
+  const collection = await db.resource.create({data: {slug: `${prefix}-collection`, title: 'Deletion fixture collection', type: 'PATH'}});
+  await db.resourceItem.create({data: {collectionId: collection.id, resourceId: draftId, position: 0}});
+  const purchase = await db.purchase.create({data: {userId: learnerId, resourceId: jsonResource.id, reference: `${prefix}-purchase`, amountMinor: 100}});
+  const selections = (await db.resource.findMany({
+    where: {id: {in: [draftId, jsonResource.id, collection.id]}},
+    select: {id: true, version: true, updatedAt: true},
+  })).map(row => ({...row, updatedAt: row.updatedAt.toISOString()}));
+  const draftSelection = selections.find(row => row.id === draftId)!;
+  const jsonSelection = selections.find(row => row.id === jsonResource.id)!;
+  assert.match((await action('deleteResources', [[draftSelection]], ownerCookie)).body, /belongs to a collection/);
+  assert.match((await action('deleteResources', [[jsonSelection]], ownerCookie)).body, /purchase records/);
+  const staleSelections = selections.map(row => row.id === draftId ? {...row, version: row.version + 1} : row);
+  assert.match((await action('deleteResources', [staleSelections], ownerCookie)).body, /selected resource changed/);
+  assert.equal(await db.resource.count({where: {id: {in: selections.map(row => row.id)}}}), 3);
+  await db.purchase.delete({where: {id: purchase.id}});
+  assert.match((await action('deleteResources', [[jsonSelection]], ownerCookie)).body, /"changed":1/);
+  assert.match((await action('deleteResources', [selections.filter(row => row.id !== jsonResource.id)], ownerCookie)).body, /"changed":2/);
+  assert.equal(await db.resource.count({where: {id: {in: selections.map(row => row.id)}}}), 0);
+  assert.equal(await db.resourceAudit.count({where: {actorId: ownerId, resourceId: null, action: 'DELETED'}}), 3);
+  const ideaSelections = (await db.projectIdea.findMany({where: {slug: {in: [ideaSlug, `${ideaSlug}-studio`]}}}))
+    .map(row => ({id: row.slug, updatedAt: row.updatedAt.toISOString()}));
+  assert.equal(ideaSelections.length, 2);
+  const staleIdeas = [ideaSelections[0], {...ideaSelections[1], updatedAt: '2020-01-01T00:00:00.000Z'}];
+  assert.match((await action('deleteIdeas', [staleIdeas], ownerCookie)).body, /selected idea changed/);
+  assert.equal(await db.projectIdea.count({where: {slug: {in: ideaSelections.map(row => row.id)}}}), 2);
+  assert.match((await action('deleteIdeas', [ideaSelections], ownerCookie)).body, /"changed":2/);
+  assert.equal(await db.projectIdea.count({where: {slug: {in: ideaSelections.map(row => row.id)}}}), 0);
   const tokenRecord = await db.resourceApiToken.findUniqueOrThrow({where: {digest: createHash('sha256').update(editApiToken).digest('hex')}});
   await action('revokeResourceToken', [tokenRecord.id], ownerCookie);
   assert.equal((await fetch(draftUrl, {headers: auth(editApiToken)})).status, 401);
@@ -282,7 +309,9 @@ try {
   // Include any partially created fixture if an assertion failed after the action.
   const fixtures = await db.resource.findMany({where: {slug: {startsWith: prefix}}, select: {id: true}});
   const resourceIds = [...new Set([...ids, ...fixtures.map(row => row.id)])];
-  await db.resourceAudit.deleteMany({where: {resourceId: {in: resourceIds}}});
+  await db.purchase.deleteMany({where: {reference: `${prefix}-purchase`}});
+  await db.resourceItem.deleteMany({where: {collectionId: {in: resourceIds}}});
+  await db.resourceAudit.deleteMany({where: {OR: [{resourceId: {in: resourceIds}}, {actorId: ownerId, resourceId: null}]}});
   await db.resource.deleteMany({where: {id: {in: resourceIds}}});
   await db.user.deleteMany({where: {id: {in: [ownerId, learnerId]}}});
   await db.projectIdea.deleteMany({where: {slug: {startsWith: prefix}}});

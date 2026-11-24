@@ -276,10 +276,10 @@
 .bulk-status-controls { flex-wrap: wrap; margin-inline-start: auto; }
 .bulk-status-confirm p { margin: 0 auto 0 0; font-size: 14px; }
 .admin-experience .bulk-status-checkbox { inline-size: 17px; block-size: 17px; accent-color: var(--studio-accent, #b74118); margin: 0; flex: none; }
-.bulk-resource-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; padding-inline-start: 14px; }
+.bulk-resource-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding-inline: 14px; }
 .bulk-resource-row + .bulk-resource-row { border-top: 1px dashed var(--studio-divider, #d9dce1); }
-.bulk-resource-row .admin-resource-row { border: 0; padding-inline-start: 0; min-width: 0; }
-.bulk-resource-labels { margin-inline-start: 27px; }
+.bulk-resource-row .admin-resource-row { border: 0; padding-inline: 0; min-width: 0; }
+.bulk-resource-labels { margin-inline: 27px 50px; }
 .bulk-idea-title { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 10px; }
 .bulk-idea-title .bulk-status-checkbox { margin-block-start: 4px; }
 .admin-experience .studio-status-tone[data-status="DRAFT"] { color: #7a490d; border-color: #b58643; }
@@ -291,3 +291,15 @@
 .admin-idea-import a { text-decoration: underline; }
 .admin-idea-import form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .admin-idea-import input[type="file"] { max-width: 100%; }
+
+.bulk-idea-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; }
+.admin-experience .bulk-row-delete { display: grid; place-items: center; inline-size: 40px; block-size: 40px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #a52332; cursor: pointer; }
+.admin-experience .bulk-row-delete:hover:not(:disabled) { background: #fceef0; }
+.admin-experience .bulk-delete-action { color: #a52332; }
+.admin-experience :is(.bulk-row-delete, .bulk-delete-action, .bulk-delete-confirm):disabled { opacity: .5; cursor: default; }
+.studio-delete-dialog { box-sizing: border-box; width: min(100% - 28px, 440px); margin: auto; padding: 22px; border: 1px solid var(--studio-divider, #d9dce1); border-radius: 12px; background: #fff; color: #17181a; }
+.studio-delete-dialog::backdrop { background: #10121870; }
+.studio-delete-dialog h2 { margin: 0; font-size: 1.2rem; }
+.studio-delete-dialog p { overflow-wrap: anywhere; }
+.studio-delete-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.admin-experience .bulk-delete-confirm { background: #a52332; border-color: #a52332; color: #fff; }

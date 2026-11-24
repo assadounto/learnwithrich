@@ -61,3 +61,22 @@ export async function bulkResourceStatus(input: unknown, status: unknown) {
     return {ok: true as const, changed};
   } catch (error) { return failure(error); }
 }
+
+export async function deleteResources(input: unknown) {
+  const owner = await requireOwner();
+  try {
+    const changed = await adminRepository(database(), owner.id, owner.sessionId).deleteResources(input);
+    revalidatePath('/admin/resources');
+    revalidatePath('/admin/resources/[id]', 'page');
+    revalidatePath('/resources', 'layout');
+    revalidatePath('/');
+    return {ok: true as const, changed};
+  } catch (error) {
+    if (error instanceof ResourceInputError || error instanceof EditConflictError) return {ok: false as const, error: error.message};
+    if (typeof error === 'object' && error && 'code' in error && error.code === 'P2003') {
+      return {ok: false as const, error: 'A resource is still linked to a purchase or collection. No resources were deleted.'};
+    }
+    console.error('Admin resource deletion failed', error instanceof Error ? error.name : 'UnknownError');
+    return {ok: false as const, error: 'Could not delete the selected resources.'};
+  }
+}

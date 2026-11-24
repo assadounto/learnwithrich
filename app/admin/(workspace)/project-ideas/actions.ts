@@ -38,17 +38,22 @@ export async function saveIdea(_previous: string, form: FormData): Promise<strin
   redirect('/admin/project-ideas?saved=1');
 }
 
+function selectedIdeas(input: unknown) {
+  if (!Array.isArray(input) || input.length < 1 || input.length > 100) throw new IdeaInputError('Select 1 to 100 ideas.');
+  const selected = input.map((value: unknown) => {
+    if (!value || typeof value !== 'object' || !('id' in value) || !('updatedAt' in value) || typeof value.updatedAt !== 'string' ||
+      !/^\d{4}-\d{2}-\d{2}T/.test(value.updatedAt) || !Number.isFinite(Date.parse(value.updatedAt))) throw new IdeaInputError('Reload your idea selection.');
+    return {slug: ideaSlug('', value.id), updatedAt: new Date(value.updatedAt)};
+  });
+  if (new Set(selected.map(row => row.slug)).size !== selected.length) throw new IdeaInputError('Select each idea only once.');
+  return selected;
+}
+
 export async function bulkIdeaStatus(input: unknown, status: unknown) {
   const owner = await requireOwner();
   try {
     if (status !== 'DRAFT' && status !== 'PUBLISHED' && status !== 'ARCHIVED') throw new IdeaInputError('Choose an idea status.');
-    if (!Array.isArray(input) || input.length < 1 || input.length > 100) throw new IdeaInputError('Select 1 to 100 ideas.');
-    const selected = input.map((value: unknown) => {
-      if (!value || typeof value !== 'object' || !('id' in value) || !('updatedAt' in value) || typeof value.updatedAt !== 'string' ||
-        !/^\d{4}-\d{2}-\d{2}T/.test(value.updatedAt) || !Number.isFinite(Date.parse(value.updatedAt))) throw new IdeaInputError('Reload your idea selection.');
-      return {slug: ideaSlug('', value.id), updatedAt: new Date(value.updatedAt)};
-    });
-    if (new Set(selected.map(row => row.slug)).size !== selected.length) throw new IdeaInputError('Select each idea only once.');
+    const selected = selectedIdeas(input);
     const changed = await database().$transaction(async tx => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${owner.id}, 18427653))`;
       await assertOwner(tx, owner.id);
@@ -70,5 +75,26 @@ export async function bulkIdeaStatus(input: unknown, status: unknown) {
     return {ok: true as const, changed};
   } catch (error) {
     return {ok: false as const, error: error instanceof IdeaInputError ? error.message : 'Could not update the selected ideas.'};
+  }
+}
+
+export async function deleteIdeas(input: unknown) {
+  const owner = await requireOwner();
+  try {
+    const selected = selectedIdeas(input);
+    const changed = await database().$transaction(async tx => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${owner.id}, 18427653))`;
+      await assertOwner(tx, owner.id);
+      await assertSessionMfa(tx, {userId: owner.id, sessionId: owner.sessionId});
+      const removed = await tx.projectIdea.deleteMany({where: {OR: selected}});
+      if (removed.count !== selected.length) throw new IdeaInputError('A selected idea changed. Reload the list before deleting.');
+      return removed.count;
+    });
+    revalidatePath('/project-ideas');
+    revalidatePath('/admin/project-ideas');
+    revalidatePath('/admin/project-ideas/[slug]/edit', 'page');
+    return {ok: true as const, changed};
+  } catch (error) {
+    return {ok: false as const, error: error instanceof IdeaInputError ? error.message : 'Could not delete the selected ideas.'};
   }
 }
