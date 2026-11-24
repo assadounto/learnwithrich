@@ -54,6 +54,17 @@ export function resourceRepository(db: Database) {
         return tx.resourceItem.findMany({where: {collectionId}, orderBy: {position: 'asc'}});
       });
     },
+    async publicTags(type?: ReturnType<typeof catalogQuery>['type']) {
+      const rows = await db.tag.findMany({
+        where: {resources: {some: {resource: {...published(), ...(type ? {type} : {})}}}},
+        orderBy: {name: 'asc'}, select: {name: true},
+      });
+      return rows.map(row => row.name);
+    },
+    async publicBookmarks(slugs: string[]) {
+      const rows = await db.resource.findMany({where: {...published(), slug: {in: slugs}}, select: cardSelect});
+      return rows.map(card);
+    },
     async listPublic(params: URLSearchParams) {
       const {type, query, tag, page, limit} = catalogQuery(params);
       const where: Prisma.ResourceWhereInput = {
