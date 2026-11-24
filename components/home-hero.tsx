@@ -135,14 +135,11 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
   const className = `reference-hero home-hero-preset-${preset.toLowerCase()}${full || cinematic ? ' home-hero-fullbleed' : ''}${cinematic ? ' home-hero-cinematic' : ''}`;
   return <section className={`${className}${hasVideo ? ' home-hero-has-video' : ''}`} data-hero-phase={showVideo ? 'video' : 'intro'}>
     {full && <div className="home-hero-image" aria-hidden="true">{picture}</div>}
-    {(full || cinematic) && clip}
+    {clip}
     <div className="ref-container ref-hero-inner">
-      {cinematic ? <>
-        <HeroCopy className="ref-hero-copy hero-copy-intro" hidden={showVideo}/>
-        <HeroCopy className={`ref-hero-copy hero-copy-arriving${showVideo ? ' is-visible' : ''}`} hidden={!showVideo}/>
-      </> : <HeroCopy className="ref-hero-copy"/>}
-      {!full && <div className="ref-hero-art">{picture}{!cinematic && clip}</div>}
+      <HeroCopy className={`ref-hero-copy${cinematic ? ' hero-copy-intro' : ''}`} hidden={showVideo}/>
+      {!full && <div className="ref-hero-art">{picture}</div>}
     </div>
-    {showVideo && <div className="mobile-video-actions" aria-label="Homepage actions"><HeroActions/></div>}
+    {showVideo && <div className="hero-video-actions" aria-label="Homepage actions"><HeroActions/></div>}
   </section>;
 }

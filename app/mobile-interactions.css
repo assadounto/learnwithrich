@@ -1,4 +1,4 @@
-.mobile-bookmarks, .mobile-video-actions { display: none; }
+.mobile-bookmarks { display: none; }
 .mobile-drawer {
   position: fixed;
   inset: 0 0 0 auto;
@@ -53,43 +53,28 @@ html:has(.mobile-drawer[open], .selection-dialog[open]) { overflow: hidden; }
   .site-header .brand>span:not(.brand-emblem) { font-size: 18px; }
   .site-header .brand-emblem { width: 24px; height: 24px; }
 }
-@media (max-width: 580px) {
-  .reference-hero.home-hero-has-video { isolation: isolate; }
-  /* The poster and intro copy remain in flow for both playback states. */
-  .reference-hero[data-hero-phase="video"] :is(.ref-hero-copy, .home-hero-picture) {
-    visibility: hidden;
-    pointer-events: none;
-  }
-  .reference-hero.home-hero-has-video:not(.home-hero-fullbleed) :is(.ref-hero-inner, .ref-hero-art) {
-    position: static;
-    overflow: visible;
-    transform: none;
-    animation: none;
-  }
-  .reference-hero.home-hero-has-video:not(.home-hero-fullbleed) .home-hero-video {
-    inset: 0;
-    border-radius: 0;
-  }
-  .reference-hero[data-hero-phase="video"] .home-hero-video::after {
-    content: '';
-    background: linear-gradient(0deg, #0b0e12e6, transparent 54%);
-  }
-  .mobile-video-actions {
-    display: block;
-    position: absolute;
-    z-index: 4;
-    inset: auto 0 0;
-    padding: 24px 12px max(20px, env(safe-area-inset-bottom));
-    pointer-events: none;
-    animation: video-actions-enter .4s ease-out both;
-  }
-  .mobile-video-actions .ref-hero-actions { justify-content: center; gap: 8px 14px; }
-  .mobile-video-actions a { pointer-events: auto; }
-  .mobile-video-actions .text-link { color: #fff; text-decoration-color: #fff; }
-  @keyframes video-actions-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.reference-hero.home-hero-has-video { isolation: isolate; }
+.reference-hero[data-hero-phase="video"] :is(.ref-hero-copy, .home-hero-picture) {
+  visibility: hidden;
+  pointer-events: none;
 }
+.reference-hero[data-hero-phase="video"] .home-hero-video::after {
+  background: linear-gradient(0deg, #0b0e12e6, transparent 54%);
+}
+.hero-video-actions {
+  position: absolute;
+  z-index: 4;
+  inset: auto 0 0;
+  padding: 24px 16px max(20px, env(safe-area-inset-bottom));
+  pointer-events: none;
+  animation: video-actions-enter .4s ease-out both;
+}
+.hero-video-actions .ref-hero-actions { justify-content: center; gap: 8px 18px; flex-wrap: wrap; }
+.hero-video-actions a { pointer-events: auto; }
+.hero-video-actions .text-link { color: #fff; border-color: #fff; text-decoration-color: #fff; }
+@keyframes video-actions-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) {
-  .mobile-drawer[open], .mobile-video-actions { animation: none; }
+  .mobile-drawer[open], .hero-video-actions { animation: none; }
 }
 
 .selection-dialog {

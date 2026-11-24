@@ -3,7 +3,7 @@ import {resourceApiAccess, ResourceTokenError} from '@/lib/server/identity/resou
 import {database} from '@/lib/server/database';
 import {adminRepository, EditConflictError, packageSlugConflictMessage, packageSlugConflicts, type PackageMediaAssetInput, type PackageResourceInput} from '@/lib/server/admin/repository';
 import {cleanOriginalName, checkMediaStorage, deleteMediaObject, detectMediaMime, mediaExtension, putMediaObject} from '@/lib/server/media/library';
-import {readResourcePackageForImport, MAX_RESOURCE_PACKAGE_BYTES} from '@/lib/server/resources/package-import';
+import {readPackageUpload, MAX_RESOURCE_PACKAGE_BYTES} from '@/lib/server/resources/package-import';
 import {ResourceInputError, validateDraft} from '@/lib/server/resources/validation';
 
 export const runtime = 'nodejs';
@@ -15,14 +15,13 @@ export async function POST(request: Request) {
   const uploaded: string[] = [];
   try {
     const owner = await resourceApiAccess(request, 'upload', true);
-    const form = await request.formData(), file = form.get('file');
-    if (!(file instanceof File) || !file.size || file.size > MAX_RESOURCE_PACKAGE_BYTES || !/\.zip$/i.test(file.name)) throw new ResourceInputError('Choose a ZIP package up to 100 MB.');
-    const parsed = readResourcePackageForImport(Buffer.from(await file.arrayBuffer()));
+    const form = await request.formData();
+    const {file, parsed} = await readPackageUpload(form.get('file'), true);
     const db = database();
     const existing = await packageSlugConflicts(db, parsed.resources.map(resource => resource.slug));
     if (existing.length) throw new EditConflictError(packageSlugConflictMessage(existing));
 
-    const folderLabel = parsed.resources.length === 1 ? parsed.resources[0].title : file.name.replace(/\.zip$/i, '');
+    const folderLabel = parsed.resources.length === 1 ? parsed.resources[0].title : file.name.replace(/\.(zip|json)$/i, '');
     const folderName = Array.from(folderLabel.replace(/[\p{Cc}\p{Cf}]/gu, ' ').replace(/\s+/g, ' ').trim() || 'Resource package').slice(0, 80).join('').trimEnd();
     const sourceById = new Map<string, Buffer>();
     const assetIds = new Map<string, string>(), assets: PackageMediaAssetInput[] = [];

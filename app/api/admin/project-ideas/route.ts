@@ -1,3 +1,5 @@
+import {assertOwner} from '@/lib/server/identity/owner';
+import {assertSessionMfa} from '@/lib/server/identity/mfa';
 import {database} from '@/lib/server/database';
 import {resourceApiAccess, ResourceTokenError} from '@/lib/server/identity/resource-token';
 import {ideaFields, ideaSlug, IdeaInputError} from '@/lib/server/project-ideas';
@@ -30,9 +32,10 @@ async function jsonBody(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const owner = await resourceApiAccess(request, 'ideas');
-    if (!owner.automation) throw new ResourceTokenError('Use a resource API token with idea creation enabled.');
-    const assertActive = owner.automation;
+    const owner = await resourceApiAccess(request, 'ideas', true);
+    if (owner.sessionId && ['cross-site', 'same-site'].includes(request.headers.get('sec-fetch-site') ?? '')) {
+      throw new ResourceTokenError('Open the studio to import ideas.', 403);
+    }
     const body: unknown = await jsonBody(request);
     const items: unknown = body && typeof body === 'object' && 'ideas' in body ? body.ideas : null;
     if (!Array.isArray(items) || !items.length || items.length > 25) throw new IdeaInputError('Send an ideas array with 1 to 25 entries.');
@@ -44,7 +47,13 @@ export async function POST(request: Request) {
     if (new Set(data.map(item => item.slug)).size !== data.length) throw new IdeaInputError('Each idea in the batch needs a unique slug.');
     const ideas = await database().$transaction(async transaction => {
       await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${owner.id}, 18427653))`;
-      await assertActive(transaction);
+      if (owner.automation) await owner.automation(transaction);
+      else if (owner.sessionId) {
+        await assertOwner(transaction, owner.id);
+        await assertSessionMfa(transaction, {userId: owner.id, sessionId: owner.sessionId});
+      } else throw new ResourceTokenError('Use a token or verified studio session.');
+      const existing = await transaction.projectIdea.findMany({where: {slug: {in: data.map(item => item.slug)}}, select: {slug: true}, take: 25});
+      if (existing.length) throw new ResourceTokenError(`These idea slugs already exist: ${existing.map(item => item.slug).join(', ')}. No drafts were added.`, 409);
       return transaction.projectIdea.createManyAndReturn({data, select: {slug: true, title: true, status: true, updatedAt: true}});
     });
     return Response.json({ideas}, {status: 201, headers});

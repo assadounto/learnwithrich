@@ -52,3 +52,12 @@ export async function saveHomepageHero(input: unknown) {
     return {ok: true as const};
   } catch (error) { return failure(error); }
 }
+
+export async function bulkResourceStatus(input: unknown, status: unknown) {
+  const owner = await requireOwner();
+  try {
+    const changed = await adminRepository(database(), owner.id, owner.sessionId).bulkTransition(input, status);
+    revalidatePath('/admin/resources');
+    return {ok: true as const, changed};
+  } catch (error) { return failure(error); }
+}

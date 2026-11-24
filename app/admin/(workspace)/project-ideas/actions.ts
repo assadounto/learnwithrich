@@ -2,6 +2,8 @@
 
 import {revalidatePath} from 'next/cache';
 import {redirect} from 'next/navigation';
+import {assertOwner} from '@/lib/server/identity/owner';
+import {assertSessionMfa} from '@/lib/server/identity/mfa';
 import {database} from '@/lib/server/database';
 import {requireOwner} from '@/lib/server/identity/access';
 import {ideaFields, ideaSlug, IdeaInputError} from '@/lib/server/project-ideas';
@@ -34,4 +36,39 @@ export async function saveIdea(_previous: string, form: FormData): Promise<strin
   revalidatePath('/project-ideas');
   revalidatePath('/admin/project-ideas');
   redirect('/admin/project-ideas?saved=1');
+}
+
+export async function bulkIdeaStatus(input: unknown, status: unknown) {
+  const owner = await requireOwner();
+  try {
+    if (status !== 'DRAFT' && status !== 'PUBLISHED' && status !== 'ARCHIVED') throw new IdeaInputError('Choose an idea status.');
+    if (!Array.isArray(input) || input.length < 1 || input.length > 100) throw new IdeaInputError('Select 1 to 100 ideas.');
+    const selected = input.map((value: unknown) => {
+      if (!value || typeof value !== 'object' || !('id' in value) || !('updatedAt' in value) || typeof value.updatedAt !== 'string' ||
+        !/^\d{4}-\d{2}-\d{2}T/.test(value.updatedAt) || !Number.isFinite(Date.parse(value.updatedAt))) throw new IdeaInputError('Reload your idea selection.');
+      return {slug: ideaSlug('', value.id), updatedAt: new Date(value.updatedAt)};
+    });
+    if (new Set(selected.map(row => row.slug)).size !== selected.length) throw new IdeaInputError('Select each idea only once.');
+    const changed = await database().$transaction(async tx => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${owner.id}, 18427653))`;
+      await assertOwner(tx, owner.id);
+      await assertSessionMfa(tx, {userId: owner.id, sessionId: owner.sessionId});
+      let changed = 0;
+      for (const row of selected) {
+        const current = await tx.projectIdea.findUnique({where: row});
+        if (!current) throw new IdeaInputError('A selected idea changed. Reload the list and try again.');
+        if (current.status === status) continue;
+        if (status === 'PUBLISHED') ideaFields(current);
+        const result = await tx.projectIdea.updateMany({where: row, data: {status}});
+        if (!result.count) throw new IdeaInputError('A selected idea changed. Reload the list and try again.');
+        changed++;
+      }
+      return changed;
+    });
+    revalidatePath('/project-ideas');
+    revalidatePath('/admin/project-ideas');
+    return {ok: true as const, changed};
+  } catch (error) {
+    return {ok: false as const, error: error instanceof IdeaInputError ? error.message : 'Could not update the selected ideas.'};
+  }
 }
