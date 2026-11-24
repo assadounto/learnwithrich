@@ -140,9 +140,9 @@ function markdownLinks(body: string) {
   return links;
 }
 
-function parseResourcePackage(zip: Buffer): ParsedResourcePackage {
+function parseResourceFiles(archiveFiles: ResourcePackageFile[]): ParsedResourcePackage {
   const errors: string[] = [], warnings: string[] = [];
-  const archiveFiles = extractZip(zip), byPath = new Map(archiveFiles.map(file => [file.path, file]));
+  const byPath = new Map(archiveFiles.map(file => [file.path, file]));
   const manifestFile = byPath.get('manifest.json');
   if (!manifestFile) fail('The ZIP must have a manifest.json at its root.');
   let manifest: unknown;
@@ -337,11 +337,22 @@ function parseResourcePackage(zip: Buffer): ParsedResourcePackage {
 }
 
 export function previewResourcePackage(zip: Buffer): PackagePreview {
-  return parseResourcePackage(zip).preview;
+  return parseResourceFiles(extractZip(zip)).preview;
 }
 
 export function readResourcePackageForImport(zip: Buffer): ParsedResourcePackage {
-  const parsed = parseResourcePackage(zip);
+  const parsed = parseResourceFiles(extractZip(zip));
   if (!parsed.preview.valid) fail(parsed.preview.errors.join(' '));
   return parsed;
+}
+
+export async function readPackageUpload(file: FormDataEntryValue | null, validate: boolean) {
+  if (!(file instanceof File) || !file.size || !/\.(zip|json)$/i.test(file.name)) fail('Choose a ZIP or manifest JSON file.');
+  const json = /\.json$/i.test(file.name);
+  if (json && file.size > MAX_MANIFEST_BYTES) fail('manifest.json must be 2 MB or smaller.');
+  if (!json && file.size > MAX_RESOURCE_PACKAGE_BYTES) fail('ZIP packages must be 100 MB or smaller.');
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const parsed = parseResourceFiles(json ? [{path: 'manifest.json', bytes}] : extractZip(bytes));
+  if (validate && !parsed.preview.valid) fail(parsed.preview.errors.join(' '));
+  return {file, parsed};
 }

@@ -6,6 +6,9 @@ import {SelectMenu} from '@/components/selection-dialog';
 import {disciplineLabel, disciplines} from '@/lib/project-ideas';
 import {database} from '@/lib/server/database';
 import {requireOwner} from '@/lib/server/identity/access';
+import {BulkRowCheckbox, BulkStatus} from '@/components/admin/bulk-status';
+import {IdeaJsonUpload} from '@/components/admin/idea-json-upload';
+import {bulkIdeaStatus} from './actions';
 import styles from './ideas.module.css';
 
 type Params = Promise<{edit?: string; q?: string; status?: string; discipline?: string; page?: string; saved?: string}>;
@@ -59,6 +62,7 @@ export default async function ProjectIdeasAdmin({searchParams}: {searchParams: P
       </div>
     </header>
     {params.saved === '1' && <p role="status" className="admin-success">Idea saved.</p>}
+    <IdeaJsonUpload/>
     <section className={styles.library} aria-labelledby="idea-library">
       <div className={styles.libraryHeading}><h2 id="idea-library">Idea library</h2><span>{total} {total === 1 ? 'idea' : 'ideas'}{filtered ? ' found' : ''}</span></div>
       <form action="/admin/project-ideas" className={styles.filters} key={href(1)}>
@@ -68,21 +72,21 @@ export default async function ProjectIdeasAdmin({searchParams}: {searchParams: P
         <label>Status<SelectMenu name="status" defaultValue={status ?? ''}><option value="">All statuses</option><option value="DRAFT">Draft</option><option value="PUBLISHED">Published</option><option value="ARCHIVED">Archived</option></SelectMenu></label>
         <button className="button button-outline"><Search size={16}/> Filter</button>
       </form>
-      {ideas.length ? <>
+      {ideas.length ? <BulkStatus key={href(page)} entries={ideas.map(idea => ({id: idea.slug, updatedAt: idea.updatedAt.toISOString()}))} noun="ideas" update={bulkIdeaStatus}>
         <div className={styles.columns} aria-hidden="true"><span>Idea</span><span>Status</span><span>Last updated</span><span/></div>
         <ul className={styles.rows}>{ideas.map(idea => <li key={idea.slug}>
-          <div className={styles.idea}>
+          <div className={styles.idea}><div className="bulk-idea-title"><BulkRowCheckbox id={idea.slug} title={idea.title}/><div>
             <Link className={styles.ideaTitle} href={`/admin/project-ideas/${idea.slug}/edit`}>{idea.title}</Link>
             <p>{disciplineLabel(idea.discipline)}</p>
             {!!idea.tags.length && <ul className={styles.tags} aria-label="Tags">{idea.tags.slice(0, 3).map(tag => <li key={tag}>{tag}</li>)}
               {idea.tags.length > 3 && <li>+{idea.tags.length - 3} more</li>}
             </ul>}
-          </div>
-          <span className={styles.status} data-status={idea.status}>{idea.status.toLowerCase()}</span>
+          </div></div></div>
+          <span className={`${styles.status} studio-status-tone`} data-status={idea.status}>{idea.status.toLowerCase()}</span>
           <time dateTime={idea.updatedAt.toISOString()}>{formatDate.format(idea.updatedAt)}</time>
           <Link className={styles.editLink} href={`/admin/project-ideas/${idea.slug}/edit`} aria-label={`Edit ${idea.title}`}>Edit <ArrowRight size={15}/></Link>
         </li>)}</ul>
-      </> : <div className={styles.empty}>
+      </BulkStatus> : <div className={styles.empty}>
         <Lightbulb size={25} aria-hidden="true"/><h3>{filtered ? 'No ideas match these filters' : 'Add your first project idea'}</h3>
         <Link className="button button-outline" href={filtered ? '/admin/project-ideas' : '/admin/project-ideas/new'}>{filtered ? 'Clear filters' : 'New idea'}</Link>
       </div>}

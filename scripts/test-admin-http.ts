@@ -194,6 +194,19 @@ try {
   const imported = await uploadZip('import', uploadToken);
   assert.equal(imported.status, 201);
   const draftId = (await imported.json()).resources[0].id;
+  const manifest = {format: 'learnwithrich-resource', version: 1, resources: [{
+    key: 'manifest', type: 'ARTICLE', title: 'JSON manifest fixture', slug: `${prefix}-json`, summary: 'Check direct manifest import.', bodyMarkdown: 'Example article',
+  }]};
+  const uploadJson = (stage: 'preview' | 'import') => {
+    const form = new FormData();
+    form.set('file', new Blob([JSON.stringify(manifest)], {type: 'application/json'}), 'manifest.json');
+    return fetch(`${origin}/api/admin/resource-packages/${stage}`, {method: 'POST', headers: auth(uploadToken), body: form});
+  };
+  const jsonPreview = await uploadJson('preview');
+  assert.equal(jsonPreview.status, 200);
+  assert.equal((await jsonPreview.json()).preview.valid, true);
+  assert.equal((await uploadJson('import')).status, 201);
+  assert.equal((await uploadJson('import')).status, 409);
   const draftUrl = `${origin}/api/admin/resource-drafts/${draftId}`;
   assert.equal((await uploadZip('import', uploadToken)).status, 409);
   assert.equal((await fetch(draftUrl, {headers: auth(uploadToken)})).status, 403);
@@ -223,6 +236,11 @@ try {
   const createdIdea = await createIdea(ideaCreator);
   assert.equal(createdIdea.status, 201);
   const {ideas: [idea]} = await createdIdea.json();
+  const ideaInStudio = (body: string) => fetch(ideaEndpoint, {
+    method: 'POST', headers: {'Content-Type': 'application/json', Cookie: ownerCookie}, body,
+  });
+  assert.equal((await ideaInStudio(ideaBody)).status, 409);
+  assert.equal((await ideaInStudio(ideaBody.replace(ideaSlug, `${ideaSlug}-studio`))).status, 201);
   assert.equal(idea.status, 'DRAFT');
   const publishIdea = (token: string, updatedAt: string) => fetch(ideaPublishUrl, {method: 'POST', headers: jsonHeaders(token), body: JSON.stringify({updatedAt})});
   assert.equal((await publishIdea(ideaCreator, idea.updatedAt)).status, 403);
@@ -244,6 +262,13 @@ try {
   assert.equal((await resourcePublish(resourcePublisher, revision)).status, 200);
   assert.equal((await resourcePublish(resourcePublisher, revision)).status, 409);
   assert.equal((await db.resource.findUniqueOrThrow({where: {id: draftId}})).status, 'PUBLISHED');
+  const archived = await db.resource.findUniqueOrThrow({where: {id: draftId}, select: {id: true, updatedAt: true, version: true}});
+  const jsonResource = await db.resource.findUniqueOrThrow({where: {slug: `${prefix}-json`}, select: {id: true, updatedAt: true, version: true}});
+  const snapshots = [archived, jsonResource].map(row => ({...row, updatedAt: row.updatedAt.toISOString()}));
+  await action('bulkResourceStatus', [[snapshots[0], {...snapshots[1], version: snapshots[1].version + 1}], 'ARCHIVED'], ownerCookie);
+  assert.equal((await db.resource.findUniqueOrThrow({where: {id: draftId}})).status, 'PUBLISHED');
+  await action('bulkResourceStatus', [snapshots, 'ARCHIVED'], ownerCookie);
+  assert.equal(await db.resource.count({where: {id: {in: snapshots.map(row => row.id)}, status: 'ARCHIVED'}}), 2);
   const tokenRecord = await db.resourceApiToken.findUniqueOrThrow({where: {digest: createHash('sha256').update(editApiToken).digest('hex')}});
   await action('revokeResourceToken', [tokenRecord.id], ownerCookie);
   assert.equal((await fetch(draftUrl, {headers: auth(editApiToken)})).status, 401);

@@ -46,6 +46,20 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
     }
     if (sessionId) await assertSessionMfa(target, {userId: actorId, sessionId});
   }
+  async function transitionRow(tx: Prisma.TransactionClient, id: string, token: ReturnType<typeof editToken>, action: string, skipUnchanged = false) {
+    const current = await tx.resource.findUniqueOrThrow({where: {id}, include: {content: true, _count: {select: {items: true}}}});
+    if (automation && current.status !== 'DRAFT') throw new EditConflictError('Only resource drafts can be published with a token.');
+    if (current.version !== token.version || current.updatedAt.getTime() !== token.updatedAt.getTime()) throw new EditConflictError('This resource changed in another tab. Reload before publishing.');
+    const status = action === 'PUBLISH' ? 'PUBLISHED' : action === 'UNPUBLISH' ? 'DRAFT' : 'ARCHIVED';
+    if (skipUnchanged && current.status === status) return null;
+    if (action === 'PUBLISH') {
+      const issues = publishingIssues({type: current.type, summary: current.summary, bodyMarkdown: current.content?.bodyMarkdown ?? '', details: (current.content?.details ?? {}) as ResourceDetails, itemCount: current._count.items});
+      if (issues.length) throw new ResourceInputError(skipUnchanged ? `${current.title}: ${issues.join(' ')}` : issues.join(' '));
+    }
+    const changed = await tx.resource.updateMany({where: {id, ...token}, data: {status, ...(action === 'PUBLISH' ? {publishedAt: new Date()} : {}), version: {increment: 1}}});
+    if (changed.count !== 1) throw new EditConflictError('This resource changed in another tab. Reload before publishing.');
+    return snapshot(tx, id, actorId, action);
+  }
   return {
     async summary() {
       await authorize(db);
@@ -57,7 +71,7 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
       const q = text(query, 'search', 200, false);
       const type = filters.type ? enumValue(filters.type, resourceTypes, 'resource type') : undefined;
       const status = filters.status ? enumValue(filters.status, ['DRAFT', 'PUBLISHED', 'ARCHIVED'], 'status') : undefined;
-      return db.resource.findMany({where: {type, status, ...(q ? {OR: [{title: {contains: q, mode: 'insensitive' as const}}, {slug: {contains: q, mode: 'insensitive' as const}}]} : {})}, select: {id: true, title: true, type: true, slug: true, status: true, access: true, updatedAt: true, _count: {select: {items: true}}}, orderBy: {updatedAt: 'desc'}, take: 100});
+      return db.resource.findMany({where: {type, status, ...(q ? {OR: [{title: {contains: q, mode: 'insensitive' as const}}, {slug: {contains: q, mode: 'insensitive' as const}}]} : {})}, select: {id: true, title: true, type: true, slug: true, status: true, access: true, updatedAt: true, version: true, _count: {select: {items: true}}}, orderBy: {updatedAt: 'desc'}, take: 100});
     },
     async get(id: string) {
       await authorize(db);
@@ -285,6 +299,25 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
         return snapshot(tx, targetId, actorId, id ? 'UPDATED' : 'CREATED');
       }, {timeout: 15000});
     },
+    async bulkTransition(input: unknown, status: unknown) {
+      await authorize(db);
+      const target = enumValue(status, ['DRAFT', 'PUBLISHED', 'ARCHIVED'] as const, 'status');
+      const action = target === 'DRAFT' ? 'UNPUBLISH' : target === 'PUBLISHED' ? 'PUBLISH' : 'ARCHIVE';
+      if (!Array.isArray(input) || input.length < 1 || input.length > 100) throw new ResourceInputError('Select 1 to 100 resources.');
+      const selected = input.map(value => {
+        if (!value || typeof value !== 'object') throw new ResourceInputError('Invalid resource selection.');
+        return {id: resourceId(value.id), token: editToken(value.version, value.updatedAt)};
+      });
+      if (new Set(selected.map(row => row.id)).size !== selected.length) throw new ResourceInputError('Select each resource only once.');
+      return db.$transaction(async tx => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(18427651)`;
+        if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
+        await authorize(tx);
+        let changed = 0;
+        for (const row of selected) if (await transitionRow(tx, row.id, row.token, action, true)) changed++;
+        return changed;
+      }, {timeout: 30000});
+    },
     async transition(id: string, version: unknown, updatedAt: unknown, action: string) {
       await authorize(db, action === 'PUBLISH');
       resourceId(id); const token = editToken(version, updatedAt);
@@ -293,16 +326,7 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(18427651)`;
         if (sessionId || automation) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
         await authorize(tx, action === 'PUBLISH');
-        const current = await tx.resource.findUniqueOrThrow({where: {id}, include: {content: true, _count: {select: {items: true}}}});
-        if (automation && current.status !== 'DRAFT') throw new EditConflictError('Only resource drafts can be published with a token.');
-        if (current.version !== token.version || current.updatedAt.getTime() !== token.updatedAt.getTime()) throw new EditConflictError('This resource changed in another tab. Reload before publishing.');
-        if (action === 'PUBLISH') {
-          const issues = publishingIssues({type: current.type, summary: current.summary, bodyMarkdown: current.content?.bodyMarkdown ?? '', details: (current.content?.details ?? {}) as ResourceDetails, itemCount: current._count.items});
-          if (issues.length) throw new ResourceInputError(issues.join(' '));
-        }
-        const changed = await tx.resource.updateMany({where: {id, ...token}, data: {status: action === 'PUBLISH' ? 'PUBLISHED' : action === 'UNPUBLISH' ? 'DRAFT' : 'ARCHIVED', ...(action === 'PUBLISH' ? {publishedAt: new Date()} : {}), version: {increment: 1}}});
-        if (changed.count !== 1) throw new EditConflictError('This resource changed in another tab. Reload before publishing.');
-        return snapshot(tx, id, actorId, action);
+        return (await transitionRow(tx, id, token, action))!
       });
     },
   };

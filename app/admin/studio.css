@@ -269,3 +269,25 @@
 .admin-panel .resource-token-scopes label { display: flex; align-items: center; gap: 8px; min-height: 36px; margin: 0; }
 .admin-panel .resource-token-scopes input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
 .resource-token-scopes p { margin: 2px 0 0; }
+
+.bulk-status-bar, .bulk-status-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 18px; border-top: 1px dashed var(--studio-divider, #d9dce1); }
+.bulk-status-all, .bulk-status-controls { display: flex; align-items: center; gap: 8px; }
+.bulk-status-all, .bulk-status-count { font-size: 13px; }
+.bulk-status-controls { flex-wrap: wrap; margin-inline-start: auto; }
+.bulk-status-confirm p { margin: 0 auto 0 0; font-size: 14px; }
+.admin-experience .bulk-status-checkbox { inline-size: 17px; block-size: 17px; accent-color: var(--studio-accent, #b74118); margin: 0; flex: none; }
+.bulk-resource-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; padding-inline-start: 14px; }
+.bulk-resource-row + .bulk-resource-row { border-top: 1px dashed var(--studio-divider, #d9dce1); }
+.bulk-resource-row .admin-resource-row { border: 0; padding-inline-start: 0; min-width: 0; }
+.bulk-resource-labels { margin-inline-start: 27px; }
+.bulk-idea-title { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 10px; }
+.bulk-idea-title .bulk-status-checkbox { margin-block-start: 4px; }
+.admin-experience .studio-status-tone[data-status="DRAFT"] { color: #7a490d; border-color: #b58643; }
+.admin-experience .studio-status-tone[data-status="PUBLISHED"] { color: #236342; border-color: #6b9f80; }
+.admin-experience .studio-status-tone[data-status="ARCHIVED"] { color: #65508a; border-color: #a08eb8; }
+.admin-idea-import { padding: 12px 16px; border: 1px solid var(--studio-divider, #d9dce1); border-radius: 8px; }
+.admin-idea-import summary { display: flex; align-items: center; gap: 8px; min-height: 32px; cursor: pointer; font-weight: 650; }
+.admin-idea-import p { margin: 8px 0; }
+.admin-idea-import a { text-decoration: underline; }
+.admin-idea-import form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.admin-idea-import input[type="file"] { max-width: 100%; }

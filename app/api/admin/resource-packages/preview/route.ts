@@ -1,7 +1,7 @@
 import {packageSlugConflictMessage, packageSlugConflicts} from '@/lib/server/admin/repository';
 import {resourceApiAccess, ResourceTokenError} from '@/lib/server/identity/resource-token';
 import {database} from '@/lib/server/database';
-import {MAX_RESOURCE_PACKAGE_BYTES, previewResourcePackage} from '@/lib/server/resources/package-import';
+import {MAX_RESOURCE_PACKAGE_BYTES, readPackageUpload} from '@/lib/server/resources/package-import';
 import {ResourceInputError} from '@/lib/server/resources/validation';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,12 +12,7 @@ export async function POST(request: Request) {
   try {
     await resourceApiAccess(request, 'upload', true);
     const form = await request.formData();
-    const file = form.get('file');
-    if (!(file instanceof File)) return Response.json({error: 'Choose a ZIP package to preview.'}, {status: 400});
-    if (!file.size || file.size > MAX_RESOURCE_PACKAGE_BYTES) return Response.json({error: 'ZIP packages must be between 1 byte and 100 MB.'}, {status: 413});
-    if (!/\.zip$/i.test(file.name)) return Response.json({error: 'Choose a file with a .zip extension.'}, {status: 400});
-
-    const preview = previewResourcePackage(Buffer.from(await file.arrayBuffer()));
+    const {parsed: {preview}} = await readPackageUpload(form.get('file'), false);
     const slugs = preview.resources.map(resource => resource.slug).filter(Boolean);
     if (slugs.length) {
       const conflicts = await packageSlugConflicts(database(), slugs);
