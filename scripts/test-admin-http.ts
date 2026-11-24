@@ -271,7 +271,7 @@ try {
   assert.equal(await db.resource.count({where: {id: {in: snapshots.map(row => row.id)}, status: 'ARCHIVED'}}), 2);
   const collection = await db.resource.create({data: {slug: `${prefix}-collection`, title: 'Deletion fixture collection', type: 'PATH'}});
   await db.resourceItem.create({data: {collectionId: collection.id, resourceId: draftId, position: 0}});
-  const purchase = await db.purchase.create({data: {userId: learnerId, resourceId: jsonResource.id, reference: `${prefix}-purchase`, amountMinor: 100}});
+  const purchase = await db.purchase.create({data: {userId: learnerId, resourceId: jsonResource.id, reference: `${prefix}-purchase`, amountMinor: 100, currency: 'GHS'}});
   const selections = (await db.resource.findMany({
     where: {id: {in: [draftId, jsonResource.id, collection.id]}},
     select: {id: true, version: true, updatedAt: true},
