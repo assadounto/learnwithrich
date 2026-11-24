@@ -54,7 +54,7 @@ html:has(.mobile-drawer[open], .selection-dialog[open]) { overflow: hidden; }
   .site-header .brand-emblem { width: 24px; height: 24px; }
 }
 .reference-hero.home-hero-has-video { isolation: isolate; }
-.reference-hero[data-hero-phase="video"] :is(.ref-hero-copy, .home-hero-picture) {
+.reference-hero:not(.home-hero-contained)[data-hero-phase="video"] :is(.ref-hero-copy, .home-hero-picture) {
   visibility: hidden;
   pointer-events: none;
 }

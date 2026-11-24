@@ -21,6 +21,7 @@ const port = address.port; await new Promise<void>(resolve => listener.close(() 
 const origin = `http://127.0.0.1:${port}`, secret = randomBytes(32).toString('hex');
 const db = createDatabase(process.env.TEST_DATABASE_URL);
 const prefix = `http-admin-${randomUUID()}`;
+const removableLearnerId = `${prefix}-removable`;
 const analyticsPath = `/projects/${prefix}`;
 const ownerId = `${prefix}-owner`, learnerId = `${prefix}-learner`;
 const ids: string[] = [];
@@ -97,7 +98,7 @@ try {
     if (!entry) throw new Error(`Missing server action ${name}`); return entry[0];
   };
   const action = async (name: string, args: unknown[], sessionCookie: string, source = origin) => {
-    const page = name === 'updateNewsletterSignup' ? '/admin/community/newsletter' : name === 'mfaAction' ? '/admin/security' : ['createResourceToken', 'revokeResourceToken'].includes(name) ? '/admin/resource-api' : name === 'deleteIdeas' ? '/admin/project-ideas' : ['bulkResourceStatus', 'deleteResources'].includes(name) ? '/admin/resources' : '/admin/resources/new';
+    const page = name === 'updateNewsletterSignup' ? '/admin/community/newsletter' : name === 'mfaAction' ? '/admin/security' : ['createResourceToken', 'revokeResourceToken'].includes(name) ? '/admin/resource-api' : name === 'manageLearner' ? `/admin/users/${args[0]}` : name === 'deleteIdeas' ? '/admin/project-ideas' : ['bulkResourceStatus', 'deleteResources'].includes(name) ? '/admin/resources' : '/admin/resources/new';
     const response = await fetch(origin + page, {method: 'POST', headers: {'Next-Action': actionId(name), 'Content-Type': 'text/plain;charset=UTF-8', origin: source, cookie: sessionCookie}, body: JSON.stringify(args), redirect: 'manual'});
     return {status: response.status, body: await response.text()};
   };
@@ -118,6 +119,23 @@ try {
   const codes = JSON.parse(codesMatch[1]) as string[];
   await expectRedirect(await request('/admin', ownerCookie), '/admin/resources');
   await expectRedirect(await request('/admin/analytics', learnerCookie), '/admin/access-denied');
+  await expectRedirect(await request('/admin/users', learnerCookie), '/admin/access-denied');
+  const usersPage = await request(`/admin/users?q=${encodeURIComponent(learnerId)}`, ownerCookie);
+  assert.equal(usersPage.status, 200);
+  assert.match(await usersPage.text(), /Registered accounts/);
+  const learnerPage = await request(`/admin/users/${learnerId}`, ownerCookie);
+  assert.equal(learnerPage.status, 200);
+  assert.match(await learnerPage.text(), /Latest recorded sign-in/);
+  await action('manageLearner', [ownerId, 'delete'], ownerCookie);
+  assert.equal(await db.user.count({where: {id: ownerId}}), 1);
+  await db.user.create({data: {id: removableLearnerId, name: 'Removable learner', email: `${removableLearnerId}@example.test`}});
+  await cookie(removableLearnerId);
+  await action('manageLearner', [removableLearnerId, 'delete'], learnerCookie);
+  assert.equal(await db.user.count({where: {id: removableLearnerId}}), 1);
+  await action('manageLearner', [removableLearnerId, 'sign-out'], ownerCookie);
+  assert.equal(await db.session.count({where: {userId: removableLearnerId}}), 0);
+  await action('manageLearner', [removableLearnerId, 'delete'], ownerCookie);
+  assert.equal(await db.user.count({where: {id: removableLearnerId}}), 0);
   const pageview = (path: string, visit = false, extraHeaders: Record<string, string> = {}) =>
     fetch(origin + '/api/analytics/pageview', {method: 'POST', headers: {'Content-Type': 'application/json',
       'Sec-Fetch-Site': 'same-origin', [process.env.ANALYTICS_COUNTRY_HEADER || 'cf-ipcountry']: 'GH', ...extraHeaders},
@@ -301,6 +319,8 @@ try {
   const staleSelections = selections.map(row => row.id === draftId ? {...row, version: row.version + 1} : row);
   assert.match((await action('deleteResources', [staleSelections], ownerCookie)).body, /selected resource changed/);
   assert.equal(await db.resource.count({where: {id: {in: selections.map(row => row.id)}}}), 3);
+  assert.match((await action('manageLearner', [learnerId, 'delete'], ownerCookie)).body, /has payment or audit records/);
+  assert.equal(await db.user.count({where: {id: learnerId}}), 1);
   await db.purchase.delete({where: {id: purchase.id}});
   assert.match((await action('deleteResources', [[jsonSelection]], ownerCookie)).body, /"changed":1/);
   assert.match((await action('deleteResources', [selections.filter(row => row.id !== jsonResource.id)], ownerCookie)).body, /"changed":2/);
@@ -331,7 +351,7 @@ try {
   await db.resourceItem.deleteMany({where: {collectionId: {in: resourceIds}}});
   await db.resourceAudit.deleteMany({where: {OR: [{resourceId: {in: resourceIds}}, {actorId: ownerId, resourceId: null}]}});
   await db.resource.deleteMany({where: {id: {in: resourceIds}}});
-  await db.user.deleteMany({where: {id: {in: [ownerId, learnerId]}}});
+  await db.user.deleteMany({where: {id: {in: [ownerId, learnerId, removableLearnerId]}}});
   await db.projectIdea.deleteMany({where: {slug: {startsWith: prefix}}});
   await db.newsletterSignup.deleteMany({where: {email: newsletterEmail}});
   await db.pageAnalytics.deleteMany({where: {path: analyticsPath}});

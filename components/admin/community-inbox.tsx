@@ -1,9 +1,9 @@
 'use client';
 import {serviceLabel} from '@/lib/service-offerings';
 import {SelectMenu} from '@/components/selection-dialog';
-import {useState, useTransition} from 'react';
+import {Fragment, useState, useTransition} from 'react';
 import {useRouter} from 'next/navigation';
-import {Check, ChevronRight, Clock3, Inbox, Mail, MessageSquareQuote, Save, Search, UserRound, X, FileText, Paperclip, Send} from 'lucide-react';
+import {Check, ChevronLeft, ChevronRight, Clock3, Inbox, Mail, MessageSquareQuote, Save, Search, UserRound, X, FileText, Paperclip, Send} from 'lucide-react';
 import {MediaLibraryModal} from '@/components/admin/media-library-modal';
 import styles from './community-inbox.module.css';
 
@@ -14,7 +14,7 @@ type Row = {id:string; status:string; createdAt:string; name?:string; email?:str
 const statusLabels: Record<string,string> = {PENDING:'Pending review',APPROVED:'Approved',HIDDEN:'Hidden',NEW:'New request',REVIEWING:'Reviewing',QUOTED:'Quote ready',PAYMENT_PENDING:'Payment pending',ACCEPTED:'Paid · in progress',DECLINED:'Declined',COMPLETED:'Completed'};
 const requestStatuses = ['NEW','REVIEWING','QUOTED','ACCEPTED','DECLINED','COMPLETED'];
 const pretty = (value:string) => value.replaceAll('_',' ').toLowerCase().replace(/\b\w/g, letter => letter.toUpperCase());
-function dateLabel(value:string) {return new Intl.DateTimeFormat('en-GH',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value));}
+function dateLabel(value:string) {return new Intl.DateTimeFormat('en-GH',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Accra'}).format(new Date(value));}
 
 const inboxCopy = {
   guestbook: {title: 'Guest book', description: 'Review notes before they appear on the public site.', item: 'notes'},
@@ -39,12 +39,13 @@ function Status({value}: {value: string}) {
   return <span className={`admin-status admin-status-${value.toLowerCase()}`}>{statusLabels[value] ?? pretty(value)}</span>;
 }
 
-export function CommunityInbox({kind, initialRows}: {kind: Kind; initialRows: Row[]}) {
+export function CommunityInbox({kind, initialRows, initialSelection = ''}: {kind: Kind; initialRows: Row[]; initialSelection?: string}) {
   const router = useRouter();
   const [changes, setChanges] = useState<Record<string, Partial<Row>>>({});
   const [busy, setBusy] = useState('');
   const [feedback, setFeedback] = useState<{error: boolean; text: string} | null>(null);
-  const [selectedRequest, setSelectedRequest] = useState(initialRows[0]?.id ?? '');
+  const [selected, setSelected] = useState(initialSelection);
+  const [requestedPage, setPage] = useState(1);
   const [filter, setFilter] = useState('ALL');
   const [query, setQuery] = useState('');
   const [pending, startTransition] = useTransition();
@@ -59,7 +60,10 @@ export function CommunityInbox({kind, initialRows}: {kind: Kind; initialRows: Ro
   ].some(value => value?.toLowerCase().includes(search)));
   const activeFilter = filters.find(item => item.id === filter) ?? filters[0];
   const visibleRows = matching.filter(row => !activeFilter.statuses.length || activeFilter.statuses.includes(row.status));
-  const selectedRow = visibleRows.find(row => row.id === selectedRequest);
+  const pageSize = 15;
+  const pages = Math.max(1, Math.ceil(visibleRows.length / pageSize));
+  const page = Math.min(requestedPage, pages);
+  const pageRows = visibleRows.slice((page - 1) * pageSize, page * pageSize);
 
   function update(id: string, payload: Partial<Row>) {
     setBusy(id);
@@ -90,52 +94,64 @@ export function CommunityInbox({kind, initialRows}: {kind: Kind; initialRows: Ro
         <div className={styles.filters} role="group" aria-label="Filter by status">
           {filters.map(item => <button type="button" key={item.id} aria-pressed={filter === item.id} onClick={() => {
             setFilter(item.id);
-            setSelectedRequest(matching.find(row => !item.statuses.length || item.statuses.includes(row.status))?.id ?? '');
+            setSelected('');
+            setPage(1);
           }}>{item.label}<span>{matching.filter(row => !item.statuses.length || item.statuses.includes(row.status)).length}</span></button>)}
         </div>
         <label className={styles.search}><Search size={16}/><span className="sr-only">{`Search ${copy.item}`}</span>
-          <input type="search" placeholder={`Search ${copy.item}…`} value={query} onChange={event => setQuery(event.target.value)}/>
+          <input type="search" placeholder={`Search ${copy.item}…`} value={query} onChange={event => {setQuery(event.target.value); setSelected(''); setPage(1);}}/>
         </label>
       </div>
       {feedback && <p className={feedback.error ? 'admin-alert' : 'admin-success'} role={feedback.error ? 'alert' : 'status'}>{feedback.text}</p>}
       {!visibleRows.length ? <div className={styles.empty}>
         <Inbox size={24}/><h2>{rows.length ? 'No matching results' : `No ${copy.item} yet`}</h2>
-        {rows.length > 0 && <button type="button" className="button button-outline" onClick={() => {setQuery(''); setFilter('ALL'); setSelectedRequest(rows[0]?.id ?? '');}}>Clear filters</button>}
-      </div> : service ? <div className={styles.serviceGrid}>
-        <nav className={styles.requestList} aria-label="Service request inbox">
-          {visibleRows.map(row => <button type="button" key={row.id} aria-current={row.id === selectedRequest ? 'true' : undefined}
-            aria-controls="service-request-detail" onClick={() => setSelectedRequest(row.id)}>
-            <span className={styles.requestTitle}><strong>{pretty(row.serviceType ?? 'OTHER')}</strong><ChevronRight size={16}/></span>
-            <span className={styles.requestMeta}>{row.name} · <time dateTime={row.createdAt}>{dateLabel(row.createdAt)}</time></span>
-            <Status value={row.status}/>
-          </button>)}
-        </nav>
-        <div id="service-request-detail" className={styles.detail}>
-          {selectedRow ? <ServiceRequestCard key={selectedRow.id} row={selectedRow} busy={pending || busy === selectedRow.id} onSave={update}/>
-            : <div className={styles.empty}><FileText size={22}/><h2>Select a request</h2><p>Open a request to see its brief, quote, and delivery.</p></div>}
-        </div>
-      </div> : <div className={styles.moderationList}>
-        {visibleRows.map(row => <article className={styles.moderationCard} key={row.id}>
-          <header className={styles.cardHeader}>
-            <div className={styles.person}>
-              {row.imageAssetId ? <img src={`/api/media/${row.imageAssetId}`} alt="" width="40" height="40" loading="lazy"/> : <span className={styles.avatar}><UserRound size={18}/></span>}
-              <div><strong>{row.name}</strong><span>{row.country ? `${row.country} · ` : ''}<time dateTime={row.createdAt}>{dateLabel(row.createdAt)}</time></span></div>
-            </div>
-            <Status value={row.status}/>
-          </header>
-          <div className={styles.message}>
-            {kind === 'reviews' && row.rating !== undefined && <p className={styles.rating}><span aria-hidden="true">{'★'.repeat(row.rating)}{'☆'.repeat(5 - row.rating)}</span> {row.rating}/5</p>}
-            {row.title && <h2>{row.title}</h2>}
-            <blockquote>{row.message}</blockquote>
-          </div>
-          <footer className={styles.cardActions}>
-            {row.email && <a href={`mailto:${row.email}`} className={styles.email}><Mail size={15}/>{row.email}</a>}
-            {row.status !== 'APPROVED' ? <button type="button" className="button button-dark" disabled={pending} onClick={() => update(row.id, {status: 'APPROVED'})}><Check size={15}/>Approve</button>
-              : <button type="button" className="button button-outline" disabled={pending} onClick={() => update(row.id, {status: 'HIDDEN'})}><X size={15}/>Hide</button>}
-            {row.status !== 'PENDING' && <button type="button" className="button button-outline" disabled={pending} onClick={() => update(row.id, {status: 'PENDING'})}><Clock3 size={14}/>Return to pending</button>}
-          </footer>
-        </article>)}
-      </div>}
+        {rows.length > 0 && <button type="button" className="button button-outline" onClick={() => {setQuery(''); setFilter('ALL'); setSelected(''); setPage(1);}}>Clear filters</button>}
+      </div> : <>
+        <table className={styles.table}>
+          <caption className="sr-only">{copy.title}</caption>
+          <thead><tr><th scope="col">{service ? 'Request' : 'Submission'}</th><th scope="col">Status</th><th scope="col" className={styles.dateColumn}>Received</th><th scope="col" className={styles.openColumn}>Details</th></tr></thead>
+          <tbody>{pageRows.map(row => {
+            const open = selected === row.id;
+            const detailId = `inbox-entry-${row.id}`;
+            return <Fragment key={row.id}>
+              <tr className={styles.entry} data-open={open || undefined}>
+                <th scope="row"><div className={styles.person}>
+                  {row.imageAssetId ? <img src={`/api/media/${row.imageAssetId}`} alt="" width="34" height="34" loading="lazy"/> : <span className={styles.avatar}><UserRound size={16}/></span>}
+                  <div><strong>{service ? serviceLabel(row.serviceType ?? 'OTHER') : row.name}</strong>
+                    <span>{service ? row.name : [row.title, row.country, row.rating === undefined ? undefined : `${row.rating}/5`].filter(Boolean).join(' · ')}</span>
+                    <time className={styles.mobileDate} dateTime={row.createdAt}>{dateLabel(row.createdAt)}</time>
+                  </div>
+                </div></th>
+                <td><Status value={row.status}/></td>
+                <td className={styles.dateColumn}><time dateTime={row.createdAt}>{dateLabel(row.createdAt)}</time></td>
+                <td className={styles.openColumn}><button className={styles.openDetails} type="button" aria-label={`${open ? 'Close' : 'Open'} ${row.name ?? 'submission'}`} aria-expanded={open}
+                  aria-controls={open ? detailId : undefined} onClick={() => setSelected(open ? '' : row.id)}>
+                  <span>{open ? 'Close' : 'Open'}</span><ChevronRight size={16} aria-hidden="true"/>
+                </button></td>
+              </tr>
+              {open && <tr className={styles.expanded}><td colSpan={4}><div className={styles.detail} id={detailId}>
+                {service ? <ServiceRequestCard key={row.id} row={row} busy={pending || busy === row.id} onSave={update}/> : <article>
+                  <div className={styles.message}>
+                    {row.title && <h2>{row.title}</h2>}
+                    <blockquote>{row.message}</blockquote>
+                  </div>
+                  <footer className={styles.cardActions}>
+                    {row.email && <a href={`mailto:${row.email}`} className={styles.email}><Mail size={15}/>{row.email}</a>}
+                    {row.status !== 'APPROVED' ? <button type="button" className="button button-dark" disabled={pending} onClick={() => update(row.id, {status:'APPROVED'})}><Check size={15}/>Approve</button>
+                      : <button type="button" className="button button-outline" disabled={pending} onClick={() => update(row.id, {status:'HIDDEN'})}><X size={15}/>Hide</button>}
+                    {row.status !== 'PENDING' && <button type="button" className="button button-outline" disabled={pending} onClick={() => update(row.id, {status:'PENDING'})}><Clock3 size={14}/>Return to pending</button>}
+                  </footer>
+                </article>}
+              </div></td></tr>}
+            </Fragment>;
+          })}</tbody>
+        </table>
+        {pages > 1 && <nav className={styles.pagination} aria-label={`${copy.title} pages`}>
+          <span>Page {page} of {pages}</span>
+          <button type="button" className="button button-outline" disabled={page === 1} onClick={() => {setSelected(''); setPage(page - 1);}}><ChevronLeft size={16}/>Previous</button>
+          <button type="button" className="button button-outline" disabled={page === pages} onClick={() => {setSelected(''); setPage(page + 1);}}>Next<ChevronRight size={16}/></button>
+        </nav>}
+      </>}
     </section>
   </div>;
 }

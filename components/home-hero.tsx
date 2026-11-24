@@ -31,12 +31,12 @@ function HeroActions() {
   </div>;
 }
 
-function HeroCopy({className, hidden = false}: {className: string; hidden?: boolean}) {
+function HeroCopy({className, hidden = false, actions = true}: {className: string; hidden?: boolean; actions?: boolean}) {
   return <div className={className} aria-hidden={hidden || undefined} inert={hidden || undefined}>
     <div className="ref-eyebrow">THE INTERNET IS FULL OF IDEAS. LET’S BUILD SOME.<DrawnUnderline className="orange-scribble"/></div>
     <h1><span className="hero-title-line">A little <i>curiosity.</i> </span><span className="hero-title-line">A lot of possibility.</span><AccentRays className="hero-rays"/></h1>
     <p>Projects, books, illustrations and practical<br className="ref-desktop-break"/> courses by Richmond Adu-Kyere.</p>
-    <HeroActions/>
+    {actions && <HeroActions/>}
   </div>;
 }
 
@@ -202,19 +202,28 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
   }, [source, delaySeconds, preset]);
 
 
-  const cinematic = preset === 'CINEMATIC' && hasVideo;
+  const cinematic = preset === 'CINEMATIC';
+  const editorial = preset === 'EDITORIAL';
+  const contained = cinematic || editorial;
   const full = preset === 'CENTERED' || preset === 'SPOTLIGHT';
   const showVideo = Boolean(source && playingSource === source);
   const clip = hasVideo && <div className="home-hero-video" aria-hidden="true"><video ref={video} muted playsInline preload="none"/></div>;
-  const picture = <HeroImage desktop={imageUrl} mobile={mobileImageUrl} full={full}/>;
-  const className = `reference-hero home-hero-preset-${preset.toLowerCase()}${full || cinematic ? ' home-hero-fullbleed' : ''}${cinematic ? ' home-hero-cinematic' : ''}`;
+  const picture = <HeroImage desktop={imageUrl} mobile={mobileImageUrl} full={full || cinematic}/>;
+  const className = `reference-hero home-hero-preset-${preset.toLowerCase()}${full ? ' home-hero-fullbleed' : ''}${contained ? ' home-hero-contained' : ''}`;
   return <section className={`${className}${hasVideo ? ' home-hero-has-video' : ''}`} data-hero-phase={showVideo ? 'video' : 'intro'}>
-    {full && <div className="home-hero-image" aria-hidden="true">{picture}</div>}
-    {clip}
-    <div className="ref-container ref-hero-inner">
-      <HeroCopy className={`ref-hero-copy${cinematic ? ' hero-copy-intro' : ''}`} hidden={showVideo}/>
-      {!full && <div className="ref-hero-art">{picture}</div>}
-    </div>
-    {showVideo && <div className="hero-video-actions" aria-label="Homepage actions"><HeroActions/></div>}
+    {cinematic ? <div className="ref-container home-cinematic-frame">
+      <div className="home-hero-image" aria-hidden="true">{picture}</div>
+      {clip}
+      <HeroCopy className="ref-hero-copy home-cinematic-copy" hidden={showVideo} actions={false}/>
+      <div className="hero-video-actions" aria-label="Homepage actions"><HeroActions/></div>
+    </div> : <>
+      {full && <div className="home-hero-image" aria-hidden="true">{picture}</div>}
+      {!contained && clip}
+      <div className="ref-container ref-hero-inner">
+        <HeroCopy className="ref-hero-copy" hidden={showVideo && !contained}/>
+        {!full && <div className="ref-hero-art">{picture}{editorial && clip}</div>}
+      </div>
+      {showVideo && !contained && <div className="hero-video-actions" aria-label="Homepage actions"><HeroActions/></div>}
+    </>}
   </section>;
 }
