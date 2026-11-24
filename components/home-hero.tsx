@@ -130,12 +130,10 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
   const cinematic = preset === 'CINEMATIC' && hasVideo;
   const full = preset === 'CENTERED' || preset === 'SPOTLIGHT';
   const showVideo = Boolean(source && playingSource === source);
-  const clip = hasVideo && <div className="home-hero-video"><video ref={video} aria-hidden="true" muted playsInline loop preload="none"/>
-    {showVideo && <div className="mobile-video-actions"><HeroActions/></div>}
-  </div>;
+  const clip = hasVideo && <div className="home-hero-video" aria-hidden="true"><video ref={video} muted playsInline loop preload="none"/></div>;
   const picture = <HeroImage desktop={imageUrl} mobile={mobileImageUrl} full={full}/>;
   const className = `reference-hero home-hero-preset-${preset.toLowerCase()}${full || cinematic ? ' home-hero-fullbleed' : ''}${cinematic ? ' home-hero-cinematic' : ''}`;
-  return <section className={className} data-hero-phase={showVideo ? 'video' : 'intro'}>
+  return <section className={`${className}${hasVideo ? ' home-hero-has-video' : ''}`} data-hero-phase={showVideo ? 'video' : 'intro'}>
     {full && <div className="home-hero-image" aria-hidden="true">{picture}</div>}
     {(full || cinematic) && clip}
     <div className="ref-container ref-hero-inner">
@@ -145,5 +143,6 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
       </> : <HeroCopy className="ref-hero-copy"/>}
       {!full && <div className="ref-hero-art">{picture}{!cinematic && clip}</div>}
     </div>
+    {showVideo && <div className="mobile-video-actions" aria-label="Homepage actions"><HeroActions/></div>}
   </section>;
 }

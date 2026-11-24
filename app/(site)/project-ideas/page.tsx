@@ -1,3 +1,4 @@
+import {SelectMenu} from '@/components/selection-dialog';
 import type {Metadata} from 'next';
 import {ArrowRight, Layers, LayoutGrid, Lightbulb} from 'lucide-react';
 import Link from '@/components/navigation-link';
@@ -51,7 +52,7 @@ export default async function ProjectIdeas({searchParams}: {searchParams: Params
     <section id="ideas" aria-label="Browse ideas">
       <form action="/project-ideas#ideas" className={styles.filters}>
         <label>Search ideas<input name="q" type="search" defaultValue={q} maxLength={120} placeholder="Try solar, sensors, or accessibility"/></label>
-        <label>Discipline<select name="discipline" defaultValue={discipline}><option value="">All disciplines</option>{disciplines.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+        <label>Discipline<SelectMenu name="discipline" defaultValue={discipline}><option value="">All disciplines</option>{disciplines.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</SelectMenu></label>
         {tag && <input type="hidden" name="tag" value={tag}/>}
         {swipe && <input type="hidden" name="mode" value="swipe"/>}
         <button className="button button-dark">Find ideas</button>

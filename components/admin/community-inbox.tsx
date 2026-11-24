@@ -1,4 +1,5 @@
 'use client';
+import {SelectMenu} from '@/components/selection-dialog';
 import {useState, useTransition} from 'react';
 import {useRouter} from 'next/navigation';
 import {Check, ChevronRight, Clock3, Inbox, Mail, MessageSquareQuote, Save, Search, UserRound, X, FileText, Paperclip, Send} from 'lucide-react';
@@ -197,10 +198,10 @@ function ServiceRequestCard({row, busy, onSave}: {row: Row; busy: boolean; onSav
           <small>A sent quote appears in the learner’s account with a Paystack payment button.</small>
         </div>
         <div className="service-admin-quote-fields">
-          <label>Request status<select value={status} onChange={event => setStatus(event.target.value)}>
+          <label>Request status<SelectMenu value={status} onChange={event => setStatus(event.target.value)}>
             {!requestStatuses.includes(status) && <option value={status} disabled>{statusLabels[status] ?? pretty(status)}</option>}
             {requestStatuses.map(value => <option key={value} value={value}>{statusLabels[value]}</option>)}
-          </select></label>
+          </SelectMenu></label>
           <label>Project quote ({row.currency})<input inputMode="decimal" value={quote} onChange={event => setQuote(event.target.value)} placeholder="e.g. 2500.00"/></label>
           <label>Included revisions<input type="number" min="0" max="50" value={included} onChange={event => setIncluded(event.target.value)}/></label>
           <label>Price per extra revision ({row.currency})<input inputMode="decimal" value={extra} onChange={event => setExtra(event.target.value)}/></label>

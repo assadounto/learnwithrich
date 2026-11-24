@@ -1,3 +1,4 @@
+import {SelectMenu} from '@/components/selection-dialog';
 import type {ResourceStatus} from '@/lib/generated/prisma/client';
 import Link from '@/components/navigation-link';
 import {ProjectIdeaForm} from '@/components/admin/project-idea-form';
@@ -33,7 +34,7 @@ export default async function ProjectIdeasAdmin({searchParams}: {searchParams: P
     <section className="admin-panel">
       <form action="/admin/project-ideas" className="newsletter-admin-toolbar">
         <label>Find an idea<input name="q" type="search" defaultValue={q} maxLength={120}/></label>
-        <label>Status<select name="status" defaultValue={status ?? ''}><option value="">All</option><option value="DRAFT">Draft</option><option value="PUBLISHED">Published</option><option value="ARCHIVED">Archived</option></select></label>
+        <label>Status<SelectMenu name="status" defaultValue={status ?? ''}><option value="">All</option><option value="DRAFT">Draft</option><option value="PUBLISHED">Published</option><option value="ARCHIVED">Archived</option></SelectMenu></label>
         <button className="button button-outline">Filter</button>
         {selected && <Link href={href(page)} className="button button-outline">New idea</Link>}
       </form>

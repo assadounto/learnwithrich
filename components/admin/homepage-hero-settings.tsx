@@ -1,4 +1,5 @@
 'use client';
+import {SelectMenu} from '@/components/selection-dialog';
 
 import {useState, useTransition} from 'react';
 import {Clock3, Image, Layers3, Save, Sparkles, Trash2, Video} from 'lucide-react';
@@ -76,9 +77,9 @@ export function HomepageHeroSettings({initialHero}: {initialHero: HomepageHeroEd
         <input type="checkbox" checked={hero.videoEnabled} onChange={event => update({videoEnabled: event.target.checked})}/>
       </label>}
       {hasVideo && (hero.videoEnabled || hero.preset === 'CINEMATIC') && <label className="homepage-hero-delay"><span><Clock3 size={16}/>Delay before video</span>
-        <select value={hero.delaySeconds} onChange={event => update({delaySeconds: Number(event.target.value)})}>
+        <SelectMenu value={hero.delaySeconds} onChange={event => update({delaySeconds: Number(event.target.value)})}>
           {Array.from({length: 10}, (_, index) => index + 3).map(seconds => <option key={seconds} value={seconds}>{seconds} seconds</option>)}
-        </select>
+        </SelectMenu>
       </label>}
       {requiresVideo && <p className="homepage-hero-error" role="status">Select a video to enable the cinematic reveal.</p>}
     </div>

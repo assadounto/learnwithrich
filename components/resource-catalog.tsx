@@ -1,3 +1,4 @@
+import {SelectMenu} from '@/components/selection-dialog';
 import {Layers, LayoutGrid, Search} from 'lucide-react';
 import Link from '@/components/navigation-link';
 import {OwnedResourceGrid} from './owned-resource-card';
@@ -23,14 +24,14 @@ export function ResourceCatalog({data, path}: {data: Awaited<ReturnType<typeof b
   return <>
     <form action={`${path}#${anchor}`} method="get" className="browse-controls" key={`${q}:${type ?? ''}:${tag}`}>
       <label>Search<input type="search" name="q" placeholder="Try Arduino or web apps" defaultValue={q} maxLength={200}/></label>
-      {!isProjects && <label>Resource type<select name="type" defaultValue={type ?? ''}>
+      {!isProjects && <label>Resource type<SelectMenu name="type" defaultValue={type ?? ''}>
         <option value="">All types</option>{resourceTypes.map(key => <option key={key} value={key}>{resourceDefinitions[key].plural}</option>)}
-      </select></label>}
-      <label>Tag<select name="tag" defaultValue={tag}>
+      </SelectMenu></label>}
+      <label>Tag<SelectMenu name="tag" defaultValue={tag}>
         <option value="">All tags</option>
         {tag && !tags.includes(tag) && <option value={tag}>{tag}</option>}
         {tags.map(name => <option value={name} key={name}>{name}</option>)}
-      </select></label>
+      </SelectMenu></label>
       {swipe && <input type="hidden" name="mode" value="swipe"/>}
       <button className="button button-dark" type="submit"><Search size={16}/>Apply filters</button>
     </form>

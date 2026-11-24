@@ -1,4 +1,5 @@
 "use client";
+import {SelectMenu} from '@/components/selection-dialog';
 import {publicImageAttributes} from '@/lib/image-sizes';
 import Link from "@/components/navigation-link";
 import { useState } from "react";
@@ -25,14 +26,14 @@ function CommunityProfileFields({ titleLabel }: { titleLabel: string }) {
       </label>
       <label>
         Country <span>optional</span>
-        <select name="country" defaultValue="">
+        <SelectMenu name="country" defaultValue="">
           <option value="">Prefer not to say</option>
           {COMMUNITY_COUNTRIES.map((country) => (
             <option key={country} value={country}>
               {country}
             </option>
           ))}
-        </select>
+        </SelectMenu>
       </label>
       <label className="community-image-field">
         Photo <span>optional · JPG, PNG or WebP · max 2 MB</span>
@@ -219,13 +220,13 @@ export function ReviewForm() {
       </label>
       <label>
         Rating
-        <select name="rating" defaultValue="5">
+        <SelectMenu name="rating" defaultValue="5">
           <option value="5">★★★★★ — Excellent</option>
           <option value="4">★★★★ — Very good</option>
           <option value="3">★★★ — Good</option>
           <option value="2">★★ — Fair</option>
           <option value="1">★ — Needs work</option>
-        </select>
+        </SelectMenu>
       </label>
       <div className="community-form-foot">
         <small>
