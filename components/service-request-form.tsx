@@ -1,9 +1,10 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {AudioLines, CheckCircle2, LockKeyhole, PenLine, Send} from 'lucide-react';
 import Link from '@/components/navigation-link';
 import {serviceOfferings} from '@/lib/service-offerings';
+import {SubmissionSuccessDialog} from './submission-success-dialog';
 import {SelectMenu} from './selection-dialog';
 import {ServiceVoiceRecorder} from './service-voice-recorder';
 
@@ -18,6 +19,8 @@ export function ServiceRequestForm({profile, next, idea, service}: {
   const [description, setDescription] = useState(idea ? `Project idea: ${idea.title}\n\n` : '');
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState<{id: string; code: string}>();
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const receipt = useRef<HTMLElement>(null);
   const [error, setError] = useState('');
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -34,6 +37,7 @@ export function ServiceRequestForm({profile, next, idea, service}: {
       if (!response.ok) throw new Error(result.error || 'Could not send your request.');
       if (typeof result.id !== 'string') throw new Error('Could not confirm your request. Please try again.');
       setSent({id: result.id, code: result.requestCode});
+      setConfirmationOpen(true);
       setVoice(null);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not send your request.');
@@ -47,9 +51,15 @@ export function ServiceRequestForm({profile, next, idea, service}: {
     <Link className="button button-dark" href={`/signin?next=${encodeURIComponent(next)}`}>Sign in to continue <Send size={15}/></Link>
   </div></section>;
 
-  if (sent) return <section className="service-request-form service-form-success" role="status">
+  if (sent) return <section ref={receipt} tabIndex={-1} className="service-request-form service-form-success" aria-label="Request confirmation">
     <CheckCircle2 size={25}/><h2>Request received</h2><p>Your request number is <strong>{sent.code}</strong>. You can follow it from your account.</p>
     <Link className="button button-dark" href={`/account/services/${sent.id}`}>Open my request</Link>
+    {confirmationOpen && <SubmissionSuccessDialog title="Request received"
+      description="Richmond will review your brief. Open your request to check its status, add files, and view your quote when it’s ready."
+      action={{href: `/account/services/${sent.id}`, label: 'Open my request'}}
+      onDismiss={() => {setConfirmationOpen(false); receipt.current?.focus({preventScroll: true});}}>
+      <p className="submission-success-reference">Request number <strong>{sent.code}</strong></p>
+    </SubmissionSuccessDialog>}
   </section>;
 
   return <form className="service-request-form" onSubmit={submit}>

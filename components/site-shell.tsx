@@ -1,4 +1,5 @@
 'use client';
+import {SubmissionSuccessDialog} from './submission-success-dialog';
 import { useState } from 'react';
 import { Search, ArrowRight } from 'lucide-react';
 import { useSiteNavigation } from './navigation-feedback';
@@ -6,6 +7,7 @@ import { PaperEdges } from './paper-edges';
 import { DrawnUnderline } from './decorative-marks';
 export function Newsletter() {
   const [notice, setNotice] = useState<{text: string; error: boolean} | null>(null);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [pending, setPending] = useState(false);
 
   async function subscribe(event: React.FormEvent<HTMLFormElement>) {
@@ -28,6 +30,7 @@ export function Newsletter() {
       }
       form.reset();
       setNotice({error: false, text: 'Thanks! Your newsletter signup was received.'});
+      setConfirmationOpen(true);
     } catch {
       setNotice({error: true, text: 'Could not save your signup. Try again.'});
     } finally { setPending(false); }
@@ -46,9 +49,10 @@ export function Newsletter() {
           <button className="button button-dark" type="submit" disabled={pending}>{pending ? 'Subscribing…' : 'Subscribe'}</button>
         </form>
         <p className="newsletter-consent">By subscribing, you agree to receive updates by email. <a href="/privacy#newsletter">Privacy details</a></p>
-        <p className="ref-newsletter-notice" role={notice?.error ? 'alert' : 'status'}>{notice?.text ?? ''}</p>
+        <p className="ref-newsletter-notice" role={notice?.error ? 'alert' : 'status'}>{confirmationOpen ? '' : notice?.text ?? ''}</p>
       </div>
     </div>
+    {confirmationOpen && <SubmissionSuccessDialog title="Newsletter signup received" description="Thanks for signing up. Look out for new projects and learning resources in future emails." onDismiss={() => setConfirmationOpen(false)}/>}
   </section>;
 }
 export function SearchForm({compact=false}:{compact?:boolean}){const navigate=useSiteNavigation();return <form action="/resources" onSubmit={event=>{if(!navigate)return;event.preventDefault();const data=new FormData(event.currentTarget);const query=new URLSearchParams({q:String(data.get('q')||'')});navigate(`/resources?${query}`,{})}} className={`search-form ${compact?'compact':''}`}><Search size={21} aria-hidden="true"/><label className="sr-only" htmlFor={compact?'compact-search':'home-search'}>Search resources</label><input id={compact?'compact-search':'home-search'} type="search" name="q" placeholder="Search projects, books, guides, courses…"/><button type="submit" aria-label="Search resources"><ArrowRight size={21}/></button></form>}

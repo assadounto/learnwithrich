@@ -1,4 +1,5 @@
 "use client";
+import {SubmissionSuccessDialog} from './submission-success-dialog';
 import {SelectMenu} from '@/components/selection-dialog';
 import {publicImageAttributes} from '@/lib/image-sizes';
 import Link from "@/components/navigation-link";
@@ -53,6 +54,7 @@ function CommunityProfileFields({ titleLabel }: { titleLabel: string }) {
 export function GuestbookForm() {
   const [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
+    [confirmationOpen, setConfirmationOpen] = useState(false),
     [error, setError] = useState("");
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -69,7 +71,8 @@ export function GuestbookForm() {
       const result = await response.json();
       if (!response.ok)
         throw new Error(result.error || "Could not save your note.");
-      setNotice(result.message || "Thanks for signing.");
+      setNotice("Your guest book entry is awaiting review.");
+      setConfirmationOpen(true);
       form.reset();
     } catch (reason) {
       setError(
@@ -130,7 +133,8 @@ export function GuestbookForm() {
           {busy ? "Sending…" : "Sign the guest book"}
         </button>
       </div>
-      {notice && (
+      {confirmationOpen && <SubmissionSuccessDialog title="Thanks for signing the guest book" description="Your note was received and will appear in the guest book after it’s approved." onDismiss={() => setConfirmationOpen(false)}/>}
+      {notice && !confirmationOpen && (
         <p role="status" className="community-success">
           {notice}
         </p>
@@ -149,6 +153,7 @@ export function ReviewForm() {
   const [name, setName] = useState<string>(),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
+    [confirmationOpen, setConfirmationOpen] = useState(false),
     [error, setError] = useState("");
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -165,7 +170,8 @@ export function ReviewForm() {
       const result = await response.json();
       if (!response.ok)
         throw new Error(result.error || "Could not save your review.");
-      setNotice(result.message || "Thanks for sharing.");
+      setNotice("Your review is awaiting approval.");
+      setConfirmationOpen(true);
       formElement.reset();
     } catch (reason) {
       setError(
@@ -238,7 +244,8 @@ export function ReviewForm() {
           {busy ? "Sending…" : "Share a review"}
         </button>
       </div>
-      {notice && (
+      {confirmationOpen && <SubmissionSuccessDialog title="Review submitted" description="Thanks for sharing your experience. Your review will appear on the site after it’s approved." onDismiss={() => setConfirmationOpen(false)}/>}
+      {notice && !confirmationOpen && (
         <p role="status" className="community-success">
           {notice}
         </p>
