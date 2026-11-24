@@ -1,0 +1,121 @@
+:root { color-scheme: light; }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --dark-surface: #1d2026;
+  --dark-raised: #272b33;
+  --dark-glass: #242830e6;
+  --dark-warm: #342820;
+  --dark-cool: #23332e;
+  --dark-line: #454c58;
+  --dark-divider: #464e5a8c;
+  --dark-text: #edf0f4;
+  --dark-muted: #b3bac5;
+  --dark-accent: #ffab82;
+  --dark-danger: #ff9ca6;
+  --dark-warning: #e9bd7e;
+  --dark-success: #97d9b7;
+  --dark-violet: #c5b7fa;
+
+  --paper: #15171c;
+  --surface: var(--dark-surface);
+  --surface-soft: var(--dark-raised);
+  --surface-green: var(--dark-raised);
+  --ink: var(--dark-text);
+  --muted: var(--dark-muted);
+  --olive: var(--muted);
+  --accent-green: var(--muted);
+  --line: var(--dark-line);
+  --card-border: var(--dark-line);
+  --card-shadow: 0 3px 16px #0002;
+  --primary: #ffab82;
+  --primary-hover: #ffc09f;
+  --orange: var(--primary);
+  --brand-fill: #9c3d19;
+  --brand-fill-hover: #a74420;
+}
+
+[data-theme="dark"] ::selection { background: #633820; color: #fff5ed; }
+[data-theme="dark"] :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), select, textarea, [contenteditable="true"]) {
+  color: var(--ink);
+}
+[data-theme="dark"] :is(input, textarea)::placeholder { color: var(--muted); opacity: 1; }
+[data-theme="dark"] :is(.button-dark, .button-outline, .button-cream, .search-form button, .service-brief-mode button[aria-pressed="true"], .skip-link) {
+  color: var(--ink);
+  background: var(--surface-soft);
+  border-color: var(--line);
+}
+[data-theme="dark"] :is(.button-dark, .button-outline, .button-cream):hover { background: #303641; color: var(--ink); border-color: #727c8d; }
+[data-theme="dark"] :is(.button-orange, .site-header .header-cta) {
+  background: var(--brand-fill);
+  border-color: var(--brand-fill);
+  color: #fff;
+}
+[data-theme="dark"] :is(.button-orange, .site-header .header-cta):hover { background: var(--brand-fill-hover); border-color: var(--brand-fill-hover); }
+[data-theme="dark"] :is(.ref-hero-copy .text-link, .ref-section-heading .text-link) { border-color: currentColor; }
+[data-theme="dark"] .home-hero-fullbleed:not(.home-hero-cinematic) .ref-hero-copy .text-link { color: #fffdf7; }
+[data-theme="dark"] .admin-experience :is(.admin-alert, .bulk-delete-action, .bulk-row-delete) { color: var(--dark-danger); }
+[data-theme="dark"] .admin-experience .admin-success { color: var(--dark-success); }
+[data-theme="dark"] .admin-experience .bulk-delete-confirm { color: #fff; background: #a52332; border-color: #d95160; }
+
+.theme-switcher { position: relative; flex: none; color: inherit; }
+.theme-switcher > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  list-style: none;
+  cursor: pointer;
+}
+.theme-switcher > summary::-webkit-details-marker { display: none; }
+.theme-switcher > summary:hover, .theme-switcher[open] > summary { border-color: var(--line); }
+.theme-options {
+  position: absolute;
+  z-index: 3;
+  inset: calc(100% + 6px) 0 auto auto;
+  width: 148px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: 0 10px 24px #0002;
+}
+.theme-options button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  text-align: start;
+  font-size: 13px;
+}
+.theme-options button:hover, .theme-options button[aria-pressed="true"] { background: var(--surface-soft); }
+.theme-selected { margin-inline-start: auto; color: var(--orange); }
+.theme-options button:focus-visible, .theme-switcher > summary:focus-visible { outline: 2px solid var(--orange); outline-offset: -2px; }
+.drawer-theme-switch { margin-bottom: 8px; }
+.drawer-theme-switch > summary { min-height: 44px; }
+.drawer-theme-switch .theme-options { inset: auto auto calc(100% + 5px) 0; }
+.studio-theme-switch > summary { min-width: 36px; min-height: 36px; }
+@media (min-width: 1101px) {
+  .site-header .header-actions:has(.header-theme-switch) { gap: clamp(6px, 1.1vw, 16px); }
+}
+@media (max-width: 1100px) {
+  .header-theme-switch { display: none; }
+}
+@media (max-width: 360px) {
+  .studio-theme-switch > summary { min-width: 30px; padding-inline: 5px; }
+}

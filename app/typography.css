@@ -102,7 +102,7 @@ h1 i, h2 i { font-weight: 600; }
   overflow: visible;
 }
 .drawn-mark.orange-scribble { color: var(--orange); }
-.drawn-mark.olive-scribble { color: #686b70; }
+.drawn-mark.olive-scribble { color: var(--dark-muted, #686b70); }
 .drawn-mark.white-scribble { color: var(--paper); }
 .ref-eyebrow .drawn-mark { height: 7px; bottom: -11px; }
 .ref-discovery h2 .drawn-mark { height: 13px; bottom: -19px; }

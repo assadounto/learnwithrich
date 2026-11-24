@@ -6,6 +6,7 @@ import {ArrowUpRight, Bookmark, Menu, UserRound, X} from 'lucide-react';
 import Link from '@/components/navigation-link';
 import {useSiteAccount} from './site-account';
 import {Brand} from './brand';
+import {ThemeSwitcher} from './theme-switcher';
 
 const links = [['Discover','/'], ['Projects','/projects'], ['Project Ideas','/project-ideas'], ['Library','/resources?view=library'], ['Courses','/courses'], ['About','/about']];
 
@@ -69,6 +70,7 @@ export function Header() {
       <nav className="desktop-nav" aria-label="Main navigation">{links.map(([label, href]) => <Link key={href} href={href}
         className={label === active ? 'active' : ''} aria-current={label === active ? 'page' : undefined}>{label}</Link>)}</nav>
       <div className="header-actions">
+        <ThemeSwitcher className="header-theme-switch"/>
         <Link className="mobile-bookmarks" href={savedHref} aria-label="Saved resources"><Bookmark size={17}/></Link>
         <Link className="header-account-link" href={accountHref} aria-label={accountLabel}><UserRound size={16}/><span>{accountLabel}</span></Link>
         <Link className="button button-dark header-cta" href="/services/request">Request a service</Link>
@@ -87,7 +89,7 @@ export function Header() {
           <Link href={accountHref} onClick={close}>{accountLabel} <UserRound size={16}/></Link>
           <Link href="/admin" onClick={close}>Creator studio <ArrowUpRight size={16}/></Link>
         </nav>
-        <footer><Link href="/services/request" className="button button-dark" onClick={close}>Request a service <ArrowUpRight size={16}/></Link></footer>
+        <footer><ThemeSwitcher className="drawer-theme-switch" showLabel/><Link href="/services/request" className="button button-dark" onClick={close}>Request a service <ArrowUpRight size={16}/></Link></footer>
       </div>
     </dialog>
   </header>;

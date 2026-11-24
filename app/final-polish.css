@@ -11,7 +11,7 @@
 .drawn-rays.library-rays {
   width: 44px;
   height: 44px;
-  color: #e3bd39;
+  color: var(--dark-accent, #e3bd39);
   top: -10px;
   right: -17px;
   transform: rotate(43deg);

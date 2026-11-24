@@ -1,7 +1,7 @@
 /* One canvas for the studio. Solid surfaces are reserved for overlays and sticky chrome. */
 .admin-experience {
-  --studio-divider: #d9dce1;
-  --studio-nested-divider: #bfc4cb;
+  --studio-divider: var(--dark-line, #d9dce1);
+  --studio-nested-divider: var(--dark-line, #bfc4cb);
 }
 
 .admin-experience :is(
@@ -59,4 +59,4 @@
 .admin-experience .studio-tabs { background: var(--paper); }
 .admin-experience :is(.admin-panel, .service-admin-quote, .homepage-section-fields, .admin-editor-grid)
   :is(input:not([type="checkbox"]):not([type="radio"]), textarea, .select-menu-trigger) { background: transparent; }
-.admin-experience :is(.workspace-nav-item:hover, .studio-tree-group summary:hover) { color: var(--studio-accent, #c84b13); }
+.admin-experience :is(.workspace-nav-item:hover, .studio-tree-group summary:hover) { color: var(--studio-accent, var(--dark-accent, #c84b13)); }

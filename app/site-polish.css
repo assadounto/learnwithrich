@@ -6,12 +6,12 @@
 .ref-project-card, .ref-course-card, .folio-project-card, .compact-resource,
 .resource-card, .course-card, .live-product-card, .business-home-library .live-product-card,
 .testimonial-card, .testimonial-card.testimonial-featured {
-  background: #fff; color: var(--ink);
+  background: var(--dark-surface, #fff); color: var(--ink);
 }
-.testimonial-featured .testimonial-top { color: #b9551c; }
-.testimonial-featured .testimonial-label { color: #686b70; }
-.testimonial-card.testimonial-featured figcaption { border-color: #8d825a40; }
-.testimonial-featured figcaption small { color: #726c59; }
+.testimonial-featured .testimonial-top { color: var(--dark-accent, #b9551c); }
+.testimonial-featured .testimonial-label { color: var(--dark-muted, #686b70); }
+.testimonial-card.testimonial-featured figcaption { border-color: var(--dark-divider, #8d825a40); }
+.testimonial-featured figcaption small { color: var(--dark-muted, #726c59); }
 .ref-project-card, .ref-course-card, .folio-project-card, .compact-resource {
   transition: border-color .2s, box-shadow .2s;
 }
@@ -23,7 +23,7 @@
 }
 .studio-catalog-grid .compact-resource h3, .studio-courses-list .compact-resource h3 { font-size: 22px; }
 .ref-project-info p, .ref-course-info p, .folio-project-copy > p,
-.compact-resource-copy > p { color: #4b493c; line-height: 1.55; }
+.compact-resource-copy > p { color: var(--dark-text, #4b493c); line-height: 1.55; }
 .compact-resource-copy { gap: 0; }
 .compact-resource-bottom { padding-top: 8px; }
 .ref-project-tags span, .format-tag, .access-badge { border-radius: 4px; line-height: 1.25; }
@@ -41,10 +41,10 @@
 .studio-page-heading > p { max-width: 780px; }
 .studio-filter-tabs button, .project-topic-tabs button, .studio-detail-tabs button { min-height: 44px; }
 .save-button { border-radius: var(--control-radius); }
-.mobile-nav a.active { background: #ffffff; color: #686b70; font-weight: 700; }
+.mobile-nav a.active { background: var(--dark-surface, #ffffff); color: var(--dark-muted, #686b70); font-weight: 700; }
 .navigation-progress { position: fixed; inset: 0 0 auto; height: 3px; z-index: 1000; overflow: hidden; background: #efcc9a88; pointer-events: none; }
 .navigation-progress > span { display: block; width: 40%; height: 100%; background: var(--orange); box-shadow: 0 0 8px #e75d1666; animation: route-progress 1.1s ease-in-out infinite; }
-.navigation-notice { position: fixed; z-index: 1000; right: 24px; top: 92px; display: inline-flex; align-items: center; gap: 9px; padding: 10px 15px; background: #d65316; color: #fbf2dc; border: 1px solid #eee3c544; border-radius: 999px; box-shadow: 0 5px 20px #0002; font-size: 12px; pointer-events: none; animation: route-notice .15s .12s both; }
+.navigation-notice { position: fixed; z-index: 1000; right: 24px; top: 92px; display: inline-flex; align-items: center; gap: 9px; padding: 10px 15px; background: #d65316; color: #fbf2dc; border: 1px solid var(--dark-divider, #eee3c544); border-radius: 999px; box-shadow: 0 5px 20px #0002; font-size: 12px; pointer-events: none; animation: route-notice .15s .12s both; }
 .navigation-notice svg { animation: route-spin .8s linear infinite; }
 .route-loading { padding: 60px 0; min-height: 60vh; }
 .route-loading-label { display: flex; gap: 10px; align-items: center; font-size: 14px; margin-bottom: 30px; }
@@ -62,7 +62,7 @@
 @keyframes route-notice { from { opacity: 0; } to { opacity: 1; } }
 @media (hover: hover) {
   .ref-project-card:hover, .ref-course-card:hover, .folio-project-card:hover,
-  .compact-resource:hover { border-color: #a89871; box-shadow: 0 5px 18px #44361c0c; }
+  .compact-resource:hover { border-color: var(--dark-line, #a89871); box-shadow: 0 5px 18px #44361c0c; }
 }
 @media (max-width: 1000px) {
   .studio-catalog-grid .compact-resource h3, .studio-courses-list .compact-resource h3 { font-size: 20px; }
