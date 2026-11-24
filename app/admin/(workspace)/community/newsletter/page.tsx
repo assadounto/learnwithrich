@@ -1,3 +1,4 @@
+import {SelectMenu} from '@/components/selection-dialog';
 import Link from 'next/link';
 import {database} from '@/lib/server/database';
 import {requireOwner} from '@/lib/server/identity/access';
@@ -32,7 +33,7 @@ export default async function NewsletterAdmin({searchParams}: {
     <section className="admin-panel">
       <form className="newsletter-admin-toolbar" action="/admin/community/newsletter">
         <label>Find an email<input name="q" type="search" defaultValue={query} maxLength={254}/></label>
-        <label>Status<select name="status" defaultValue={status ?? ''}><option value="">All</option><option value="pending">Pending</option><option value="verified">Verified</option></select></label>
+        <label>Status<SelectMenu name="status" defaultValue={status ?? ''}><option value="">All</option><option value="pending">Pending</option><option value="verified">Verified</option></SelectMenu></label>
         <button type="submit" className="button button-outline">Filter</button>
       </form>
       {signups.length ? <ul className="newsletter-admin-list">

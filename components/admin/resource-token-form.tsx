@@ -1,4 +1,5 @@
 'use client';
+import {SelectMenu} from '@/components/selection-dialog';
 
 import {useState, useTransition} from 'react';
 import {Copy, KeyRound} from 'lucide-react';
@@ -26,8 +27,8 @@ export function ResourceTokenForm() {
     }}>
       <label>Token name<input name="label" required maxLength={80} placeholder="e.g. Course authoring assistant"/></label>
       <div className="admin-field-pair">
-        <label>Permissions<select name="scope"><option value="upload">Preview and import ZIPs</option><option value="edit">Preview, import, and edit drafts</option></select></label>
-        <label>Expires after<select name="days" defaultValue="7"><option value="1">1 day</option><option value="7">7 days</option><option value="30">30 days</option></select></label>
+        <label>Permissions<SelectMenu name="scope"><option value="upload">Preview and import ZIPs</option><option value="edit">Preview, import, and edit drafts</option></SelectMenu></label>
+        <label>Expires after<SelectMenu name="days" defaultValue="7"><option value="1">1 day</option><option value="7">7 days</option><option value="30">30 days</option></SelectMenu></label>
       </div>
       <button className="button button-dark" disabled={pending}><KeyRound size={16}/>{pending ? 'Generating…' : 'Generate token'}</button>
     </form>

@@ -1,4 +1,5 @@
 'use client';
+import {SelectMenu} from '@/components/selection-dialog';
 
 import {useState} from 'react';
 import {ArrowUpRight, Shrink} from 'lucide-react';
@@ -34,9 +35,9 @@ export function MediaOptimizer({id, sizeBytes, video}: {id: string; sizeBytes: n
   return <section className="admin-panel studio-media-optimize" aria-labelledby="optimize-media-title">
     <h2 id="optimize-media-title">Reduce file size</h2>
     <p>The optimized copy is saved alongside the original. {video ? 'Lossless keeps the video and audio streams as they are.' : 'Lossless keeps image detail and dimensions.'} High quality re-encodes the file for more savings and can change fine details.</p>
-    <div><label>Compression<select value={mode} disabled={busy} onChange={event => setMode(event.target.value === 'lossless' ? 'lossless' : 'high-quality')}>
+    <div><label>Compression<SelectMenu value={mode} disabled={busy} onChange={event => setMode(event.target.value === 'lossless' ? 'lossless' : 'high-quality')}>
       <option value="lossless">Lossless</option><option value="high-quality">High quality</option>
-    </select></label>
+    </SelectMenu></label>
       <button className="button button-dark" type="button" onClick={() => void optimize()} disabled={busy}><Shrink size={16}/>{busy ? 'Optimizing…' : 'Create optimized copy'}</button>
     </div>
     {notice && <p role="status">{notice}</p>}{error && <p role="alert" className="admin-alert">{error}</p>}
