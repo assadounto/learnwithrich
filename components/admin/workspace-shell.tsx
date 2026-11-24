@@ -126,6 +126,7 @@ function StudioWorkspace({name, email, resources, children}: WorkspaceProps) {
   const [commands, setCommands] = useState<MenuTarget>();
   const commandDialog = useRef<HTMLDialogElement>(null);
   const paneFrame = useRef<HTMLIFrameElement>(null);
+  const splitPanel = useRef<HTMLElement>(null);
   const paneDirty = useRef(false);
   const [dirtyEditors, setDirtyEditors] = useState<Set<object>>(() => new Set());
   const dirty = dirtyEditors.size > 0;
@@ -251,6 +252,10 @@ function StudioWorkspace({name, email, resources, children}: WorkspaceProps) {
     return () => window.removeEventListener('message', receive);
   }, []);
 
+  useEffect(() => {
+    if (pane && narrow) splitPanel.current?.scrollIntoView({block: 'start'});
+  }, [pane, narrow]);
+
   function openCommands(event: MouseEvent<HTMLElement>, target: {href?: string; label: string}) {
     event.preventDefault();
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -370,7 +375,7 @@ function StudioWorkspace({name, email, resources, children}: WorkspaceProps) {
         </nav>
         <div className={pane ? `studio-split pane-${pane.side}` : undefined}>
           <div className="workspace-content studio-primary-pane">{children}</div>
-          {pane && <section className="studio-secondary-pane" aria-label="Split editor">
+          {pane && <section ref={splitPanel} className="studio-secondary-pane" style={{scrollMarginTop: "calc(var(--studio-heading) + 45px)"}} aria-label="Split editor">
             <header className="studio-secondary-heading"><Columns2 size={16}/><strong>{pane.label}</strong>
               <button type="button" className="studio-pane-action" aria-label="Move split pane" onClick={event => openCommands(event, pane)}><Ellipsis size={18}/></button>
               <button type="button" className="studio-pane-action" aria-label="Close split pane" onClick={closePane}><X size={17}/></button>
