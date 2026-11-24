@@ -6,3 +6,16 @@
 @media(max-width:980px){.account{grid-template-columns:1fr;gap:15px}.navigation{position:static;display:flex;overflow-x:auto;scrollbar-width:thin}.navigation a{flex:0 0 auto}.navigation a svg:last-child{display:none}.recentGrid{grid-template-columns:1fr 1fr}.recentCard:last-child{grid-column:1/-1}}
 @media(max-width:740px){.account{padding-block:18px 55px;gap:12px}.navigation{margin-inline:-3px}.navigation a{gap:7px;padding-inline:9px;font-size:10px}.welcome{padding:23px 19px}.welcome h1{font-size:39px}.profile{gap:10px}.profile .button{margin-left:0}.summaryGrid{grid-template-columns:1fr}.summaryCard{min-height:82px}.sectionHeading{align-items:flex-start;flex-direction:column}.sectionHeading h2{font-size:23px}.recentGrid{grid-template-columns:1fr}.recentCard:last-child{grid-column:auto}.savedGrid{grid-template-columns:1fr}.pageHeading h1{font-size:37px}.purchaseRow,.serviceRow{gap:9px;padding:10px}.purchaseCopy strong,.serviceCopy strong{font-size:15px}.purchaseMeta{display:none}.rowArrow{width:14px}.serviceQuote{font-size:9px}.serviceDetailGrid{grid-template-columns:1fr}.serviceDetailAside{position:static}.serviceDetailGrid .detailPanel:first-child{margin-top:0}.detailPanel,.receiptPanel{padding:16px}.downloadRow{align-items:flex-start;flex-direction:column}.statusBadge{font-size:8px}.serviceRow>.statusBadge{display:none}}
 @media(max-width:430px){.navigation a{flex:1 0 auto;justify-content:center}.navigation a span{white-space:nowrap}.savedCard{grid-template-columns:92px minmax(0,1fr)}.savedCard>img,.savedCover{width:92px;height:98px}.savedCardCopy strong{font-size:15px}.serviceCopy>small{font-size:7px}.serviceCopy em{font-size:8px}}
+
+@media (max-width: 980px) {
+  .account .navigation { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: visible; margin-inline: 0; }
+  .account .navigation a { min-width: 0; min-height: 44px; justify-content: flex-start; }
+  .account .navigation a span { white-space: normal; line-height: 1.25; }
+}
+
+@media (max-width: 600px) { .account .navigation { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+@media (max-width: 600px) {
+  .account :global(.account-workspace-tablist) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; }
+  .account :global(.account-workspace-tablist) button { min-width: 0; white-space: normal; }
+}
