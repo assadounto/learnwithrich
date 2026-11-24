@@ -96,7 +96,7 @@ try {
     if (!entry) throw new Error(`Missing server action ${name}`); return entry[0];
   };
   const action = async (name: string, args: unknown[], sessionCookie: string, source = origin) => {
-    const page = name === 'updateNewsletterSignup' ? '/admin/community/newsletter' : name === 'mfaAction' ? '/admin/security' : ['createResourceToken', 'revokeResourceToken'].includes(name) ? '/admin/resource-api' : '/admin/resources/new';
+    const page = name === 'updateNewsletterSignup' ? '/admin/community/newsletter' : name === 'mfaAction' ? '/admin/security' : ['createResourceToken', 'revokeResourceToken'].includes(name) ? '/admin/resource-api' : name === 'bulkResourceStatus' ? '/admin/resources' : '/admin/resources/new';
     const response = await fetch(origin + page, {method: 'POST', headers: {'Next-Action': actionId(name), 'Content-Type': 'text/plain;charset=UTF-8', origin: source, cookie: sessionCookie}, body: JSON.stringify(args), redirect: 'manual'});
     return {status: response.status, body: await response.text()};
   };
@@ -194,12 +194,12 @@ try {
   const imported = await uploadZip('import', uploadToken);
   assert.equal(imported.status, 201);
   const draftId = (await imported.json()).resources[0].id;
-  const manifest = {format: 'learnwithrich-resource', version: 1, resources: [{
+  const resourceManifest = {format: 'learnwithrich-resource', version: 1, resources: [{
     key: 'manifest', type: 'ARTICLE', title: 'JSON manifest fixture', slug: `${prefix}-json`, summary: 'Check direct manifest import.', bodyMarkdown: 'Example article',
   }]};
   const uploadJson = (stage: 'preview' | 'import') => {
     const form = new FormData();
-    form.set('file', new Blob([JSON.stringify(manifest)], {type: 'application/json'}), 'manifest.json');
+    form.set('file', new Blob([JSON.stringify(resourceManifest)], {type: 'application/json'}), 'manifest.json');
     return fetch(`${origin}/api/admin/resource-packages/${stage}`, {method: 'POST', headers: auth(uploadToken), body: form});
   };
   const jsonPreview = await uploadJson('preview');
