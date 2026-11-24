@@ -43,6 +43,9 @@ async function HomeContent() {
 <div className="ref-manifesto">LOOK FOR A NEW ANGLE. KEEP MOVING FORWARD.</div>
 <section className="ref-discovery ref-container"><h2>What are you curious about?<DrawnUnderline className="olive-scribble"/></h2><div className="ref-search-wrap"><SearchForm/><AccentRays className="search-rays"/></div><div className="ref-topic-links">{[[Cpu,'Electronics'],[Code2,'Software'],[Layers,'Guides'],[Pencil,'Documentation']].map(([Icon,label])=>{const I=Icon as typeof Cpu;return <Link key={String(label)} href={String(label)==='Guides'?'/resources?category=guide':`/resources?q=${encodeURIComponent(String(label))}`} ><I size={25}/>{String(label)}</Link>})}</div></section>
 <Suspense><HomeCatalog sections={sections}/></Suspense>
+<section className="ref-container" style={{paddingBlock: '24px'}}>
+  <div className="service-page-hero"><span className="maker-kicker">FINAL-YEAR PROJECTS & RESEARCH</span><h2>Find your next project idea.</h2><p>Explore topics in electrical engineering, mechanical design, software, and more.</p><Link href="/project-ideas" className="button button-dark">Browse project ideas <ArrowRight size={16}/></Link></div>
+</section>
 <MakerPaths/>
 <SkillsPlayground/>
 <Suspense><HomeReviews/></Suspense>

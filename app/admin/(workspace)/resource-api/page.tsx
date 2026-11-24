@@ -48,6 +48,17 @@ export default async function ResourceApiPage() {
       <pre><code>{zipCommands}</code></pre>
     </section>
     <section className="admin-panel">
+      <h2>Add project idea drafts</h2>
+      <p className="admin-help">Use a token with draft editing permission. Send 1 to 25 ideas per request. Each needs a title, discipline, abstract (40 to 3,000 characters), and a tags array (up to 12). The slug is optional. An existing slug blocks the batch. Review and publish drafts under <Link href="/admin/project-ideas">Project ideas</Link>.</p>
+      <p className="admin-help">Discipline IDs are electrical, mechanical, software, civil, environmental, and interdisciplinary.</p>
+      <pre><code>{[
+        'curl --fail-with-body -H "Authorization: Bearer $LWR_TOKEN" -H "Content-Type: application/json" --data-binary @ideas.json "$LWR_URL/api/admin/project-ideas"',
+        '',
+        'ideas.json',
+        JSON.stringify({ideas: [{title: 'Library Queue Study', discipline: 'software', abstract: 'Model a library help desk queue and compare simulated wait times against an anonymized sample. Evaluate how staffing changes affect peak periods.', tags: ['simulation', 'research']}]}, null, 2),
+      ].join('\n')}</code></pre>
+    </section>
+    <section className="admin-panel">
       <h2>Read and edit a draft</h2>
       <p className="admin-help">Use a token with draft editing permission. PATCH accepts <code>title</code>, <code>summary</code>, <code>bodyMarkdown</code>, <code>tags</code>, and <code>details</code>. Omitted fields are kept. Sending <code>tags</code> or <code>details</code> replaces that field. A 409 means the draft changed. Fetch it again and review the changes before retrying.</p>
       <pre><code>{editCommands}</code></pre>
