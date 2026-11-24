@@ -8,7 +8,7 @@
  .studio-catalog-grid > .compact-resource, .studio-courses-list > .compact-resource {
   display: grid; grid-template-columns: 42% minmax(0, 1fr); grid-template-rows: auto;
   min-height: 0; width: 100%; margin: 0; padding: 0; gap: 0; overflow: hidden;
-  border: 1px solid var(--card-border); border-radius: 8px; background: #fff;
+  border: 1px solid var(--card-border); border-radius: 8px; background: var(--dark-surface, #fff);
  }
  .live-product-card > div, .folio-project-copy, .live-catalog-browser .folio-project-copy,
  .ref-project-info, .ref-course-info, .compact-resource-copy,

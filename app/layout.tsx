@@ -19,6 +19,8 @@ import './home-hero.css';
 import './catalog-browse.css';
 import './mobile-interactions.css';
 import './service-studio.css';
+import './color-theme.css';
+import {initializeTheme} from '@/lib/color-theme';
 import { NavigationFeedback } from '@/components/navigation-feedback';
 const siteUrl = 'https://learnwithrich.com';
 
@@ -41,4 +43,4 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   icons: { icon: '/icon.svg' },
 };
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body><a href="#main-content" className="skip-link">Skip to content</a><NavigationFeedback>{children}</NavigationFeedback></body></html>}
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{__html: initializeTheme}}/></head><body><a href="#main-content" className="skip-link">Skip to content</a><NavigationFeedback>{children}</NavigationFeedback></body></html>}

@@ -5,6 +5,7 @@ import {usePathname, useRouter, useSearchParams} from 'next/navigation';
 import {ChartNoAxesCombined, ChevronRight, Columns2, Ellipsis, FileArchive, FileText, Files, FolderOpen, Globe, Library, Menu, MessageSquareQuote, PanelsTopLeft, Plus, Search, ShieldCheck, X} from 'lucide-react';
 import Link from '@/components/navigation-link';
 import {resourceDefinitions} from '@/lib/resource-types';
+import {ThemeSwitcher} from '@/components/theme-switcher';
 import {OwnerSignout} from './session-buttons';
 
 const sections = [
@@ -329,6 +330,7 @@ function StudioWorkspace({name, email, resources, children}: WorkspaceProps) {
         <button type="button" className="studio-quick-open" onClick={() => palette.current?.showModal()}>
           <Search size={16}/><span>Quick open</span><kbd>Ctrl / ⌘ K</kbd>
         </button>
+        <ThemeSwitcher className="studio-theme-switch"/>
         <div className="workspace-header-actions"><Link href="/" className="workspace-site-link"><Globe size={16}/>View website</Link></div>
       </header>
       {drawer && <button type="button" className="workspace-backdrop" aria-label="Close explorer" onClick={() => {setDrawer(false); menu.current?.focus();}}/>}

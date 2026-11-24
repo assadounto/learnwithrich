@@ -76,8 +76,8 @@ html:has(.submission-success-dialog[open]) { overflow: hidden; }
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  color: #285d43;
-  background: #e8efe4;
+  color: var(--dark-success, #285d43);
+  background: var(--dark-raised, #e8efe4);
   margin-bottom: 15px;
 }
 .submission-success-content h2 { font-size: clamp(26px, 6vw, 34px); line-height: 1.14; margin: 0 0 10px; }
