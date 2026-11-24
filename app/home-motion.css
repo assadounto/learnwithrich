@@ -112,3 +112,10 @@ html{scrollbar-gutter:stable}
   }
   .site-header .mobile-nav a[aria-current="page"] { color: var(--orange); font-weight: 700; }
 }
+
+/* Keep account resolution from shifting the rest of the header. */
+.site-header .header-account-link { inline-size: 100px; flex: 0 0 100px; justify-content: center; white-space: nowrap; }
+@media (max-width: 940px) {
+  .site-header .header-account-link { inline-size: 44px; flex-basis: 44px; min-height: 44px; }
+  .site-header .header-account-link span { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}

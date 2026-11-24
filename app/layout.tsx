@@ -16,6 +16,7 @@ import './white-theme.css';
 import './page-loaders.css';
 import './readability.css';
 import './home-hero.css';
+import './catalog-browse.css';
 import { NavigationFeedback } from '@/components/navigation-feedback';
 const siteUrl = 'https://learnwithrich.com';
 
