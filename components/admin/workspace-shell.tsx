@@ -2,13 +2,14 @@
 
 import {createContext, useContext, useEffect, useRef, useState, type MouseEvent} from 'react';
 import {usePathname, useRouter, useSearchParams} from 'next/navigation';
-import {ChartNoAxesCombined, ChevronRight, Columns2, Ellipsis, FileArchive, FileText, Files, FolderOpen, Globe, Library, Menu, MessageSquareQuote, PanelsTopLeft, Plus, Search, ShieldCheck, X} from 'lucide-react';
+import {ChartNoAxesCombined, ChevronRight, Columns2, Ellipsis, FileArchive, FileText, Files, FolderOpen, Globe, Library, Menu, MessageSquareQuote, PanelsTopLeft, Plus, Search, ShieldCheck, Users, X} from 'lucide-react';
 import Link from '@/components/navigation-link';
 import {resourceDefinitions} from '@/lib/resource-types';
 import {ThemeSwitcher} from '@/components/theme-switcher';
 import {OwnerSignout} from './session-buttons';
 
 const sections = [
+  {href: '/admin/users', label: 'Users', icon: Users},
   {href: '/admin/analytics', label: 'Analytics', icon: ChartNoAxesCombined},
   {href: '/admin/project-ideas', label: 'Project ideas', icon: FileText},
   {href: '/admin/resources', label: 'Resources', icon: Library},
@@ -34,7 +35,7 @@ function tabDestination(tab: WorkspaceTab) {
 }
 const tabStore = 'learnwithrich.studio.tabs';
 const home = '/admin/resources';
-const tabPath = /^\/admin\/(?:resources\/(?:new|import|[a-f0-9-]{36})|files\/[a-f0-9-]{36}|files|homepage|site-contact|community\/(?:guestbook|service-requests|reviews|newsletter)|project-ideas(?:\/new|\/[a-z0-9-]{1,120}\/edit)?|resource-api|security|analytics)$/;
+const tabPath = /^\/admin\/(?:resources\/(?:new|import|[a-f0-9-]{36})|files\/[a-f0-9-]{36}|files|homepage|site-contact|community\/(?:guestbook|service-requests|reviews|newsletter)|project-ideas(?:\/new|\/[a-z0-9-]{1,120}\/edit)?|resource-api|security|analytics|users(?:\/[a-zA-Z0-9_-]{1,128})?)$/;
 type Side = 'left' | 'right';
 type Pane = {href: string; label: string; side: Side};
 type MenuTarget = {href?: string; label: string; x: number; y: number};
@@ -153,7 +154,7 @@ function StudioWorkspace({name, email, resources, children}: WorkspaceProps) {
 
   const resource = resources.find(row => path === `/admin/resources/${row.id}`);
   const label = labels[path] ?? resource?.title ?? [...sections, ...actions].find(item => item.href === path)?.label
-    ?? tabs.find(tab => tab.href === path)?.label ?? (path === '/admin/project-ideas/new' ? 'New project idea' : path.startsWith('/admin/project-ideas/') ? 'Edit project idea' : path.startsWith('/admin/files/') ? 'File preview' : 'Resource editor');
+    ?? tabs.find(tab => tab.href === path)?.label ?? (path === '/admin/project-ideas/new' ? 'New project idea' : path.startsWith('/admin/project-ideas/') ? 'Edit project idea' : path.startsWith('/admin/users/') ? 'User account' : path.startsWith('/admin/files/') ? 'File preview' : 'Resource editor');
   const newType = path === '/admin/resources/new' ? params.get('type') ?? undefined : undefined;
   const activeTab = path === home || tabPath.test(path) ? path : home;
   const homeSelection = path === home && params.size ? `${home}?${params}` : home;

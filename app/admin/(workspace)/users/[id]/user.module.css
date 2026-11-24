@@ -1,0 +1,18 @@
+.page { display: grid; gap: 16px; min-width: 0; }
+.heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.heading h1 { font-size: clamp(26px, 4vw, 42px); margin: 0 0 6px; overflow-wrap: anywhere; }
+.heading p, .panel > p { color: var(--muted); margin-bottom: 0; overflow-wrap: anywhere; font-size: 13px; }
+.back, .activity a { display: inline-flex; align-items: center; gap: 6px; width: fit-content; font-weight: 650; font-size: 13px; }
+.back:hover, .activity a:hover { color: var(--primary); text-decoration: underline; }
+.back { min-height: 36px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 365px), 1fr)); align-items: start; gap: 14px; }
+.panel { border: 1px solid var(--line); border-radius: 8px; min-width: 0; padding: clamp(13px, 2vw, 22px); }
+.panel h2 { font: 700 16px var(--sans); margin: 0 0 14px; }
+.panel h2 small { color: var(--muted); font-size: 12px; margin-inline-start: 4px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 12px; padding-bottom: 14px; border-bottom: 1px dashed var(--line); margin: 0 0 14px; font-size: 13px; }
+.facts dt, .activity span { color: var(--muted); }
+.facts dd { margin: 3px 0 0; font-weight: 650; }
+.activity { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+.activity li { display: grid; gap: 2px; overflow-wrap: anywhere; padding: 8px 0; }
+.activity li + li { border-top: 1px dashed var(--line); }
+.activity span { font-size: 12px; }
