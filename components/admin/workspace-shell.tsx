@@ -1,13 +1,14 @@
 'use client';
 
-import {createContext, useContext, useEffect, useRef, useState} from 'react';
+import {createContext, useContext, useEffect, useRef, useState, type MouseEvent} from 'react';
 import {usePathname, useRouter, useSearchParams} from 'next/navigation';
-import {ChevronRight, FileArchive, FileText, Files, FolderOpen, Globe, Library, Menu, MessageSquareQuote, PanelsTopLeft, Plus, Search, ShieldCheck, X} from 'lucide-react';
+import {ChartNoAxesCombined, ChevronRight, Columns2, Ellipsis, FileArchive, FileText, Files, FolderOpen, Globe, Library, Menu, MessageSquareQuote, PanelsTopLeft, Plus, Search, ShieldCheck, X} from 'lucide-react';
 import Link from '@/components/navigation-link';
 import {resourceDefinitions} from '@/lib/resource-types';
 import {OwnerSignout} from './session-buttons';
 
 const sections = [
+  {href: '/admin/analytics', label: 'Analytics', icon: ChartNoAxesCombined},
   {href: '/admin/project-ideas', label: 'Project ideas', icon: FileText},
   {href: '/admin/resources', label: 'Resources', icon: Library},
   {href: '/admin/files', label: 'Files', icon: FolderOpen},
@@ -32,7 +33,11 @@ function tabDestination(tab: WorkspaceTab) {
 }
 const tabStore = 'learnwithrich.studio.tabs';
 const home = '/admin/resources';
-const tabPath = /^\/admin\/(?:resources\/(?:new|import|[a-f0-9-]{36})|files\/[a-f0-9-]{36}|files|homepage|site-contact|community\/(?:guestbook|service-requests|reviews|newsletter)|project-ideas(?:\/new|\/[a-z0-9-]{1,120}\/edit)?|resource-api|security)$/;
+const tabPath = /^\/admin\/(?:resources\/(?:new|import|[a-f0-9-]{36})|files\/[a-f0-9-]{36}|files|homepage|site-contact|community\/(?:guestbook|service-requests|reviews|newsletter)|project-ideas(?:\/new|\/[a-z0-9-]{1,120}\/edit)?|resource-api|security|analytics)$/;
+type Side = 'left' | 'right';
+type Pane = {href: string; label: string; side: Side};
+type MenuTarget = {href?: string; label: string; x: number; y: number};
+const sideKey = 'learnwithrich.studio.explorer-side';
 const WorkspaceContext = createContext({
   trackDirty: (_key: object, _dirty: boolean) => {},
   namePage: (_path: string, _label: string) => {},
@@ -55,12 +60,57 @@ export function WorkspacePageTitle({title}: {title: string}) {
   return null;
 }
 
-export function WorkspaceShell({name, email, resources, children}: {
+type WorkspaceProps = {
   name: string;
   email: string;
   resources: ResourceEntry[];
   children: React.ReactNode;
-}) {
+};
+
+function EmbeddedWorkspace({children}: {children: React.ReactNode}) {
+  const [editors, setEditors] = useState<Set<object>>(() => new Set());
+  const [context] = useState(() => ({
+    namePage() {},
+    trackDirty(key: object, dirty: boolean) {
+      setEditors(previous => {
+        if (previous.has(key) === dirty) return previous;
+        const next = new Set(previous);
+        if (dirty) next.add(key);
+        else next.delete(key);
+        return next;
+      });
+    },
+  }));
+  const dirty = editors.size > 0;
+  useEffect(() => {
+    window.parent.postMessage({type: 'studio-pane-dirty', dirty}, window.location.origin);
+    const protect = (event: BeforeUnloadEvent) => {if (dirty) event.preventDefault();};
+    window.addEventListener('beforeunload', protect);
+    return () => window.removeEventListener('beforeunload', protect);
+  }, [dirty]);
+  return <WorkspaceContext.Provider value={context}><div className="studio-shell studio-embedded">
+    <div className="workspace-content" onClickCapture={event => {
+      const link = event.target instanceof Element ? event.target.closest('a') : null;
+      if (!link || link.target === '_blank' || link.hasAttribute('download') || !dirty) return;
+      const url = new URL(link.href);
+      if (url.origin === window.location.origin && url.pathname === window.location.pathname && url.search === window.location.search) return;
+      if (!window.confirm('Leave the split pane without saving your changes?')) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }}>{children}</div>
+  </div></WorkspaceContext.Provider>;
+}
+
+export function WorkspaceShell(props: WorkspaceProps) {
+  const [embedded, setEmbedded] = useState(false);
+  useEffect(() => {
+    setEmbedded(window.frameElement?.hasAttribute('data-studio-pane') ?? false);
+  }, []);
+  return embedded ? <EmbeddedWorkspace>{props.children}</EmbeddedWorkspace> : <StudioWorkspace {...props}/>;
+}
+
+function StudioWorkspace({name, email, resources, children}: WorkspaceProps) {
   const path = usePathname();
   const params = useSearchParams();
   const router = useRouter();
@@ -71,6 +121,13 @@ export function WorkspaceShell({name, email, resources, children}: {
   const [drawer, setDrawer] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [query, setQuery] = useState('');
+  const [explorerSide, setExplorerSide] = useState<Side>('left');
+  const [pane, setPane] = useState<Pane>();
+  const [commands, setCommands] = useState<MenuTarget>();
+  const commandDialog = useRef<HTMLDialogElement>(null);
+  const paneFrame = useRef<HTMLIFrameElement>(null);
+  const splitPanel = useRef<HTMLElement>(null);
+  const paneDirty = useRef(false);
   const [dirtyEditors, setDirtyEditors] = useState<Set<object>>(() => new Set());
   const dirty = dirtyEditors.size > 0;
   const menu = useRef<HTMLButtonElement>(null);
@@ -98,10 +155,12 @@ export function WorkspaceShell({name, email, resources, children}: {
     ?? tabs.find(tab => tab.href === path)?.label ?? (path === '/admin/project-ideas/new' ? 'New project idea' : path.startsWith('/admin/project-ideas/') ? 'Edit project idea' : path.startsWith('/admin/files/') ? 'File preview' : 'Resource editor');
   const newType = path === '/admin/resources/new' ? params.get('type') ?? undefined : undefined;
   const activeTab = path === home || tabPath.test(path) ? path : home;
+  const homeSelection = path === home && params.size ? `${home}?${params}` : home;
   const matching = resources.filter(row => row.title.toLowerCase().includes(query.trim().toLowerCase()));
 
   useEffect(() => {
     try {
+      if (sessionStorage.getItem(sideKey) === 'right') setExplorerSide('right');
       const stored: unknown = JSON.parse(sessionStorage.getItem(tabStore) ?? '[]');
       if (Array.isArray(stored)) {
         setTabs(stored.filter(tab => typeof tab?.href === 'string' && tabPath.test(tab.href) && typeof tab.label === 'string').slice(0, 30));
@@ -184,6 +243,59 @@ export function WorkspaceShell({name, email, resources, children}: {
     };
   }, [drawer]);
 
+  useEffect(() => {
+    const receive = (event: MessageEvent) => {
+      if (event.origin === window.location.origin && event.source === paneFrame.current?.contentWindow &&
+        event.data?.type === 'studio-pane-dirty' && typeof event.data.dirty === 'boolean') paneDirty.current = event.data.dirty;
+    };
+    window.addEventListener('message', receive);
+    return () => window.removeEventListener('message', receive);
+  }, []);
+
+  useEffect(() => {
+    if (pane && narrow) splitPanel.current?.scrollIntoView({block: 'start'});
+  }, [pane, narrow]);
+
+  function openCommands(event: MouseEvent<HTMLElement>, target: {href?: string; label: string}) {
+    event.preventDefault();
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX || bounds.left;
+    const y = event.clientY || bounds.bottom;
+    setCommands({...target, x: Math.max(8, Math.min(x, window.innerWidth - 246)), y: Math.max(8, Math.min(y, window.innerHeight - 174))});
+    if (!commandDialog.current?.open) commandDialog.current?.showModal();
+  }
+
+  function openExplorerCommands(event: MouseEvent<HTMLElement>) {
+    const anchor = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href]') : null;
+    const url = anchor && new URL(anchor.href);
+    const item = url && url.origin === window.location.origin && (url.pathname === home || tabPath.test(url.pathname));
+    openCommands(event, item ? {href: url.pathname + url.search, label: anchor?.textContent?.trim() || 'Studio item'} : {label: 'Explorer'});
+  }
+
+  function moveExplorer(side: Side) {
+    setExplorerSide(side);
+    try { sessionStorage.setItem(sideKey, side); } catch { /* Workspace storage is optional. */ }
+    commandDialog.current?.close();
+  }
+
+  function openPane(side: Side) {
+    if (!commands?.href) return;
+    commandDialog.current?.close();
+    if (pane && pane.href !== commands.href && paneDirty.current && !window.confirm('Replace the split pane without saving your changes?')) return;
+    if (!pane || pane.href !== commands.href) paneDirty.current = false;
+    setPane({href: commands.href, label: commands.label, side});
+    if (drawer) {
+      setDrawer(false);
+      menu.current?.focus();
+    }
+  }
+
+  function closePane() {
+    if (paneDirty.current && !window.confirm('Close the split pane without saving your changes?')) return;
+    paneDirty.current = false;
+    setPane(undefined);
+  }
+
   function closeTab(href: string) {
     if (href === activeTab && dirty && !window.confirm('Close this tab without saving your changes?')) return;
     const index = tabs.findIndex(tab => tab.href === href);
@@ -196,7 +308,7 @@ export function WorkspaceShell({name, email, resources, children}: {
   }
 
   return <WorkspaceContext.Provider value={context}>
-    <div className={`workspace-shell studio-shell${collapsed ? ' explorer-collapsed' : ''}`} onClickCapture={event => {
+    <div className={`workspace-shell studio-shell${explorerSide === 'right' ? ' explorer-right' : ''}${collapsed ? ' explorer-collapsed' : ''}`} onClickCapture={event => {
       const anchor = event.target instanceof Element ? event.target.closest('a') : null;
       if (!dirty || !anchor || anchor.target === '_blank' || anchor.hasAttribute('download') || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const url = new URL(anchor.href, window.location.href);
@@ -220,8 +332,10 @@ export function WorkspaceShell({name, email, resources, children}: {
         <div className="workspace-header-actions"><Link href="/" className="workspace-site-link"><Globe size={16}/>View website</Link></div>
       </header>
       {drawer && <button type="button" className="workspace-backdrop" aria-label="Close explorer" onClick={() => {setDrawer(false); menu.current?.focus();}}/>}
-      <aside id="workspace-sidebar" ref={sidebar} role={drawer ? 'dialog' : undefined} aria-modal={drawer || undefined} className={`workspace-sidebar${drawer ? ' is-open' : ''}`} aria-label="Studio explorer">
-        <div className="studio-explorer-heading"><Files size={16}/> Explorer</div>
+      <aside id="workspace-sidebar" ref={sidebar} role={drawer ? 'dialog' : undefined} aria-modal={drawer || undefined} className={`workspace-sidebar${drawer ? ' is-open' : ''}`} aria-label="Studio explorer" onContextMenu={openExplorerCommands}>
+        <div className="studio-explorer-heading"><Files size={16}/> Explorer
+          <button type="button" className="studio-pane-action" aria-label="Explorer options" onClick={event => openCommands(event, {label: 'Explorer'})}><Ellipsis size={18}/></button>
+        </div>
         <div className="studio-explorer-actions">{actions.map(({href, label: title, icon: Icon}) =>
           <Link key={href} href={href}><Icon size={16}/>{title}</Link>)}</div>
         <nav aria-label="Content">
@@ -249,15 +363,40 @@ export function WorkspaceShell({name, email, resources, children}: {
       </aside>
       <div className="workspace-main" inert={drawer}>
         <nav ref={tabStrip} className="studio-tabs" aria-label="Open workspace tabs">
-          <div className="studio-tab"><Link href={home} aria-current={activeTab === home ? 'page' : undefined}><Library size={15}/>Resources</Link></div>
-          {tabs.map(tab => <div className="studio-tab" key={tab.href}>
+          <div className="studio-tab" onContextMenu={event => openCommands(event, {href: homeSelection, label: 'Resources'})}><Link href={home} aria-current={activeTab === home ? 'page' : undefined}><Library size={15}/>Resources</Link></div>
+          {tabs.map(tab => <div className="studio-tab" key={tab.href} onContextMenu={event => openCommands(event, {href: tabDestination(tab), label: tab.label})}>
             <Link href={tabDestination(tab)} title={tab.label} prefetch={false} aria-current={activeTab === tab.href ? 'page' : undefined}><FileText size={14}/><span>{tab.label}</span></Link>
             <button type="button" aria-label={`Close ${tab.label}`} onClick={() => closeTab(tab.href)}>{dirty && activeTab === tab.href ? <span className="studio-dirty-dot"/> : <X size={15}/>}</button>
           </div>)}
+          <button type="button" className="studio-pane-action studio-tab-options" aria-label="Active tab options" onClick={event => {
+            const current = tabs.find(tab => tab.href === activeTab);
+            openCommands(event, {href: current ? tabDestination(current) : homeSelection, label});
+          }}><Ellipsis size={18}/></button>
         </nav>
-        <div className="workspace-content">{children}</div>
+        <div className={pane ? `studio-split pane-${pane.side}` : undefined}>
+          <div className="workspace-content studio-primary-pane">{children}</div>
+          {pane && <section ref={splitPanel} className="studio-secondary-pane" style={{scrollMarginTop: "calc(var(--studio-heading) + 45px)"}} aria-label="Split editor">
+            <header className="studio-secondary-heading"><Columns2 size={16}/><strong>{pane.label}</strong>
+              <button type="button" className="studio-pane-action" aria-label="Move split pane" onClick={event => openCommands(event, pane)}><Ellipsis size={18}/></button>
+              <button type="button" className="studio-pane-action" aria-label="Close split pane" onClick={closePane}><X size={17}/></button>
+            </header>
+            <iframe data-studio-pane ref={paneFrame} src={pane.href} title={`${pane.label} split pane`}/>
+          </section>}
+        </div>
         <footer className="workspace-footer"><span><span className="studio-status-dot"/> LearnWithRich Studio</span><span>{dirty ? 'Unsaved changes' : label}</span></footer>
       </div>
+      <dialog ref={commandDialog} className="studio-context-dialog" aria-label="Workspace options"
+        style={commands ? {left: commands.x, top: commands.y} : undefined}
+        onClose={() => setCommands(undefined)} onClick={event => {if (event.target === event.currentTarget) commandDialog.current?.close();}}>
+        <div>
+          {commands?.href && <>
+            <button type="button" onClick={() => openPane('left')}>Open in left pane</button>
+            <button type="button" onClick={() => openPane('right')}>Open in right pane</button>
+          </>}
+          <button type="button" onClick={() => moveExplorer(explorerSide === 'left' ? 'right' : 'left')}>Move Explorer to {explorerSide === 'left' ? 'right' : 'left'}</button>
+          <button type="button" onClick={() => commandDialog.current?.close()}>Cancel</button>
+        </div>
+      </dialog>
       <dialog ref={palette} className="studio-palette" aria-label="Quick open" onClose={() => setQuery('')}>
         <div className="studio-palette-search"><Search size={18}/>
           <input ref={paletteInput} onKeyDown={event => {

@@ -21,6 +21,7 @@ const port = address.port; await new Promise<void>(resolve => listener.close(() 
 const origin = `http://127.0.0.1:${port}`, secret = randomBytes(32).toString('hex');
 const db = createDatabase(process.env.TEST_DATABASE_URL);
 const prefix = `http-admin-${randomUUID()}`;
+const analyticsPath = `/projects/${prefix}`;
 const ownerId = `${prefix}-owner`, learnerId = `${prefix}-learner`;
 const ids: string[] = [];
 const newsletterEmail = `${prefix}@example.test`;
@@ -116,6 +117,23 @@ try {
   assert.ok(codesMatch, 'Enrollment must return recovery codes once');
   const codes = JSON.parse(codesMatch[1]) as string[];
   await expectRedirect(await request('/admin', ownerCookie), '/admin/resources');
+  await expectRedirect(await request('/admin/analytics', learnerCookie), '/admin/access-denied');
+  const pageview = (path: string, visit = false, extraHeaders: Record<string, string> = {}) =>
+    fetch(origin + '/api/analytics/pageview', {method: 'POST', headers: {'Content-Type': 'application/json',
+      'Sec-Fetch-Site': 'same-origin', [process.env.ANALYTICS_COUNTRY_HEADER || 'cf-ipcountry']: 'GH', ...extraHeaders},
+      body: JSON.stringify({path, source: 'www.example.com', screen: 'small', visit})});
+  assert.equal((await pageview('/account')).status, 400);
+  assert.equal((await pageview(analyticsPath + '?private=1')).status, 400);
+  assert.equal((await pageview(analyticsPath, true, {'Sec-Fetch-Site': 'cross-site'})).status, 403);
+  assert.equal((await pageview(analyticsPath, true, {'Sec-GPC': '1'})).status, 204);
+  const views = await Promise.all([pageview(analyticsPath, true), pageview(analyticsPath)]);
+  assert.deepEqual(views.map(view => view.status), [204, 204]);
+  const recorded = await db.pageAnalytics.findFirstOrThrow({where: {path: analyticsPath}});
+  assert.deepEqual([recorded.country, recorded.source, recorded.views, recorded.visits], ['GH', 'example.com', 2, 1]);
+  const report = await request('/admin/analytics?days=7', ownerCookie);
+  assert.equal(report.status, 200);
+  assert.match(await report.text(), /Ghana/);
+  assert.match(await (await request('/account', learnerCookie)).text(), /Learning workspace/);
   const studio = await request('/admin/resources', ownerCookie); assert.equal(studio.status, 200); const studioBody = await studio.text(); assert.match(studioBody, /Your collection/); assert.match(studioBody, /workspace-sidebar/); assert.doesNotMatch(studioBody, /class="site-header|class="reference-footer/);
   const site = await request('/about'); const siteBody = await site.text(); assert.match(siteBody, /site-header/); assert.doesNotMatch(siteBody, /workspace-sidebar/);
   for (const [kind, definition] of Object.entries(resourceDefinitions)) {
@@ -316,5 +334,6 @@ try {
   await db.user.deleteMany({where: {id: {in: [ownerId, learnerId]}}});
   await db.projectIdea.deleteMany({where: {slug: {startsWith: prefix}}});
   await db.newsletterSignup.deleteMany({where: {email: newsletterEmail}});
+  await db.pageAnalytics.deleteMany({where: {path: analyticsPath}});
   await db.$disconnect();
 }
