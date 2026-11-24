@@ -76,48 +76,116 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
     let delayElapsed = false;
     let failed = false;
     let starting = false;
+    let playAttempt = 0;
     let disposed = false;
+    let repeats = 0;
+    let recoveries = 0;
+    let introTimer: ReturnType<typeof setTimeout> | undefined;
+    let watchdog: ReturnType<typeof setTimeout> | undefined;
+    let lastTime = 0;
+    const introDuration = Math.max(3, Math.min(delaySeconds, 12)) * 1000;
 
-    const canPlay = () => !disposed && !failed && visible && !document.hidden && !motion.matches && !connection?.saveData;
-    const sync = () => {
+    function canPlay() {
+      return !disposed && !failed && visible && !document.hidden && !motion.matches && !connection?.saveData;
+    }
+
+    function startIntro() {
+      clearTimeout(introTimer);
+      clearTimeout(watchdog);
+      delayElapsed = false;
+      repeats = 0;
+      starting = false;
+      playAttempt++;
+      player.pause();
+      if (player.readyState >= HTMLMediaElement.HAVE_METADATA) player.currentTime = 0;
+      setPlayingSource(null);
+      introTimer = setTimeout(() => {
+        delayElapsed = true;
+        sync();
+      }, introDuration);
+    }
+
+    function recover() {
+      if (disposed || failed) return;
+      startIntro();
+      if (recoveries >= 2) {
+        failed = true;
+        clearTimeout(introTimer);
+        return;
+      }
+      recoveries++;
+      player.removeAttribute('src');
+      player.load();
+    }
+
+    function watch() {
+      clearTimeout(watchdog);
+      lastTime = player.currentTime;
+      watchdog = setTimeout(() => {
+        if (!canPlay() || !delayElapsed) return;
+        if (Math.abs(player.currentTime - lastTime) < 0.05) recover();
+        else watch();
+      }, 6500);
+    }
+
+    function sync() {
       if (!delayElapsed || !canPlay()) {
+        clearTimeout(watchdog);
+        if (starting) {
+          starting = false;
+          playAttempt++;
+        }
         player.pause();
         if (motion.matches) setPlayingSource(null);
         return;
       }
       if (starting || !player.paused) return;
       starting = true;
+      const attempt = ++playAttempt;
       if (!player.getAttribute('src')) player.src = playbackSource;
+      watch();
       void player.play().catch((error: unknown) => {
-        if (disposed || (error instanceof DOMException && error.name === 'AbortError')) return;
-        failed = true;
-        setPlayingSource(null);
+        if (disposed || attempt !== playAttempt || (error instanceof DOMException && error.name === 'AbortError')) return;
+        if (error instanceof DOMException && error.name === 'NotAllowedError') {
+          failed = true;
+          startIntro();
+          clearTimeout(introTimer);
+        } else recover();
       }).finally(() => {
-        starting = false;
+        if (attempt === playAttempt) starting = false;
       });
+    }
+
+    const onPlaying = () => { if (canPlay() && delayElapsed) setPlayingSource(playbackSource); };
+    const onEnded = () => {
+      repeats++;
+      recoveries = 0;
+      if (repeats === 4) startIntro();
+      else {
+        player.currentTime = 0;
+        sync();
+      }
     };
-    const onPlaying = () => { if (canPlay()) setPlayingSource(playbackSource); };
-    const onError = () => { failed = true; setPlayingSource(null); };
     const observer = 'IntersectionObserver' in window ? new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
+      visible = entry.intersectionRatio >= 0.08;
       sync();
     }, {threshold: 0.08}) : null;
     observer?.observe(player);
     player.addEventListener('playing', onPlaying);
-    player.addEventListener('error', onError);
+    player.addEventListener('ended', onEnded);
+    player.addEventListener('error', recover);
     document.addEventListener('visibilitychange', sync);
     motion.addEventListener('change', sync);
-    const timer = setTimeout(() => {
-      delayElapsed = true;
-      sync();
-    }, Math.max(3, Math.min(delaySeconds, 12)) * 1000);
+    startIntro();
 
     return () => {
       disposed = true;
       observer?.disconnect();
-      clearTimeout(timer);
+      clearTimeout(introTimer);
+      clearTimeout(watchdog);
       player.removeEventListener('playing', onPlaying);
-      player.removeEventListener('error', onError);
+      player.removeEventListener('ended', onEnded);
+      player.removeEventListener('error', recover);
       document.removeEventListener('visibilitychange', sync);
       motion.removeEventListener('change', sync);
       player.pause();
@@ -130,7 +198,7 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
   const cinematic = preset === 'CINEMATIC' && hasVideo;
   const full = preset === 'CENTERED' || preset === 'SPOTLIGHT';
   const showVideo = Boolean(source && playingSource === source);
-  const clip = hasVideo && <div className="home-hero-video" aria-hidden="true"><video ref={video} muted playsInline loop preload="none"/></div>;
+  const clip = hasVideo && <div className="home-hero-video" aria-hidden="true"><video ref={video} muted playsInline preload="none"/></div>;
   const picture = <HeroImage desktop={imageUrl} mobile={mobileImageUrl} full={full}/>;
   const className = `reference-hero home-hero-preset-${preset.toLowerCase()}${full || cinematic ? ' home-hero-fullbleed' : ''}${cinematic ? ' home-hero-cinematic' : ''}`;
   return <section className={`${className}${hasVideo ? ' home-hero-has-video' : ''}`} data-hero-phase={showVideo ? 'video' : 'intro'}>

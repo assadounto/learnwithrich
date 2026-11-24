@@ -569,3 +569,16 @@ model SiteContactSettings {
 
   @@map("site_contact_settings")
 }
+
+model PageAnalytics {
+  day     DateTime @db.Date
+  path    String   @db.VarChar(240)
+  country String   @db.VarChar(2)
+  source  String   @db.VarChar(100)
+  screen  String   @db.VarChar(8)
+  views   Int      @default(0)
+  visits  Int      @default(0)
+
+  @@id([day, path, country, source, screen])
+  @@map("page_analytics")
+}

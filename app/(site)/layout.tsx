@@ -1,3 +1,4 @@
+import {PageAnalytics} from '@/components/page-analytics';
 import {SiteAccountProvider} from '@/components/site-account';
 import {Header} from '@/components/site-header';
 import {Newsletter} from '@/components/site-shell';
@@ -9,5 +10,5 @@ import '../site-footer.css';
 export const revalidate = 300;
 
 export default function SiteLayout({children}: {children: React.ReactNode}) {
-  return <SiteAccountProvider><SiteStructuredData/><Header/><main id="main-content">{children}</main><Newsletter/><Footer/></SiteAccountProvider>;
+  return <SiteAccountProvider><SiteStructuredData/><PageAnalytics/><Header/><main id="main-content">{children}</main><Newsletter/><Footer/></SiteAccountProvider>;
 }

@@ -35,3 +35,33 @@
   .account .navigation a:focus-visible,
   .account :global(.account-workspace-tablist) button:focus-visible { outline-offset: -2px; }
 }
+
+.workspace { --account-line: #d9dce1; --account-edge: clamp(14px, 3vw, 36px); display: grid; grid-template-columns: minmax(175px, 226px) minmax(0, 1fr); max-width: 1440px; margin: 0 auto; padding: 0; gap: 0; border-inline: 1px solid var(--account-line); }
+.workspaceHeader { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 54px; padding-inline: var(--account-edge); border-bottom: 1px solid var(--account-line); font: 680 13px var(--sans); }
+.workspaceHeader :is(span, a), .activeStrip a { display: inline-flex; align-items: center; gap: 8px; }
+.workspaceHeader a { color: #494d52; }
+.workspaceHeader a:hover { text-decoration: underline; }
+.workspaceRail { min-width: 0; border-inline-end: 1px solid var(--account-line); padding: 16px 10px; }
+.railHeading { display: block; padding: 6px 10px 10px; color: #565a60; font-size: 12px; font-weight: 700; }
+.workspace .navigation { position: static; background: transparent; border: 0; box-shadow: none; border-radius: 0; padding: 0; }
+.workspace .navigation a { min-height: 42px; font-size: 13px; justify-content: flex-start; }
+.workspace .navigation a svg:first-child { display: block; flex: none; }
+.workspace .navigationActive { background: #f5f6f7; box-shadow: inset 2px 0 #d65316; color: #25272a; }
+.workspaceBody { min-width: 0; }
+.activeStrip { display: flex; min-height: 42px; background: #f5f6f7; border-bottom: 1px solid var(--account-line); }
+.activeStrip a { padding-inline: var(--account-edge); border-inline-end: 1px solid var(--account-line); box-shadow: inset 0 2px #d65316; background: #fff; font: 650 13px var(--sans); }
+.workspace .accountMain { min-width: 0; padding: clamp(20px, 4vw, 44px) var(--account-edge) clamp(34px, 6vw, 70px); }
+.workspace :is(.welcome, .summaryCard, .recentCard, .savedCard, .purchaseRow, .serviceRow, .detailPanel, .receiptPanel, .revisionCard, .empty, .pageHeading) { background: transparent; box-shadow: none; border-color: var(--account-line); }
+.workspace .welcome { padding: 0 0 22px; border: 0; border-bottom: 1px solid var(--account-line); border-radius: 0; align-items: center; }
+.workspace :is(.welcome, .pageHeading) h1 { font: 740 clamp(27px, 4vw, 44px)/1.12 var(--sans); letter-spacing: -.035em; }
+.workspace .welcome h1 i { font-style: normal; }
+.workspace :is(.recentRow + .recentRow, .revisionCard + .revisionCard) { border-top-style: dashed; }
+@media (max-width: 980px) {
+  .workspace { grid-template-columns: minmax(0, 1fr); border-inline: 0; }
+  .workspaceRail { border: 0; padding: 4px var(--account-edge); }
+  .railHeading, .activeStrip { display: none; }
+  .workspace .navigation a { padding-inline: 10px; }
+}
+@media (max-width: 740px) {
+  .workspace .welcome { align-items: flex-start; }
+}
