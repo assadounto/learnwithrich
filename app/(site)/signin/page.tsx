@@ -10,7 +10,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function SignInPage({searchParams}: {searchParams: Promise<{next?: string}>}) {
   if (await currentUser()) {
-    const rawNext = (await searchParams).next || '/account';
+    const {next} = await searchParams;
+    const rawNext = typeof next === 'string' ? next : '/account';
     redirect(learnerDestination(rawNext));
   }
   return <Suspense fallback={<div className="container" role="status">Opening sign-in…</div>}><LearnerSignIn/></Suspense>;
