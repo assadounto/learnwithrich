@@ -1,0 +1,62 @@
+/* One canvas for the studio. Solid surfaces are reserved for overlays and sticky chrome. */
+.admin-experience {
+  --studio-divider: #d9dce1;
+  --studio-nested-divider: #bfc4cb;
+}
+
+.admin-experience :is(
+  .admin-panel, .admin-signin-card, .workspace-collection, .workspace-stat, .workspace-list-labels,
+  .community-admin-card, .community-admin-card-heading, .community-admin-count, .service-admin-card,
+  .service-admin-type, .service-admin-quote, .admin-service-revisions, .admin-service-revision,
+  .admin-revision-empty, .admin-initial-delivery, .service-admin-request-files, .service-admin-request-files a,
+  .admin-readiness, .admin-editor-tabs, .admin-editor-steps, .admin-heading-customizer, .admin-section-list,
+  .homepage-hero-settings, .homepage-hero-video-settings, .homepage-hero-preset, .homepage-hero-preset-icon,
+  .homepage-hero-video-icon, .homepage-builder-toolbar, .homepage-builder-bottom, .homepage-section-editor,
+  .homepage-choice-panel, .homepage-choice-list label, .homepage-admin-icon, .homepage-add-section,
+  .admin-resource-list, .admin-resource-row, .admin-resource-symbol, .admin-status, .admin-type-picker button,
+  .admin-cover-preview, .resource-media-editor-row, .resource-media-type, .resource-media-empty,
+  .studio-file-library, .studio-file-preview, .studio-file-preview pre, .studio-quick-open,
+  .studio-tab:has([aria-current="page"]), .media-asset, .media-file-icon, .workspace-label,
+  .admin-revision-file, .media-public-warning, .resource-api-page pre
+) {
+  background: transparent;
+  box-shadow: none;
+}
+
+.admin-experience :is(.button-outline, .workspace-nav-item:hover, .workspace-nav-item[aria-current="page"],
+  .studio-tree-group summary:hover, .studio-explorer-actions a, .media-browse-button) {
+  background: transparent;
+}
+.admin-experience .button-outline { border-color: var(--studio-divider); color: var(--ink); }
+.admin-experience .button-outline:hover { border-color: #777c84; }
+.admin-experience :is(.workspace-nav-item[aria-current="page"], .homepage-hero-preset.is-selected, .admin-type-picker button[aria-pressed="true"],
+  .admin-editor-tabs button[aria-pressed="true"]) { box-shadow: inset 2px 0 var(--studio-accent, #c84b13); border-color: var(--studio-divider); }
+.admin-experience .studio-tab:has([aria-current="page"]) { box-shadow: inset 0 2px var(--studio-accent, #c84b13); }
+
+.admin-experience :is(.admin-panel, .homepage-hero-settings, .homepage-section-editor, .community-admin-card, .studio-file-preview)
+  :is(.homepage-choice-panel, .homepage-hero-video-settings, .admin-heading-customizer, .admin-readiness,
+      .admin-service-revisions, .admin-service-revision, .service-admin-quote, .service-admin-request-files,
+      .resource-media-editor-row, .admin-initial-delivery, .admin-revision-empty, .admin-revision-file) {
+  border: 0;
+  border-block-start: 1px dashed var(--studio-nested-divider);
+  border-radius: 0;
+}
+
+.admin-experience .homepage-hero-presets .homepage-hero-preset:not(.is-selected) { border-style: dashed; }
+.admin-experience .homepage-choice-list label { border: 0; border-bottom: 1px dashed var(--studio-nested-divider); border-radius: 0; }
+.admin-experience .service-admin-request-files a { border: 0; border-bottom: 1px dashed var(--studio-nested-divider); border-radius: 0; }
+.admin-experience .admin-resource-row + .admin-resource-row { border-top: 1px solid var(--studio-divider); }
+.admin-experience .studio-file-preview pre { border: 0; padding: 0; }
+
+.admin-experience .admin-status { border: 1px solid currentColor; }
+.admin-experience .admin-alert, .admin-experience .admin-success, .admin-experience .homepage-save-message {
+  background: transparent;
+  border: 0;
+  border-inline-start: 2px solid currentColor;
+  border-radius: 0;
+}
+
+.admin-experience .studio-tabs { background: var(--paper); }
+.admin-experience :is(.admin-panel, .service-admin-quote, .homepage-section-fields, .admin-editor-grid)
+  :is(input:not([type="checkbox"]):not([type="radio"]), textarea, .select-menu-trigger) { background: transparent; }
+.admin-experience :is(.workspace-nav-item:hover, .studio-tree-group summary:hover) { color: var(--studio-accent, #c84b13); }

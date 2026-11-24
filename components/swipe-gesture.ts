@@ -29,6 +29,30 @@ export function useSwipeGesture(onDecision: (right: boolean) => void, disabled =
   const [dragging, setDragging] = useState(false);
   const start = useRef<{x: number; y: number; id: number} | null>(null);
   const suppressClick = useRef(false);
+  const card = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    function handleKey(event: KeyboardEvent) {
+      if (disabled || event.defaultPrevented || event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+          (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
+      const deck = card.current?.closest('.swipe-deck');
+      if (!deck || document.querySelector('dialog[open], [aria-modal="true"]')) return;
+      const target = event.target;
+      if (target instanceof HTMLElement) {
+        if (target.closest('input, textarea, select, [contenteditable], [role="textbox"]')) return;
+        if (!deck.contains(target) && target.closest('a, button, summary, [tabindex]')) return;
+      }
+      const bounds = deck.getBoundingClientRect();
+      const header = document.querySelector('.site-header')?.getBoundingClientRect().bottom ?? 0;
+      if (bounds.bottom <= header || bounds.top >= window.innerHeight) return;
+      event.preventDefault();
+      onDecision(event.key === 'ArrowRight');
+    }
+
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [disabled, onDecision]);
+
   function begin(event: PointerEvent<HTMLAnchorElement>) {
     if (!event.isPrimary || event.button !== 0 || disabled) return;
     suppressClick.current = false;
@@ -63,6 +87,8 @@ export function useSwipeGesture(onDecision: (right: boolean) => void, disabled =
   return {
     offset, dragging,
     anchorProps: {
+      ref: card,
+      'aria-keyshortcuts': 'ArrowLeft ArrowRight',
       onPointerDown: begin, onPointerMove: move, onPointerUp: end,
       onPointerCancel: (event: PointerEvent<HTMLAnchorElement>) => end(event, true),
       onLostPointerCapture: (event: PointerEvent<HTMLAnchorElement>) => end(event, true),

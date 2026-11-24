@@ -15,7 +15,7 @@ export function ResourceSwipeDeck({items, nextHref}: {items: ResourceCardData[];
   const deck = useSwipeVisibility(index);
 
   return <section ref={deck} className="swipe-deck" aria-label="Swipe through matching resources">
-    <header><div><h2>Find your next build</h2><p>Swipe right to save, left to skip. Tap a card to see the details.</p></div>
+    <header><div><h2>Find your next build</h2><p>Swipe or press → to save and ← to skip. Open a card to see the details.</p></div>
       <span>{Math.min(index + 1, items.length)} / {items.length}</span>
     </header>
     {item ? <SwipeCard key={item.id} item={item} advance={saved => {

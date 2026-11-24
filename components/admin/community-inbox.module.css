@@ -28,7 +28,7 @@
   font-size: 12px;
 }
 
-.inbox { border: 1px solid var(--inbox-border); border-radius: 8px; background: #fff; }
+.inbox { border: 1px solid var(--inbox-border); border-radius: 8px; background: transparent; }
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -47,15 +47,15 @@
   min-height: 34px;
   border: 1px solid transparent;
   border-radius: 5px;
-  background: #fff;
+  background: transparent;
   color: var(--inbox-muted);
   font: 600 12px/1.4 var(--sans);
   cursor: pointer;
 }
-.filters button:hover, .detailTabs button:hover { background: var(--inbox-soft); }
+.filters button:hover, .detailTabs button:hover { background: transparent; }
 .filters button[aria-pressed="true"], .detailTabs button[aria-pressed="true"] {
   border-color: var(--inbox-border);
-  background: var(--inbox-soft);
+  background: transparent;
   color: #202124;
   box-shadow: inset 0 -2px var(--inbox-accent);
 }
@@ -72,16 +72,16 @@
   color: var(--inbox-muted);
 }
 .search svg { flex: none; }
-.search input { width: 100%; min-width: 0; padding: 8px 1px; border: 0; background: #fff; font: 13px var(--sans); }
+.search input { width: 100%; min-width: 0; padding: 8px 1px; border: 0; background: transparent; font: 13px var(--sans); }
 .inbox > :is(:global(.admin-alert), :global(.admin-success)) { margin: 12px 16px; }
 
 .moderationList { display: grid; gap: 14px; padding: clamp(12px, 3cqw, 24px); }
-.moderationCard { min-width: 0; border: 1px solid var(--inbox-border); border-radius: 7px; background: #fff; overflow: hidden; }
+.moderationCard { min-width: 0; border: 0; border-block-end: 1px solid var(--inbox-border); background: transparent; overflow: hidden; }
 .cardHeader, .message, .cardActions { padding: 14px clamp(12px, 2.5cqw, 20px); }
-.cardHeader { border-bottom: 1px solid var(--inbox-border); }
+.cardHeader { border-bottom: 1px dashed var(--inbox-border); }
 .person { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .person img, .avatar { flex: none; width: 40px; height: 40px; border: 1px solid var(--inbox-border); border-radius: 6px; object-fit: cover; }
-.avatar { display: grid; place-items: center; background: var(--inbox-soft); color: var(--inbox-muted); }
+.avatar { display: grid; place-items: center; background: transparent; color: var(--inbox-muted); }
 .person div { overflow-wrap: anywhere; }
 .person strong, .person div > span { display: block; }
 .person div > span { color: var(--inbox-muted); font-size: 12px; }
@@ -89,7 +89,7 @@
 .message blockquote { margin: 0; font-size: 15px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
 .rating { margin: 0 0 7px; color: var(--inbox-muted); font-size: 13px; }
 .rating span { color: #8c4b14; font-size: 17px; letter-spacing: 2px; }
-.cardActions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--inbox-border); }
+.cardActions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; border-top: 1px dashed var(--inbox-border); }
 .root .cardActions > :global(.button) { min-height: 36px; padding: 7px 10px; font-size: 12px; }
 .email { flex: 1 1 180px; display: inline-flex; gap: 6px; align-items: center; min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
 .email:hover { text-decoration: underline; }
@@ -105,14 +105,14 @@
   padding: 14px;
   border: 0;
   border-bottom: 1px solid var(--inbox-border);
-  background: #fff;
+  background: transparent;
   color: #202124;
   text-align: start;
   font: inherit;
   cursor: pointer;
 }
 .requestList button:focus-visible { outline-offset: -3px; }
-.requestList button:hover, .requestList button[aria-current] { background: var(--inbox-soft); }
+.requestList button:hover, .requestList button[aria-current] { background: transparent; }
 .requestList button[aria-current] { box-shadow: inset 3px 0 var(--inbox-accent); }
 .requestTitle { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; font-size: 14px; }
 .requestTitle svg { flex: none; color: var(--inbox-muted); }
@@ -130,12 +130,12 @@
 .root .detail :is(:global(.service-admin-facts) dt, :global(.service-admin-request-files) strong) { font-size: 11px; }
 .root .detail :is(:global(.service-admin-facts) dd, :global(.service-admin-request-files) a) { font-size: 13px; overflow-wrap: anywhere; }
 .root .detail :global(.service-admin-request-files) { margin-bottom: 18px; }
-.root .detail :global(.service-admin-quote) { background: #fff; padding: 18px; }
+.root .detail :global(.service-admin-quote) { background: transparent; padding: 18px; }
 .root .detail :global(.service-admin-quote-heading) { align-items: flex-start; flex-direction: column; gap: 4px; }
 .root .detail :global(.service-admin-quote-heading) span { font-size: 14px; }
 .root .detail :global(.service-admin-quote-heading) small { max-width: none; font-size: 12px; text-align: left; }
 .root .detail :is(:global(.service-admin-quote) label, :global(.admin-revision-editor) label) { font-size: 13px; }
-.root .detail :global(.admin-service-revisions) { margin: 18px; padding: 14px; background: #fff; }
+.root .detail :global(.admin-service-revisions) { margin: 18px; padding: 14px; background: transparent; }
 .root .detail :global(.admin-service-revisions) h3 { font: 650 16px/1.35 var(--sans); }
 .root .detail :global(.admin-service-revision) p, .root .detail :global(.admin-revision-empty) { font-size: 13px; overflow-wrap: anywhere; }
 .root .detail :global(.button) { font-size: 12px; }

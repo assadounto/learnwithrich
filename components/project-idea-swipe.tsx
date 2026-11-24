@@ -52,7 +52,7 @@ export function ProjectIdeaSwipe({ideas, nextHref}: {ideas: Idea[]; nextHref?: s
   }
 
   return <section ref={stage} className="swipe-deck" aria-label="Swipe through project ideas">
-    <header><div><h2>Swipe through ideas</h2><p>Swipe right to shortlist, left to skip. Tap an idea to read more.</p></div><span>{Math.min(index + 1, ideas.length)} / {ideas.length}</span></header>
+    <header><div><h2>Swipe through ideas</h2><p>Swipe or press → to shortlist and ← to skip. Open an idea to read more.</p></div><span>{Math.min(index + 1, ideas.length)} / {ideas.length}</span></header>
     {idea ? <IdeaCard key={idea.slug} idea={idea} advance={advance} saved={shortlist.some(item => item.slug === idea.slug)}/> :
       <div className="swipe-finish"><h3>You’ve reached the end of this page.</h3>
         {nextHref && <Link className="button button-dark" href={nextHref}>Next page <ArrowRight size={16}/></Link>}
