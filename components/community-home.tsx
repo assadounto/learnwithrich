@@ -1,4 +1,5 @@
 "use client";
+import {publicImageAttributes} from '@/lib/image-sizes';
 import Link from "@/components/navigation-link";
 import { useEffect, useState } from "react";
 import { ArrowRight, ArrowUpRight, Heart, PenLine, Star } from "lucide-react";
@@ -278,28 +279,8 @@ export function CommunityReviewCards({ reviews }: { reviews: Review[] }) {
       role="list"
       aria-label="Reviews from the LearnWithRich community"
     >
-      {reviews.map((review, index) => (
-        <article
-          className="community-testimonial-card"
-          role="listitem"
-          key={review.id}
-        >
-          <div
-            className={`community-testimonial-image community-testimonial-image-${(index % 4) + 1}`}
-          >
-            {review.imageAssetId ? (
-              <img
-                src={`/api/public-media/${review.imageAssetId}`}
-                alt=""
-                width="320"
-                height="180"
-              />
-            ) : (
-              <span aria-hidden="true">
-                {review.displayName.slice(0, 1).toUpperCase()}
-              </span>
-            )}
-          </div>
+      {reviews.map(review => (
+        <article className="community-testimonial-card" role="listitem" key={review.id}>
           <div
             className="review-stars"
             aria-label={`${review.rating} out of 5 stars`}
@@ -317,7 +298,11 @@ export function CommunityReviewCards({ reviews }: { reviews: Review[] }) {
           )}
           <blockquote>“{review.message}”</blockquote>
           <footer>
-            <span className="community-testimonial-dot" aria-hidden="true" />
+            {review.imageAssetId ? (
+              <img className="community-testimonial-avatar" {...publicImageAttributes(`/api/public-media/${review.imageAssetId}`, [96], "40px")} decoding="async" alt="" width="40" height="40" loading="lazy"/>
+            ) : (
+              <span className="community-testimonial-avatar" aria-hidden="true">{review.displayName.slice(0, 1).toUpperCase()}</span>
+            )}
             <span>
               <strong>{review.displayName}</strong>
               {review.country && <small>{review.country}</small>}
@@ -335,11 +320,7 @@ export function CommunityHome({ reviews }: { reviews: Review[] }) {
       <div className="ref-container">
         <div className="community-testimonial-panel">
           <header className="community-testimonial-heading">
-            <h2 id="community-title">
-              WHAT ARE
-              <br />
-              PEOPLE SAYING?
-            </h2>
+            <h2 id="community-title">What are people saying?</h2>
           </header>
           {reviews.length ? (
             <CommunityReviewCards reviews={reviews.slice(0, 4)} />
@@ -349,7 +330,6 @@ export function CommunityHome({ reviews }: { reviews: Review[] }) {
             </div>
           )}
           <div className="community-testimonial-actions">
-            <span>Real words from people in the community</span>
             <div>
               <Link href="/reviews" className="text-link">
                 Read all reviews <ArrowRight size={15} />

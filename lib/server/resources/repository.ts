@@ -87,7 +87,7 @@ export function resourceRepository(db: Database) {
         videoAssetId: hasVideo ? settings?.heroVideoAssetId ?? null : null,
         delaySeconds: settings?.heroDelaySeconds ?? defaultHomepageHero.delaySeconds,
       };
-      const items = await Promise.all(sections.map(async section => {
+      const loadSections = () => Promise.all(sections.map(async section => {
         const rows = await db.resource.findMany({
           where: {
             ...published(),
@@ -102,7 +102,7 @@ export function resourceRepository(db: Database) {
         const ordered = section.source === 'SELECTED' ? section.resourceIds.map(id => byId.get(id)).filter((row): row is (typeof rows)[number] => Boolean(row)).slice(0, section.limit) : rows;
         return {...section, items: ordered.map(card)};
       }));
-      return {sections: items, hero};
+      return {sections: loadSections, hero};
     },
     async getPublic(slug: string, viewerId?: string) {
       const row = await db.resource.findFirst({where: {...published(), slug: resourceSlug(slug)}, select: {

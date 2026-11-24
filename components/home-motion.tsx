@@ -24,28 +24,33 @@ export function HomeMotion({ children }: { children: ReactNode }) {
    }
   });
   const marks = root.current?.querySelectorAll<SVGElement>('.drawn-mark');
-  let markFrame = 0;
-  const drawVisibleMarks = () => {
-   markFrame = 0;
-   marks?.forEach(mark => {
-    if (mark.classList.contains('mark-drawn')) return;
-    const rect = (mark.parentElement || mark).getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-     mark.classList.remove('mark-pending');
-     mark.classList.add('mark-drawn');
-    }
-   });
-  };
-  marks?.forEach(mark => mark.classList.add('mark-pending'));
-  const scheduleMarks = () => { if (!markFrame) markFrame = requestAnimationFrame(drawVisibleMarks); };
-  window.addEventListener('scroll', scheduleMarks, { passive: true });
-  window.addEventListener('resize', scheduleMarks);
-  scheduleMarks();
+  const markObserver = new IntersectionObserver(entries => {
+   for (const {target, isIntersecting} of entries) {
+    if (!isIntersecting) continue;
+    target.classList.remove('mark-pending');
+    target.classList.add('mark-drawn');
+    markObserver.unobserve(target);
+   }
+  });
+  marks?.forEach(mark => {
+   mark.classList.add('mark-pending');
+   markObserver.observe(mark);
+  });
   const revealAll = () => {
-   if (motion.matches) { elements?.forEach(element => element.classList.remove('motion-pending')); marks?.forEach(mark => mark.classList.remove('mark-pending')); }
+   if (!motion.matches) return;
+   observer.disconnect();
+   markObserver.disconnect();
+   elements?.forEach(element => element.classList.remove('motion-pending', 'motion-arrived'));
+   marks?.forEach(mark => mark.classList.remove('mark-pending', 'mark-drawn'));
   };
   motion.addEventListener('change', revealAll);
-  return () => { observer.disconnect(); cancelAnimationFrame(markFrame); window.removeEventListener('scroll', scheduleMarks); window.removeEventListener('resize', scheduleMarks); marks?.forEach(mark => mark.classList.remove('mark-pending','mark-drawn')); motion.removeEventListener('change', revealAll); elements?.forEach(element => element.classList.remove('motion-pending')); };
+  return () => {
+   observer.disconnect();
+   markObserver.disconnect();
+   motion.removeEventListener('change', revealAll);
+   elements?.forEach(element => element.classList.remove('motion-pending', 'motion-arrived'));
+   marks?.forEach(mark => mark.classList.remove('mark-pending', 'mark-drawn'));
+  };
  }, []);
  return <div className="reference-home" ref={root}>{children}</div>;
 }

@@ -160,7 +160,7 @@ export function OwnedResourceDetail({resource, relatedResources}: {resource: Res
       <header className="resource-detail-intro">
         <span className="owned-detail-eyebrow"><span className="owned-detail-type-mark"><Sparkles size={14}/></span> LEARN WITH RICH <i/> {names[resource.type]}</span>
         <h1>{resource.title}</h1>
-        <div className="resource-detail-author"><img src="/images/richmond-adu-kyere.jpeg" alt=""/><span>by <strong>{author}</strong></span>{duration && <span className="resource-author-duration"><Clock3 size={13}/>{duration}</span>}</div>
+        <div className="resource-detail-author"><img src="/images/richmond-adu-kyere-192.webp" alt="" decoding="async"/><span>by <strong>{author}</strong></span>{duration && <span className="resource-author-duration"><Clock3 size={13}/>{duration}</span>}</div>
         <p>{resource.summary}</p>
         <div className="resource-detail-tags">{resource.tags.map(tag => <span key={tag}>{tag}</span>)}</div>
         <div className="owned-detail-facts">{difficulty && <span><Gauge size={15}/>{difficulty}</span>}{duration && <span><Clock3 size={15}/>{duration}</span>}{resource.items.length > 0 && <span><Layers3 size={15}/>{resource.items.length} {resource.type === 'PATH' ? 'stops' : resource.type === 'COURSE' ? 'lessons' : 'included resources'}</span>}{mediaCount > 0 && <span><FileText size={15}/>{mediaCount} {mediaCount === 1 ? 'file' : 'files'}</span>}</div>

@@ -529,3 +529,14 @@ model ServiceRevisionFile {
   @@unique([revisionId, position])
   @@map("service_revision_files")
 }
+
+model NewsletterSignup {
+  email      String    @id @db.VarChar(254)
+  ipHash     String?   @map("ip_hash") @db.Char(64)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  verifiedAt DateTime? @map("verified_at") @db.Timestamptz(3)
+
+  @@index([createdAt])
+  @@index([ipHash, createdAt])
+  @@map("newsletter_signups")
+}

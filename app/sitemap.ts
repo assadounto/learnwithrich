@@ -4,7 +4,7 @@ import {database} from '@/lib/server/database';
 
 const origin = 'https://learnwithrich.com';
 const fixedPages = [
-  '', '/about', '/projects', '/courses', '/resources', '/services/request', '/privacy', '/resource-package',
+  '', '/about', '/projects', '/courses', '/resources', '/services/request', '/privacy', '/terms', '/resource-package',
 ];
 
 export const dynamic = 'force-dynamic';
