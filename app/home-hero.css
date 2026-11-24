@@ -121,3 +121,41 @@
   .home-hero-preset-editorial .ref-hero-copy,
   .home-hero-preset-editorial .ref-hero-art { grid-column: auto; grid-row: auto; }
 }
+
+/* Extend playback behind the sticky bar without moving the hero actions or the next section. */
+.site-header + #main-content:has(> .reference-home > .reference-hero[data-hero-phase="video"]) {
+  margin-block-start: calc(-1 * var(--hero-header-height, 0px));
+}
+
+#main-content > .reference-home > .reference-hero[data-hero-phase="video"] {
+  padding-block-start: var(--hero-header-height, 0px);
+  max-width: none;
+}
+
+.site-header:not(.is-scrolled):has(+ #main-content > .reference-home > .reference-hero[data-hero-phase="video"]) {
+  background-color: rgb(16 18 22 / 72%);
+  border-bottom-color: rgb(255 255 255 / 24%);
+  color: #fff;
+}
+
+.site-header:not(.is-scrolled):has(+ #main-content > .reference-home > .reference-hero[data-hero-phase="video"])
+.header-inner :is(.brand, .brand-emblem svg, .desktop-nav a, .header-account-link, .mobile-bookmarks, .mobile-menu) {
+  color: #fff;
+}
+
+.site-header:not(.is-scrolled):has(+ #main-content > .reference-home > .reference-hero[data-hero-phase="video"])
+.header-inner :is(.header-cta, .header-account-link, .mobile-bookmarks, .mobile-menu) {
+  background: rgb(0 0 0 / 22%);
+  border-color: rgb(255 255 255 / 46%);
+}
+
+.site-header:not(.is-scrolled):has(+ #main-content > .reference-home > .reference-hero[data-hero-phase="video"])
+.header-inner :is(.header-cta, .header-account-link, .mobile-bookmarks, .mobile-menu):hover {
+  background: rgb(0 0 0 / 48%);
+}
+
+.site-header:not(.is-scrolled):has(+ #main-content > .reference-home > .reference-hero[data-hero-phase="video"])
+.header-inner :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}

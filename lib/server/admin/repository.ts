@@ -32,9 +32,20 @@ const fullResource = {
 };
 async function snapshot(tx: Prisma.TransactionClient, id: string, actorId: string, action: string) {
   const row = await tx.resource.findUniqueOrThrow({where: {id}, include: fullResource});
-  await tx.resourceAudit.create({data: {actorId, resourceId: id, action, version: row.version, snapshot: JSON.parse(JSON.stringify(row)) as Prisma.InputJsonValue}});
+  const version = action === 'DELETED' ? row.version + 1 : row.version;
+  await tx.resourceAudit.create({data: {actorId, resourceId: id, action, version, snapshot: JSON.parse(JSON.stringify(row)) as Prisma.InputJsonValue}});
   return row;
 }
+function selectedResources(input: unknown) {
+  if (!Array.isArray(input) || input.length < 1 || input.length > 100) throw new ResourceInputError('Select 1 to 100 resources.');
+  const selected = input.map(value => {
+    if (!value || typeof value !== 'object') throw new ResourceInputError('Invalid resource selection.');
+    return {id: resourceId(value.id), token: editToken(value.version, value.updatedAt)};
+  });
+  if (new Set(selected.map(row => row.id)).size !== selected.length) throw new ResourceInputError('Select each resource only once.');
+  return selected;
+}
+
 // Server callers always pass the session ID; trusted operator/tests may use
 // owner authorization directly without a browser session.
 export function adminRepository(db: Database, actorId: string, sessionId?: string, automation?: (target: Database | Prisma.TransactionClient) => Promise<void>) {
@@ -303,12 +314,7 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
       await authorize(db);
       const target = enumValue(status, ['DRAFT', 'PUBLISHED', 'ARCHIVED'] as const, 'status');
       const action = target === 'DRAFT' ? 'UNPUBLISH' : target === 'PUBLISHED' ? 'PUBLISH' : 'ARCHIVE';
-      if (!Array.isArray(input) || input.length < 1 || input.length > 100) throw new ResourceInputError('Select 1 to 100 resources.');
-      const selected = input.map(value => {
-        if (!value || typeof value !== 'object') throw new ResourceInputError('Invalid resource selection.');
-        return {id: resourceId(value.id), token: editToken(value.version, value.updatedAt)};
-      });
-      if (new Set(selected.map(row => row.id)).size !== selected.length) throw new ResourceInputError('Select each resource only once.');
+      const selected = selectedResources(input);
       return db.$transaction(async tx => {
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(18427651)`;
         if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
@@ -316,6 +322,40 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
         let changed = 0;
         for (const row of selected) if (await transitionRow(tx, row.id, row.token, action, true)) changed++;
         return changed;
+      }, {timeout: 30000});
+    },
+    async deleteResources(input: unknown) {
+      await authorize(db);
+      const selected = selectedResources(input);
+      const ids = selected.map(row => row.id);
+      return db.$transaction(async tx => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(18427651)`;
+        if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
+        await authorize(tx);
+
+        const rows = await tx.resource.findMany({
+          where: {OR: selected.map(({id, token}) => ({id, ...token}))},
+          select: {id: true, title: true, _count: {select: {
+            purchases: true,
+            media: {where: {purchases: {some: {}}}},
+            includedIn: {where: {collectionId: {notIn: ids}}},
+          }}},
+        });
+        if (rows.length !== selected.length) throw new EditConflictError('A selected resource changed. Reload the list before deleting.');
+        for (const row of rows) {
+          if (row._count.purchases || row._count.media) {
+            throw new ResourceInputError(`“${row.title}” is linked to purchase records. No resources were deleted.`);
+          }
+          if (row._count.includedIn) {
+            throw new ResourceInputError(`“${row.title}” belongs to a collection outside this selection. Remove it from that collection or include the collection in the deletion.`);
+          }
+        }
+
+        for (const row of rows) await snapshot(tx, row.id, actorId, 'DELETED');
+        await tx.resourceItem.deleteMany({where: {collectionId: {in: ids}}});
+        const removed = await tx.resource.deleteMany({where: {OR: selected.map(({id, token}) => ({id, ...token}))}});
+        if (removed.count !== selected.length) throw new EditConflictError('A selected resource changed. Reload the list before deleting.');
+        return removed.count;
       }, {timeout: 30000});
     },
     async transition(id: string, version: unknown, updatedAt: unknown, action: string) {
