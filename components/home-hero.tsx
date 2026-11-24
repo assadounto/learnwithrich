@@ -66,8 +66,9 @@ export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVide
   }, [videoUrl, mobileVideoUrl]);
 
   useEffect(() => {
-    const player = video.current;
-    if (!source || !player) return;
+    const currentPlayer = video.current;
+    if (!source || !currentPlayer) return;
+    const player = currentPlayer;
     const playbackSource = source;
     setPlayingSource(null);
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
