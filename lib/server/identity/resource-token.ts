@@ -1,5 +1,6 @@
 import 'server-only';
 
+import {authoringScopes, type AuthoringScope} from '@/lib/authoring-scopes';
 import {createHash, randomBytes} from 'node:crypto';
 import type {Prisma} from '@/lib/generated/prisma/client';
 import {database} from '../database';
@@ -25,7 +26,7 @@ export function generateResourceToken() {
 
 function tokenDenied() { return new ResourceTokenError('Use a valid resource API token.'); }
 
-export async function resourceApiAccess(request: Request, scope: 'upload' | 'edit', allowSession = false) {
+export async function resourceApiAccess(request: Request, scope: AuthoringScope | 'read-resource-draft', allowSession = false) {
   const authorization = request.headers.get('authorization');
   if (authorization === null && allowSession) {
     let owner;
@@ -39,13 +40,15 @@ export async function resourceApiAccess(request: Request, scope: 'upload' | 'edi
 
   async function assertActive(db: TokenDb, expectedOwner?: string) {
     const token = await db.resourceApiToken.findUnique({where: {digest}, select: {
-      ownerId: true, canEdit: true, expiresAt: true, revokedAt: true, createdAt: true,
+      ownerId: true, canEdit: true, canUpload: true, canCreateIdeas: true, canPublishResources: true, canPublishIdeas: true, expiresAt: true, revokedAt: true, createdAt: true,
       owner: {select: {mfa: {select: {enabledAt: true}}}},
     }});
     const enabledAt = token?.owner.mfa?.enabledAt;
     if (!token || token.revokedAt || token.expiresAt <= new Date() || !enabledAt || enabledAt > token.createdAt
       || (expectedOwner && token.ownerId !== expectedOwner)) throw tokenDenied();
-    if (scope === 'edit' && !token.canEdit) throw new ResourceTokenError('This token can upload packages only.', 403);
+    const permission = authoringScopes.find(entry => entry.id === scope);
+    const allowed = scope === 'read-resource-draft' ? token.canEdit || token.canPublishResources : permission && token[permission.field];
+    if (!allowed) throw new ResourceTokenError('This token does not have permission for this operation.', 403);
     return token.ownerId;
   }
 
@@ -53,5 +56,5 @@ export async function resourceApiAccess(request: Request, scope: 'upload' | 'edi
   const id = await assertActive(db);
   try { await assertOwner(db, id); }
   catch (error) { if (error instanceof OwnerAccessError) throw tokenDenied(); throw error; }
-  return {id, sessionId: undefined, automation: async (target: TokenDb) => {await assertActive(target, id);}};
+  return {id, sessionId: undefined, automation: async (target: TokenDb) => {await assertActive(target, id); await assertOwner(target, id);}};
 }

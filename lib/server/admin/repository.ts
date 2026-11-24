@@ -285,15 +285,16 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
         return snapshot(tx, targetId, actorId, id ? 'UPDATED' : 'CREATED');
       }, {timeout: 15000});
     },
-    async transition(id: string, version: number, updatedAt: string, action: string) {
-      await authorize(db);
+    async transition(id: string, version: unknown, updatedAt: unknown, action: string) {
+      await authorize(db, action === 'PUBLISH');
       resourceId(id); const token = editToken(version, updatedAt);
       if (!['PUBLISH', 'UNPUBLISH', 'ARCHIVE'].includes(action)) throw new ResourceInputError('Invalid publishing action.');
       return db.$transaction(async tx => {
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(18427651)`;
-        if (sessionId) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
-        await authorize(tx);
+        if (sessionId || automation) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${actorId}, 18427653))`;
+        await authorize(tx, action === 'PUBLISH');
         const current = await tx.resource.findUniqueOrThrow({where: {id}, include: {content: true, _count: {select: {items: true}}}});
+        if (automation && current.status !== 'DRAFT') throw new EditConflictError('Only resource drafts can be published with a token.');
         if (current.version !== token.version || current.updatedAt.getTime() !== token.updatedAt.getTime()) throw new EditConflictError('This resource changed in another tab. Reload before publishing.');
         if (action === 'PUBLISH') {
           const issues = publishingIssues({type: current.type, summary: current.summary, bodyMarkdown: current.content?.bodyMarkdown ?? '', details: (current.content?.details ?? {}) as ResourceDetails, itemCount: current._count.items});

@@ -1,4 +1,5 @@
 'use client';
+import {authoringScopes} from '@/lib/authoring-scopes';
 import {SelectMenu} from '@/components/selection-dialog';
 
 import {useState, useTransition} from 'react';
@@ -19,7 +20,7 @@ export function ResourceTokenForm() {
       setMessage('');
       startTransition(async () => {
         try {
-          const result = await createResourceToken(String(form.get('label')), Number(form.get('days')), form.get('scope') === 'edit');
+          const result = await createResourceToken(String(form.get('label')), Number(form.get('days')), form.getAll('scope'));
           if (result.ok) setToken(result.token);
           else setMessage(result.error);
         } catch { setMessage('Could not generate a token. Refresh the page and try again.'); }
@@ -27,9 +28,13 @@ export function ResourceTokenForm() {
     }}>
       <label>Token name<input name="label" required maxLength={80} placeholder="e.g. Course authoring assistant"/></label>
       <div className="admin-field-pair">
-        <label>Permissions<SelectMenu name="scope"><option value="upload">Preview and import ZIPs</option><option value="edit">Preview, import, and edit drafts</option></SelectMenu></label>
         <label>Expires after<SelectMenu name="days" defaultValue="7"><option value="1">1 day</option><option value="7">7 days</option><option value="30">30 days</option></SelectMenu></label>
       </div>
+      <fieldset className="resource-token-scopes">
+        <legend>Permissions</legend>
+        {authoringScopes.map(scope => <label key={scope.id}><input type="checkbox" name="scope" value={scope.id} defaultChecked={scope.id === 'upload'}/>{scope.label}</label>)}
+        <p className="admin-help">Publishing permissions let the holder make drafts live. Choose only what this agent needs.</p>
+      </fieldset>
       <button className="button button-dark" disabled={pending}><KeyRound size={16}/>{pending ? 'Generating…' : 'Generate token'}</button>
     </form>
     {token && <div className="resource-api-secret">

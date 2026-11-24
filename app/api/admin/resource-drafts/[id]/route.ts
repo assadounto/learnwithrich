@@ -51,7 +51,7 @@ function failed(error: unknown) {
 
 export async function GET(request: Request, context: Context) {
   try {
-    const owner = await resourceApiAccess(request, 'edit');
+    const owner = await resourceApiAccess(request, 'read-resource-draft');
     const id = resourceId((await context.params).id);
     return response(await adminRepository(database(), owner.id, owner.sessionId, owner.automation).getAutomationDraft(id));
   } catch (error) { return failed(error); }

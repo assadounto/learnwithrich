@@ -121,6 +121,8 @@ Publishing requires a summary and usable content for the selected type (includin
 
 ## Resource API tokens
 
-Open **Resource API** in the owner studio after verifying your authenticator. Generate a token for ZIP preview and import, or enable draft editing as well. The token is shown once. The same screen has curl examples and lets you revoke tokens. Send tokens as `Authorization: Bearer $LWR_TOKEN`.
+Open **Resource API** in the owner studio after verifying your authenticator. Select permissions independently for ZIP preview/import, resource draft editing, project idea creation, and publishing each content type. The token is shown once. The same screen has curl examples and lets you revoke tokens. Send tokens as `Authorization: Bearer $LWR_TOKEN`.
 
 ZIP uploads use the `file` multipart field on `POST /api/admin/resource-packages/preview` and `POST /api/admin/resource-packages/import`. For edits, read the draft with `GET /api/admin/resource-drafts/{id}`, then send `PATCH` to the same URL with the current `version` and `updatedAt`. Editable fields are `title`, `summary`, `bodyMarkdown`, `tags`, and `details`. Omitted fields are kept. Supplied tags and details replace their previous values.
+
+Share the [agent skill](https://learnwithrich.com/resource-package/SKILL.md) for current commands. ZIP imports and idea creation always produce drafts. Publishing is a separate API call, limited to drafts with current revisions and the matching publishing permission. Existing tokens retain their prior upload, edit, and idea capabilities. Create a new token if you want to grant publishing.
