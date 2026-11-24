@@ -40,7 +40,9 @@
   color: var(--ink);
 }
 [data-theme="dark"] :is(input, textarea)::placeholder { color: var(--muted); opacity: 1; }
-[data-theme="dark"] :is(.button-dark, .button-outline, .button-cream, .search-form button, .service-brief-mode button[aria-pressed="true"], .skip-link) {
+[data-theme="dark"] :is(.button-dark, .button-outline, .button-cream, .skip-link),
+[data-theme="dark"] .search-form button,
+[data-theme="dark"] .service-brief-mode button[aria-pressed="true"] {
   color: var(--ink);
   background: var(--surface-soft);
   border-color: var(--line);

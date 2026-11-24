@@ -4,7 +4,7 @@
   --studio-rail-line: var(--dark-line, #d9dce1);
   --studio-rail-ink: var(--dark-text, #33363a);
   --studio-rail-muted: var(--dark-muted, #777b80);
-  --studio-accent: #d65316;
+  --studio-accent: var(--dark-accent, #d65316);
   --studio-heading: 58px;
   --studio-explorer: 266px;
   background: var(--dark-surface, #ffffff);

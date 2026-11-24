@@ -29,7 +29,7 @@
 .rows, .tags { list-style: none; padding: 0; margin: 0; }
 .rows > li + li { border-top: 1px dashed var(--idea-dash); }
 .idea { min-width: 0; overflow-wrap: anywhere; }
-.ideaTitle { display: inline-block; font-weight: 700; line-height: 1.35; }
+.ideaTitle { display: inline-block; color: var(--ink); font-weight: 700; line-height: 1.35; }
 .ideaTitle:hover, .api:hover, .editLink:hover { color: var(--studio-accent, var(--dark-accent, #c84b13)); text-decoration: underline; }
 .idea p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 .tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }

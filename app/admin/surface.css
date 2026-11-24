@@ -60,3 +60,42 @@
 .admin-experience :is(.admin-panel, .service-admin-quote, .homepage-section-fields, .admin-editor-grid)
   :is(input:not([type="checkbox"]):not([type="radio"]), textarea, .select-menu-trigger) { background: transparent; }
 .admin-experience :is(.workspace-nav-item:hover, .studio-tree-group summary:hover) { color: var(--studio-accent, var(--dark-accent, #c84b13)); }
+
+/* Use a stronger outline for controls than for decorative workspace dividers. */
+[data-theme="dark"] .admin-experience {
+  --studio-control-line: #737e90;
+}
+
+[data-theme="dark"] .admin-experience .studio-tabs {
+  background: var(--surface);
+}
+
+[data-theme="dark"] .admin-experience .studio-tab:has([aria-current="page"]) {
+  background: var(--surface-soft);
+}
+
+[data-theme="dark"] .admin-experience .studio-tab [aria-current="page"],
+[data-theme="dark"] .admin-experience :where(button, summary) {
+  color: var(--ink);
+}
+
+[data-theme="dark"] .admin-experience :is(.button-outline, .button-dark, .select-menu-trigger) {
+  border-color: var(--studio-control-line);
+}
+
+[data-theme="dark"] .admin-experience .select-menu-trigger {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+[data-theme="dark"] .admin-experience .select-menu-trigger:is(:hover, [aria-expanded="true"]):not(:disabled) {
+  background: var(--surface-soft);
+}
+
+[data-theme="dark"] .admin-experience .select-menu-trigger[aria-invalid="true"] {
+  border-color: var(--dark-danger);
+}
+
+[data-theme="dark"] .admin-experience :where(a, button, input, textarea, select, summary):focus-visible {
+  outline-color: var(--studio-accent, var(--primary));
+}
