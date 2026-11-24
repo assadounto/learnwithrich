@@ -4,9 +4,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
 FROM base AS dependencies
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
-COPY package.json package-lock.json prisma.config.ts ./
+COPY --chmod=0644 package.json package-lock.json prisma.config.ts ./
 COPY prisma ./prisma
-RUN chmod -R a+rX /app/prisma && chmod a+r /app/prisma.config.ts
+RUN chmod -R a+rX /app/prisma
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 FROM dependencies AS builder
@@ -15,8 +15,8 @@ RUN npm run build
 
 # Explicit release/operations image; never run migrations from web startup.
 FROM dependencies AS tools
-COPY scripts ./scripts
-COPY lib ./lib
+COPY --chown=node:node scripts ./scripts
+COPY --chown=node:node lib ./lib
 ENV NODE_ENV=production
 USER node
 RUN npm run db:validate
