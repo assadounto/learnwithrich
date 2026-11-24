@@ -1,3 +1,4 @@
+import type {ResourceStatus} from '@/lib/generated/prisma/client';
 import Link from '@/components/navigation-link';
 import {ProjectIdeaForm} from '@/components/admin/project-idea-form';
 import {disciplineLabel} from '@/lib/project-ideas';
@@ -10,7 +11,9 @@ export default async function ProjectIdeasAdmin({searchParams}: {searchParams: P
   await requireOwner();
   const params = await searchParams;
   const q = typeof params.q === 'string' ? params.q.trim().slice(0, 120) : '';
-  const status = params.status === 'PUBLISHED' || params.status === 'DRAFT' || params.status === 'ARCHIVED' ? params.status : undefined;
+  const requestedStatus = params.status;
+  const status: ResourceStatus | undefined = requestedStatus === 'PUBLISHED' || requestedStatus === 'DRAFT' || requestedStatus === 'ARCHIVED'
+    ? requestedStatus : undefined;
   const edit = typeof params.edit === 'string' ? params.edit.slice(0, 120) : '';
   const requested = typeof params.page === 'string' && /^\d{1,6}$/.test(params.page) ? Math.max(1, Number(params.page)) : 1;
   const where = {status, ...(q ? {title: {contains: q, mode: 'insensitive' as const}} : {})};
