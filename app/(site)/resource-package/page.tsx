@@ -1,3 +1,4 @@
+import {authoringExamples, authoringGuide, authoringSkillUrl} from '@/lib/authoring-skill';
 import type {Metadata} from 'next';
 import {ArrowRight, FileJson} from 'lucide-react';
 import {editorHeadingKeys, resourceDefinitions} from '@/lib/resource-types';
@@ -32,16 +33,17 @@ export default function ResourcePackageGuide() {
     <header className={styles.hero}>
       <span className="maker-kicker">CREATOR REFERENCE · VERSION 1</span>
       <h1>Resource ZIP format</h1>
-      <p>Bundle a project, lesson, course, or learning path with its Markdown and files. Share this guide with an LLM to help it create a ZIP you can review and import in the studio.</p>
+      <p>Bundle a project, lesson, course, or learning path with its Markdown and files. Share the agent skill with ChatGPT, Claude, or another assistant to create ZIPs, draft project ideas, or publish approved work through the API.</p>
       <div className={styles.actions}>
         <a className="button button-dark" href={schemaUrl}><FileJson size={16}/>JSON schema</a>
-        <a className="button button-outline" href="#manifest">See the manifest<ArrowRight size={16}/></a>
+        <a className="button button-outline" href={authoringSkillUrl}>Open SKILL.md <ArrowRight size={16}/></a>
       </div>
     </header>
 
     <div className={styles.layout}>
       <nav className={styles.contents} aria-label="On this page">
         <strong>On this page</strong>
+        <a href="#agent-authoring">Agent skill and commands</a>
         <a href="#manifest">ZIP and manifest</a>
         <a href="#files">Files and links</a>
         <a href="#collections">Courses and paths</a>
@@ -51,6 +53,18 @@ export default function ResourcePackageGuide() {
         <a href="#prompt">Prompt for an LLM</a>
       </nav>
       <div className={styles.content}>
+        <section id="agent-authoring">
+          <h2>Author with ChatGPT or Claude</h2>
+          <p>Paste the prompt below into your assistant. It can create the ZIP or idea JSON locally and ask for a token when you request an upload. Generate a token in <a href="/admin/resource-api">Studio → Resource API</a> and select only the permissions for that job.</p>
+          <p><a href={authoringSkillUrl}>Read the agent skill</a> or <a href={authoringSkillUrl} download="SKILL.md">download SKILL.md</a> for tools that install skills.</p>
+          <pre><code>{`Read ${authoringGuide}/SKILL.md. Help me create [describe the resources or project ideas]. Ask for a scoped token only if I request an upload. Create drafts unless I explicitly ask you to publish specific items.`}</code></pre>
+          <pre><code>{authoringExamples.setup}</code></pre>
+          <details><summary>Build, preview, and import a resource ZIP</summary><pre><code>{authoringExamples.zip}</code></pre><pre><code>{authoringExamples.resources}</code></pre></details>
+          <details><summary>Edit a resource draft</summary><pre><code>{authoringExamples.edit}</code></pre></details>
+          <details><summary>Create project idea drafts</summary><pre><code>{authoringExamples.ideas}</code></pre></details>
+          <details><summary>Publish a resource draft</summary><pre><code>{authoringExamples.publishResource}</code></pre></details>
+          <details><summary>Publish a project idea draft</summary><pre><code>{authoringExamples.publishIdea}</code></pre></details>
+        </section>
         <section id="manifest">
           <h2>ZIP and manifest</h2>
           <p>Put one <code>manifest.json</code> at the ZIP root. Assets go under <code>files/</code>. Use format <code>learnwithrich-resource</code>, version <code>1</code>, and a nonempty <code>resources</code> array. Each entry needs a unique lowercase hyphenated <code>key</code> and <code>slug</code>, plus a <code>type</code> and <code>title</code>.</p>

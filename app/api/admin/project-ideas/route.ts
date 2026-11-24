@@ -30,8 +30,8 @@ async function jsonBody(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const owner = await resourceApiAccess(request, 'edit');
-    if (!owner.automation) throw new ResourceTokenError('Use a resource API token with draft editing enabled.');
+    const owner = await resourceApiAccess(request, 'ideas');
+    if (!owner.automation) throw new ResourceTokenError('Use a resource API token with idea creation enabled.');
     const assertActive = owner.automation;
     const body: unknown = await jsonBody(request);
     const items: unknown = body && typeof body === 'object' && 'ideas' in body ? body.ideas : null;
@@ -42,11 +42,12 @@ export async function POST(request: Request) {
       return {...fields, slug};
     });
     if (new Set(data.map(item => item.slug)).size !== data.length) throw new IdeaInputError('Each idea in the batch needs a unique slug.');
-    await database().$transaction(async transaction => {
+    const ideas = await database().$transaction(async transaction => {
+      await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${owner.id}, 18427653))`;
       await assertActive(transaction);
-      await transaction.projectIdea.createMany({data});
+      return transaction.projectIdea.createManyAndReturn({data, select: {slug: true, title: true, status: true, updatedAt: true}});
     });
-    return Response.json({ideas: data.map(({slug, title}) => ({slug, title, status: 'DRAFT'}))}, {status: 201, headers});
+    return Response.json({ideas}, {status: 201, headers});
   } catch (error) {
     if (error instanceof ResourceTokenError) return Response.json({error: error.message}, {status: error.status, headers});
     if (error instanceof IdeaInputError) return Response.json({error: error.message}, {status: 400, headers});

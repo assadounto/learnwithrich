@@ -170,8 +170,8 @@ try {
   assert.equal(await db.newsletterSignup.count({where: {email: newsletterEmail}}), 0);
   const tokenPage = await request('/admin/resource-api', ownerCookie);
   assert.match(await tokenPage.text(), /Generate an API token/);
-  const createToken = async (allowEdit: boolean) => {
-    const result = await action('createResourceToken', ['HTTP automation fixture', 1, allowEdit], ownerCookie);
+  const createToken = async (scopes: boolean | string[]) => {
+    const result = await action('createResourceToken', ['HTTP automation fixture', 1, scopes], ownerCookie);
     const token = result.body.match(/"token":"(lwr_res_[A-Za-z0-9_-]{43})"/)?.[1];
     assert.ok(token, 'The owner should receive a new token once');
     return token;
@@ -181,7 +181,7 @@ try {
   const auth = (token: string) => ({Authorization: `Bearer ${token}`});
   const packageSlug = `${prefix}-zip`;
   const archive = zipManifest({format: 'learnwithrich-resource', version: 1, resources: [{
-    key: 'article', type: 'ARTICLE', title: 'ZIP fixture', slug: packageSlug, bodyMarkdown: 'Draft body',
+    key: 'article', type: 'ARTICLE', title: 'ZIP fixture', slug: packageSlug, summary: 'A resource to exercise the publishing workflow.', bodyMarkdown: 'Draft body',
   }]});
   const uploadZip = (stage: 'preview' | 'import', token: string) => {
     const form = new FormData();
@@ -207,6 +207,43 @@ try {
   assert.equal((await updated.json()).draft.title, 'Updated by automation');
   assert.equal((await patchDraft()).status, 409);
   assert.equal((await db.resource.findUniqueOrThrow({where: {id: draftId}})).status, 'DRAFT');
+  const ideaCreator = await createToken(['ideas']);
+  const ideaPublisher = await createToken(['publish-ideas']);
+  const resourcePublisher = await createToken(['publish-resources']);
+  const jsonHeaders = (token: string) => ({...auth(token), 'Content-Type': 'application/json'});
+  const ideaSlug = `${prefix}-idea`;
+  const ideaEndpoint = `${origin}/api/admin/project-ideas`;
+  const ideaPublishUrl = `${ideaEndpoint}/${ideaSlug}/publish`;
+  const ideaBody = JSON.stringify({ideas: [{slug: ideaSlug, title: 'Automation fixture', discipline: 'software',
+    abstract: 'Investigate how a small application can improve waiting times and evaluate it against anonymized sample data.', tags: ['software']}]});
+  const createIdea = (token: string) => fetch(ideaEndpoint, {method: 'POST', headers: jsonHeaders(token), body: ideaBody});
+  assert.equal((await uploadZip('preview', ideaCreator)).status, 403);
+  assert.equal((await createIdea(uploadToken)).status, 403);
+  assert.equal((await createIdea(ideaPublisher)).status, 403);
+  const createdIdea = await createIdea(ideaCreator);
+  assert.equal(createdIdea.status, 201);
+  const {ideas: [idea]} = await createdIdea.json();
+  assert.equal(idea.status, 'DRAFT');
+  const publishIdea = (token: string, updatedAt: string) => fetch(ideaPublishUrl, {method: 'POST', headers: jsonHeaders(token), body: JSON.stringify({updatedAt})});
+  assert.equal((await publishIdea(ideaCreator, idea.updatedAt)).status, 403);
+  assert.equal((await publishIdea(resourcePublisher, idea.updatedAt)).status, 403);
+  assert.equal((await publishIdea(ideaPublisher, '2020-01-01T00:00:00.000Z')).status, 409);
+  assert.equal((await fetch(ideaPublishUrl, {headers: auth(ideaPublisher)})).status, 200);
+  assert.equal((await publishIdea(ideaPublisher, idea.updatedAt)).status, 200);
+  assert.equal((await db.projectIdea.findUniqueOrThrow({where: {slug: ideaSlug}})).status, 'PUBLISHED');
+
+  const resourcePublish = (token: string, revision: {version: number; updatedAt: string}) =>
+    fetch(`${draftUrl}/publish`, {method: 'POST', headers: jsonHeaders(token), body: JSON.stringify(revision)});
+  const currentResponse = await fetch(draftUrl, {headers: auth(resourcePublisher)});
+  assert.equal(currentResponse.status, 200);
+  const {draft: currentDraft} = await currentResponse.json();
+  const revision = {version: currentDraft.version, updatedAt: currentDraft.updatedAt};
+  assert.equal((await resourcePublish(editApiToken, revision)).status, 403);
+  assert.equal((await resourcePublish(ideaPublisher, revision)).status, 403);
+  assert.equal((await resourcePublish(resourcePublisher, {version, updatedAt})).status, 409);
+  assert.equal((await resourcePublish(resourcePublisher, revision)).status, 200);
+  assert.equal((await resourcePublish(resourcePublisher, revision)).status, 409);
+  assert.equal((await db.resource.findUniqueOrThrow({where: {id: draftId}})).status, 'PUBLISHED');
   const tokenRecord = await db.resourceApiToken.findUniqueOrThrow({where: {digest: createHash('sha256').update(editApiToken).digest('hex')}});
   await action('revokeResourceToken', [tokenRecord.id], ownerCookie);
   assert.equal((await fetch(draftUrl, {headers: auth(editApiToken)})).status, 401);
@@ -223,6 +260,7 @@ try {
   await db.resourceAudit.deleteMany({where: {resourceId: {in: resourceIds}}});
   await db.resource.deleteMany({where: {id: {in: resourceIds}}});
   await db.user.deleteMany({where: {id: {in: [ownerId, learnerId]}}});
+  await db.projectIdea.deleteMany({where: {slug: {startsWith: prefix}}});
   await db.newsletterSignup.deleteMany({where: {email: newsletterEmail}});
   await db.$disconnect();
 }

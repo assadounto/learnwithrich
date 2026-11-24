@@ -10,6 +10,7 @@ export async function GET() {
     await database().resourceContent.findFirst({select: {details: true}});
     await database().homepageSettings.findUnique({where: {id: 1}, select: homepageHeroSelect});
     await database().siteContactSettings.findUnique({where: {id: 1}, select: {id: true}});
+    await database().resourceApiToken.findFirst({select: {canPublishResources: true, canPublishIdeas: true, canUpload: true, canCreateIdeas: true}});
     await checkMediaStorage();
     return Response.json({status: 'ready'}, {headers: {'Cache-Control': 'no-store'}});
   } catch {

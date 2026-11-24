@@ -2,7 +2,7 @@
 
 Resource packages are ZIP files for creating one resource or a related set of resources in the owner studio. The format is intended to be easy for people and LLMs to author. A package is a content interchange format; it does not contain database IDs, credentials, publication commands, or executable importer code.
 
-The public guide and hosted examples are available at [learnwithrich.com/resource-package](https://learnwithrich.com/resource-package).
+The [public guide](https://learnwithrich.com/resource-package) includes examples and a shareable [agent skill](https://learnwithrich.com/resource-package/SKILL.md) with commands for ZIP imports, idea drafts, edits, and publishing.
 
 ## ZIP layout
 
@@ -48,7 +48,7 @@ Attachments have `{ "path", "title" }`; an optional `priceMinor` can set an indi
 
 The owner studio's **Upload ZIP** screen first posts packages to an owner-only preview endpoint. Preview shows resource summaries and rendered Markdown content, publication-readiness issues, included files and their references, and warnings for unreferenced files. Small local images, audio, and video referenced by Markdown are previewed inline; links to other package files jump to their file entry. After import, Markdown uses the same renderer as the resource editor and resource detail page, with local media served through the resource's protected asset route. Duplicate keys/slugs, existing slugs, missing files, invalid details, unsupported referenced files, unsafe ZIP paths, excessive ZIP expansion, and broken or circular collection references block import. Resource packages use standard ZIP store/deflate compression; encrypted and ZIP64 archives are not supported.
 
-On confirmation, the importer uploads referenced media and creates all resources as drafts. It puts the files in a new Files folder named after the resource title or the bundle ZIP filename. A package without referenced files does not create a folder. Resource rows, content, tags, sections, collection items, media links, and audit snapshots are committed in one owner-authorized database transaction. If storage or database creation fails, newly uploaded objects are deleted and no partial bundle is committed. If any slug already exists, the entire import is blocked. To create a separate copy, change the conflicting slugs in the manifest. Renaming the ZIP has no effect. Publishing remains a separate owner action in the existing editor. Each imported resource can be opened from the completion list to review its draft content and readiness before publishing.
+On confirmation, the importer uploads referenced media and creates all resources as drafts. It puts the files in a new Files folder named after the resource title or the bundle ZIP filename. A package without referenced files does not create a folder. Resource rows, content, tags, sections, collection items, media links, and audit snapshots are committed in one owner-authorized database transaction. If storage or database creation fails, newly uploaded objects are deleted and no partial bundle is committed. If any slug already exists, the entire import is blocked. To create a separate copy, change the conflicting slugs in the manifest. Renaming the ZIP has no effect. Publishing remains a separate action in the owner editor or through a token with publishing permission. Each imported resource can be opened from the completion list to review its draft content and readiness before publishing.
 
 ## Authoring checklist
 
