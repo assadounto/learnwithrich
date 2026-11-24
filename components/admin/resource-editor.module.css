@@ -31,7 +31,7 @@
   align-items: start;
   border: 1px solid var(--editor-line);
   border-radius: 8px;
-  background: #fff;
+  background: transparent;
 }
 
 .outline {
@@ -54,7 +54,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 7px;
-  background: #fff;
+  background: transparent;
   border: 1px solid transparent;
   border-radius: 5px;
   color: var(--editor-muted);
@@ -63,7 +63,7 @@
   cursor: pointer;
 }
 .outline button svg { flex: none; }
-.outline button:hover, .outline button[aria-pressed="true"] { background: var(--editor-soft); }
+.outline button:hover, .outline button[aria-pressed="true"] { background: transparent; }
 .outline button[aria-pressed="true"] {
   border-color: var(--editor-line);
   box-shadow: inset 2px 0 var(--editor-accent);
@@ -77,7 +77,7 @@
 .panels > :global(.admin-panel), .settings > :global(.admin-panel) { border: 0; border-radius: 0; }
 .panels .history { border-top: 1px solid var(--editor-line); }
 .settings:not([hidden]) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.settings > :global(.admin-panel) + :global(.admin-panel) { border-inline-start: 1px solid var(--editor-line); }
+.settings > :global(.admin-panel) + :global(.admin-panel) { border-inline-start: 1px dashed var(--editor-line); }
 .status {
   display: flex;
   justify-content: space-between;
@@ -97,13 +97,13 @@
   overflow: hidden;
 }
 .split { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.split .preview { border-inline-start: 1px solid var(--editor-line); }
+.split .preview { border-inline-start: 1px dashed var(--editor-line); }
 .preview, .source { min-width: 0; }
 .source > label, .paneLabel {
   display: block;
   margin: 0;
   padding: 8px 12px;
-  background: var(--editor-soft);
+  background: transparent;
   border-bottom: 1px solid var(--editor-line);
   color: var(--editor-muted);
   font: 600 12px/1.4 var(--sans);
