@@ -301,6 +301,9 @@ model HomepageSettings {
   heroPreset         String   @default("CLASSIC") @map("hero_preset") @db.VarChar(20)
   heroImageAssetId   String?  @map("hero_image_asset_id") @db.Uuid
   heroVideoAssetId   String?  @map("hero_video_asset_id") @db.Uuid
+  heroMobileImageAssetId String? @map("hero_mobile_image_asset_id") @db.Uuid
+  heroMobileVideoAssetId String? @map("hero_mobile_video_asset_id") @db.Uuid
+  heroVideoEnabled Boolean @default(false) @map("hero_video_enabled")
   heroDelaySeconds   Int      @default(5) @map("hero_delay_seconds")
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 

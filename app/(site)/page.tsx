@@ -39,7 +39,7 @@ async function HomeCatalog({sections}: {sections: Awaited<ReturnType<ReturnType<
 async function HomeContent() {
   const {sections, hero} = await resources().homepage();
   return <HomeMotion>
-<HomeHero preset={hero.preset} imageUrl={hero.imageAssetId?`/api/public-media/${hero.imageAssetId}`:null} videoUrl={hero.videoAssetId?`/api/public-hero-video/${hero.videoAssetId}`:null} delaySeconds={hero.delaySeconds}/>
+<HomeHero preset={hero.preset} imageUrl={hero.imageAssetId?`/api/public-media/${hero.imageAssetId}`:null} mobileImageUrl={hero.mobileImageAssetId ? `/api/public-media/${hero.mobileImageAssetId}` : null} mobileVideoUrl={hero.videoEnabled && hero.mobileVideoAssetId ? `/api/public-hero-video/${hero.mobileVideoAssetId}` : null} videoUrl={hero.videoEnabled && hero.videoAssetId ?`/api/public-hero-video/${hero.videoAssetId}`:null} delaySeconds={hero.delaySeconds}/>
 <div className="ref-manifesto">LOOK FOR A NEW ANGLE. KEEP MOVING FORWARD.</div>
 <section className="ref-discovery ref-container"><h2>What are you curious about?<DrawnUnderline className="olive-scribble"/></h2><div className="ref-search-wrap"><SearchForm/><AccentRays className="search-rays"/></div><div className="ref-topic-links">{[[Cpu,'Electronics'],[Code2,'Software'],[Layers,'Guides'],[Pencil,'Documentation']].map(([Icon,label])=>{const I=Icon as typeof Cpu;return <Link key={String(label)} href={String(label)==='Guides'?'/resources?category=guide':`/resources?q=${encodeURIComponent(String(label))}`} ><I size={25}/>{String(label)}</Link>})}</div></section>
 <Suspense><HomeCatalog sections={sections}/></Suspense>

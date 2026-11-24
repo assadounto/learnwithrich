@@ -4,8 +4,8 @@ import {useRouter} from 'next/navigation';
 import {LogOut} from 'lucide-react';
 
 export function SignOutButton() {
-  const [busy, setBusy] = useState(false), router = useRouter();
-  async function signOut() {setBusy(true); try {await fetch('/api/identity/sign-out', {method: 'POST'});} finally {router.push('/'); router.refresh();}}
+  const [busy, setBusy] = useState(false);
+  async function signOut() {setBusy(true); try {await fetch('/api/identity/sign-out', {method: 'POST'});} finally {window.location.assign('/');}}
   return <button type="button" className="button button-outline" disabled={busy} onClick={signOut}><LogOut size={15}/>{busy?'Signing out…':'Sign out'}</button>;
 }
 

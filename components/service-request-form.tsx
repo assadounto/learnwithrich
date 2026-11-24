@@ -1,22 +1,14 @@
 'use client';
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
+import {useSiteAccount} from './site-account';
 import Link from '@/components/navigation-link';
 import {CheckCircle2, LockKeyhole, Send} from 'lucide-react';
 
 export function ServiceRequestForm({profile, next, idea}: {profile: {name:string;email:string;phone?:string}|null;next?:string;idea?: {title: string}}) {
-  const [accountProfile, setAccountProfile] = useState(profile);
-  const [checkingAccount, setCheckingAccount] = useState(!profile);
+  const account = useSiteAccount();
+  const accountProfile = profile ?? account;
+  const checkingAccount = !profile && account === undefined;
   const [busy, setBusy] = useState(false), [notice, setNotice] = useState(''), [error, setError] = useState('');
-  useEffect(() => {
-    if (profile) return;
-    let active = true;
-    fetch('/api/account/me', {cache: 'no-store', credentials: 'same-origin'})
-      .then(async response => response.ok ? response.json() : null)
-      .then(result => { if (active && result?.user) setAccountProfile({name: result.user.name, email: result.user.email}); })
-      .catch(() => {})
-      .finally(() => { if (active) setCheckingAccount(false); });
-    return () => { active = false; };
-  }, [profile]);
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); const form = event.currentTarget, values = new FormData(form);
     setBusy(true); setNotice(''); setError('');

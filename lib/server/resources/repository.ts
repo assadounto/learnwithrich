@@ -1,7 +1,7 @@
 import type {Prisma} from '../../generated/prisma/client';
 import type {Database} from '../database-client';
 import {catalogQuery, ResourceInputError, resourceId, resourceSlug, text, validateDraft} from './validation';
-import {defaultHomepageHero, defaultHomepageSections, validateHomepageSections, type HomepageHeroPreset} from '../admin/homepage';
+import {defaultHomepageSections, homepageHeroSelect, loadHomepageHero, validateHomepageSections} from '../admin/homepage';
 
 const cardSelect = {
   id: true, slug: true, type: true, title: true, summary: true, coverUrl: true,
@@ -72,21 +72,9 @@ export function resourceRepository(db: Database) {
       return {items: rows.map(card), total, page, limit};
     },
     async homepage() {
-      const settings = await db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true, heroPreset: true, heroImageAssetId: true, heroVideoAssetId: true, heroDelaySeconds: true}});
+      const settings = await db.homepageSettings.findUnique({where: {id: 1}, select: {sections: true, ...homepageHeroSelect}});
       const sections = validateHomepageSections(settings?.sections ?? defaultHomepageSections);
-      const [image, video] = await Promise.all([
-        settings?.heroImageAssetId ? db.mediaAsset.findUnique({where: {id: settings.heroImageAssetId}, select: {mimeType: true}}) : null,
-        settings?.heroVideoAssetId ? db.mediaAsset.findUnique({where: {id: settings.heroVideoAssetId}, select: {mimeType: true}}) : null,
-      ]);
-      const preset = (settings?.heroPreset as HomepageHeroPreset | undefined) ?? defaultHomepageHero.preset;
-      const hasImage = Boolean(image?.mimeType.startsWith('image/'));
-      const hasVideo = Boolean(video?.mimeType.startsWith('video/'));
-      const hero = {
-        preset: preset === 'CENTERED' && !hasImage || preset === 'CINEMATIC' && !hasVideo ? 'CLASSIC' as const : preset,
-        imageAssetId: hasImage ? settings?.heroImageAssetId ?? null : null,
-        videoAssetId: hasVideo ? settings?.heroVideoAssetId ?? null : null,
-        delaySeconds: settings?.heroDelaySeconds ?? defaultHomepageHero.delaySeconds,
-      };
+      const hero = await loadHomepageHero(db, settings);
       const loadSections = () => Promise.all(sections.map(async section => {
         const rows = await db.resource.findMany({
           where: {

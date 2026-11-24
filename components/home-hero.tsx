@@ -6,7 +6,23 @@ import {publicImageAttributes} from '@/lib/image-sizes';
 import {ArrowUpRight} from 'lucide-react';
 import {DrawnUnderline, AccentRays} from './decorative-marks';
 
-type Preset = 'CLASSIC' | 'CENTERED' | 'CINEMATIC';
+import type {HomepageHeroPreset} from '@/lib/home-hero';
+
+const mobileMedia = '(max-width: 580px)';
+const collage = {
+  src: '/images/hero-collage-960.webp',
+  srcSet: '/images/hero-collage-640.webp 640w, /images/hero-collage-960.webp 960w, /images/hero-collage.webp 1254w',
+};
+
+function HeroImage({desktop, mobile, full}: {desktop: string | null; mobile: string | null; full: boolean}) {
+  const sizes = full ? '100vw' : `${mobileMedia} 100vw, (max-width: 1440px) 51vw, 760px`;
+  const standard = desktop ? publicImageAttributes(desktop, [384, 768, 1280, 1920], sizes) : {...collage, sizes};
+  const phone = mobile ? publicImageAttributes(mobile, [384, 768, 1280], '100vw') : null;
+  return <picture className="home-hero-picture">
+    {phone && <source media={mobileMedia} srcSet={phone.srcSet ?? phone.src} sizes="100vw"/>}
+    <img {...standard} alt="" width="1254" height="1254" fetchPriority="high" decoding="async"/>
+  </picture>;
+}
 
 function HeroCopy({className, hidden = false}: {className: string; hidden?: boolean}) {
   return <div className={className} aria-hidden={hidden || undefined} inert={hidden || undefined}>
@@ -17,14 +33,36 @@ function HeroCopy({className, hidden = false}: {className: string; hidden?: bool
   </div>;
 }
 
-export function HomeHero({preset, imageUrl, videoUrl, delaySeconds}: {preset: Preset; imageUrl: string | null; videoUrl: string | null; delaySeconds: number}) {
+export function HomeHero({preset, imageUrl, mobileImageUrl, videoUrl, mobileVideoUrl, delaySeconds}: {
+  preset: HomepageHeroPreset;
+  imageUrl: string | null;
+  mobileImageUrl: string | null;
+  videoUrl: string | null;
+  mobileVideoUrl: string | null;
+  delaySeconds: number;
+}) {
   const video = useRef<HTMLVideoElement>(null);
+  const [source, setSource] = useState<string | null>(null);
   const [playingSource, setPlayingSource] = useState<string | null>(null);
+  const hasVideo = Boolean(videoUrl || mobileVideoUrl);
+
+  useEffect(() => {
+    if (!videoUrl && !mobileVideoUrl) {
+      setSource(null);
+      return;
+    }
+    const viewport = window.matchMedia(mobileMedia);
+    const select = () => setSource(viewport.matches ? mobileVideoUrl ?? videoUrl : videoUrl);
+    select();
+    viewport.addEventListener('change', select);
+    return () => viewport.removeEventListener('change', select);
+  }, [videoUrl, mobileVideoUrl]);
 
   useEffect(() => {
     const player = video.current;
-    if (preset !== 'CINEMATIC' || !videoUrl || !player) return;
-    const source = videoUrl;
+    if (!source || !player) return;
+    const playbackSource = source;
+    setPlayingSource(null);
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const connection = (navigator as Navigator & {connection?: {saveData?: boolean}}).connection;
     let visible = !('IntersectionObserver' in window);
@@ -42,7 +80,7 @@ export function HomeHero({preset, imageUrl, videoUrl, delaySeconds}: {preset: Pr
       }
       if (starting || !player.paused) return;
       starting = true;
-      if (!player.getAttribute('src')) player.src = source;
+      if (!player.getAttribute('src')) player.src = playbackSource;
       void player.play().catch((error: unknown) => {
         if (disposed || (error instanceof DOMException && error.name === 'AbortError')) return;
         failed = true;
@@ -51,13 +89,13 @@ export function HomeHero({preset, imageUrl, videoUrl, delaySeconds}: {preset: Pr
         starting = false;
       });
     };
-    const onPlaying = () => { if (canPlay()) setPlayingSource(source); };
+    const onPlaying = () => { if (canPlay()) setPlayingSource(playbackSource); };
     const onError = () => { failed = true; setPlayingSource(null); };
     const observer = 'IntersectionObserver' in window ? new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
       sync();
     }, {threshold: 0.08}) : null;
-    if (player.parentElement) observer?.observe(player.parentElement);
+    observer?.observe(player);
     player.addEventListener('playing', onPlaying);
     player.addEventListener('error', onError);
     document.addEventListener('visibilitychange', sync);
@@ -79,30 +117,24 @@ export function HomeHero({preset, imageUrl, videoUrl, delaySeconds}: {preset: Pr
       player.removeAttribute('src');
       player.load();
     };
-  }, [preset, videoUrl, delaySeconds]);
+  }, [source, delaySeconds, preset]);
 
-  const active = preset === 'CINEMATIC' && !!videoUrl;
-  const showVideo = active && playingSource === videoUrl;
-  const layoutPreset = preset === 'CINEMATIC' && !active ? 'CLASSIC' : preset;
-  const centeredImage = preset === 'CENTERED' ? imageUrl ?? '/images/hero-collage.webp' : null;
-  return <section className={`reference-hero home-hero-preset-${layoutPreset.toLowerCase()}${layoutPreset !== 'CLASSIC' ? ' home-hero-fullbleed' : ''}${active ? ' home-hero-cinematic' : ''}`} data-hero-phase={showVideo ? 'video' : preset === 'CENTERED' ? 'centered-static' : 'intro'}>
-    {centeredImage && <div className="home-hero-image" aria-hidden="true">
-      <img {...(imageUrl ? publicImageAttributes(centeredImage, [768, 1280, 1920], '100vw') : {src: centeredImage})}
-        alt="" fetchPriority="high" decoding="async"/>
-    </div>}
-    {preset === 'CINEMATIC' && videoUrl && <div className="home-hero-video" aria-hidden="true"><video ref={video} muted playsInline loop preload="none"/></div>}
+
+  const cinematic = preset === 'CINEMATIC' && hasVideo;
+  const full = preset === 'CENTERED' || preset === 'SPOTLIGHT';
+  const showVideo = Boolean(source && playingSource === source);
+  const clip = hasVideo && <div className="home-hero-video" aria-hidden="true"><video ref={video} muted playsInline loop preload="none"/></div>;
+  const picture = <HeroImage desktop={imageUrl} mobile={mobileImageUrl} full={full}/>;
+  const className = `reference-hero home-hero-preset-${preset.toLowerCase()}${full || cinematic ? ' home-hero-fullbleed' : ''}${cinematic ? ' home-hero-cinematic' : ''}`;
+  return <section className={className} data-hero-phase={showVideo ? 'video' : 'intro'}>
+    {full && <div className="home-hero-image" aria-hidden="true">{picture}</div>}
+    {(full || cinematic) && clip}
     <div className="ref-container ref-hero-inner">
-      {active ? <>
+      {cinematic ? <>
         <HeroCopy className="ref-hero-copy hero-copy-intro" hidden={showVideo}/>
         <HeroCopy className={`ref-hero-copy hero-copy-arriving${showVideo ? ' is-visible' : ''}`} hidden={!showVideo}/>
       </> : <HeroCopy className="ref-hero-copy"/>}
-      {(layoutPreset === 'CLASSIC' || active) && <div className="ref-hero-art">
-        <img src="/images/hero-collage-960.webp"
-          srcSet="/images/hero-collage-640.webp 640w, /images/hero-collage-960.webp 960w, /images/hero-collage.webp 1254w"
-          sizes="(max-width: 580px) 100vw, (max-width: 1440px) 51vw, 760px"
-          alt="Maker collage with an ESP32 board, a maker book, illustrated portraits, and a project notebook"
-          width="1254" height="1254" fetchPriority="high" decoding="async"/>
-      </div>}
+      {!full && <div className="ref-hero-art" aria-hidden="true">{picture}{!cinematic && clip}</div>}
     </div>
   </section>;
 }
