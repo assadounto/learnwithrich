@@ -53,14 +53,6 @@ html:has(.mobile-drawer[open], .selection-dialog[open]) { overflow: hidden; }
   .site-header .brand>span:not(.brand-emblem) { font-size: 18px; }
   .site-header .brand-emblem { width: 24px; height: 24px; }
 }
-.reference-hero.home-hero-has-video { isolation: isolate; }
-.reference-hero:not(.home-hero-contained)[data-hero-phase="video"] :is(.ref-hero-copy, .home-hero-picture) {
-  visibility: hidden;
-  pointer-events: none;
-}
-.reference-hero[data-hero-phase="video"] .home-hero-video::after {
-  background: linear-gradient(0deg, #0b0e12e6, transparent 54%);
-}
 .hero-video-actions {
   position: absolute;
   z-index: 4;

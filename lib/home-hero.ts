@@ -1,6 +1,10 @@
 export const homepageHeroPresets = ['CLASSIC', 'CENTERED', 'CINEMATIC', 'SPOTLIGHT', 'EDITORIAL'] as const;
 export type HomepageHeroPreset = (typeof homepageHeroPresets)[number];
 
+export function homepageHeroSupportsVideo(preset: HomepageHeroPreset) {
+  return preset === 'CINEMATIC' || preset === 'EDITORIAL';
+}
+
 export const homepageHeroMedia = [
   {field: 'imageAssetId', name: 'imageName', column: 'heroImageAssetId', kind: 'image', label: 'Desktop image'},
   {field: 'mobileImageAssetId', name: 'mobileImageName', column: 'heroMobileImageAssetId', kind: 'image', label: 'Mobile image'},
