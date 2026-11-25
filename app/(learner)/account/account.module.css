@@ -135,3 +135,12 @@
   .workspaceBrand, .workspaceLinks { gap: 3px; }
   .workspaceHeader :global(.brand-emblem) { display: none; }
 }
+
+.workspaceShortcuts { display: grid; gap: 9px; }
+.workspaceShortcuts :global(.button) { margin-top: 3px; min-height: 38px; padding: 6px 8px; font-size: 12px; }
+@media (min-width: 981px) {
+  .workspaceRail:not([hidden]) { display: flex; flex-direction: column; min-height: calc(100dvh - var(--account-header)); }
+  .workspaceShortcuts { margin-top: auto; }
+  .workspace[data-explorer-open="true"] .workspaceFooter { display: none; }
+}
+@media (max-width: 980px) { .workspaceFooter a svg { display: none; } }

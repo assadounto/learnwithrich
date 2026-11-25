@@ -339,3 +339,7 @@
   .studio-primary-pane .workspace-stats { grid-template-columns: minmax(0, 1fr); }
   .studio-primary-pane .admin-page-heading { align-items: flex-start; flex-direction: column; }
 }
+
+.studio-page-size { display: grid; gap: 5px; font-size: 12px; font-weight: 650; align-self: end; }
+.studio-page-size .select-menu-trigger { min-width: 86px; }
+.admin-experience .catalog-pagination { padding: 0 12px 12px; }

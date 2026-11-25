@@ -1,19 +1,22 @@
-import {ArrowRight, ChevronLeft, ChevronRight, Search, Users} from 'lucide-react';
+import {CatalogPagination} from '@/components/catalog-pagination';
+import {StudioPageSize} from '@/components/admin/studio-page-size';
+import {requestedPage, studioPageSize} from '@/lib/pagination';
+import {ArrowRight, Search, Users} from 'lucide-react';
 import Link from '@/components/navigation-link';
 import {database} from '@/lib/server/database';
 import {requireOwner} from '@/lib/server/identity/access';
 import styles from '@/components/admin/community-inbox.module.css';
 
-const pageSize = 20;
 const date = new Intl.DateTimeFormat('en-GH', {dateStyle: 'medium', timeZone: 'Africa/Accra'});
 
 export const metadata = {title: 'Users'};
 
-export default async function UsersPage({searchParams}: {searchParams: Promise<{q?: string; page?: string; deleted?: string}>}) {
+export default async function UsersPage({searchParams}: {searchParams: Promise<{q?: string; page?: string; per?: string; deleted?: string}>}) {
   await requireOwner();
   const params = await searchParams;
   const q = typeof params.q === 'string' ? params.q.trim().slice(0, 120) : '';
-  const requested = typeof params.page === 'string' && /^\d{1,6}$/.test(params.page) ? Math.max(1, Number(params.page)) : 1;
+  const requested = requestedPage(params.page);
+  const pageSize = studioPageSize(params.per);
   const where = q ? {OR: [{name: {contains: q, mode: 'insensitive' as const}}, {email: {contains: q, mode: 'insensitive' as const}}]} : {};
   const {users, page, pages, count} = await database().$transaction(async tx => {
     const count = await tx.user.count({where});
@@ -27,7 +30,7 @@ export default async function UsersPage({searchParams}: {searchParams: Promise<{
   }, {isolationLevel: 'RepeatableRead'});
 
   function pageHref(number: number) {
-    const query = new URLSearchParams({page: String(number)});
+    const query = new URLSearchParams({page: String(number), per: String(pageSize)});
     if (q) query.set('q', q);
     return `/admin/users?${query}`;
   }
@@ -38,10 +41,11 @@ export default async function UsersPage({searchParams}: {searchParams: Promise<{
     </header>
     {params.deleted === '1' && <p className="admin-success" role="status">Learner account deleted.</p>}
     <section className={styles.inbox} aria-label="Account directory">
-      <form action="/admin/users" className={styles.toolbar} key={q}>
+      <form action="/admin/users" className={styles.toolbar} key={JSON.stringify([q, pageSize])}>
         <label className={styles.search}><Search size={16}/><span className="sr-only">Search users</span>
           <input type="search" name="q" defaultValue={q} maxLength={120} placeholder="Name or email"/>
         </label>
+        <StudioPageSize value={pageSize}/>
         <button type="submit" className="button button-outline">Search</button>
         {q && <Link className="button button-outline" href="/admin/users">Clear search</Link>}
       </form>
@@ -57,11 +61,7 @@ export default async function UsersPage({searchParams}: {searchParams: Promise<{
             aria-label={`Open account for ${user.name || user.email}`}><span>Open</span><ArrowRight size={16}/></Link></td>
         </tr>)}</tbody>
       </table> : <p className={styles.empty}>{q ? 'No accounts match your search.' : 'No registered accounts yet.'}</p>}
-      {pages > 1 && <nav className={styles.pagination} aria-label="User directory pages">
-        <span>Page {page} of {pages}</span>
-        {page > 1 && <Link className="button button-outline" href={pageHref(page - 1)}><ChevronLeft size={16}/>Previous</Link>}
-        {page < pages && <Link className="button button-outline" href={pageHref(page + 1)}>Next<ChevronRight size={16}/></Link>}
-      </nav>}
+      <CatalogPagination page={page} pages={pages} href={pageHref} label="User directory pages"/>
     </section>
   </div>;
 }

@@ -1,17 +1,25 @@
+import type {ReactNode} from 'react';
 import {ChevronLeft, ChevronRight} from 'lucide-react';
 import Link from '@/components/navigation-link';
+import {paginationItems} from '@/lib/pagination';
 
-export function CatalogPagination({page, pages, href, label = 'Catalog pages'}: {
-  page: number; pages: number; href: (page: number) => string; label?: string;
-}) {
+type Props = {page: number; pages: number; label?: string} &
+  ({href: (page: number) => string; onPage?: never} | {onPage: (page: number) => void; href?: never});
+
+export function CatalogPagination({page, pages, href, onPage, label = 'Catalog pages'}: Props) {
   if (pages <= 1) return null;
-  const numbers = [...new Set([1, page - 1, page, page + 1, pages])].filter(number => number >= 1 && number <= pages).sort((a, b) => a - b);
+
+  function control(number: number, name: string, children: ReactNode) {
+    return href ? <Link href={href(number)} aria-label={name} prefetch={false}>{children}</Link>
+      : <button type="button" aria-label={name} onClick={() => onPage?.(number)}>{children}</button>;
+  }
+
   return <nav className="catalog-pagination" aria-label={label}>
-    {page > 1 && <Link href={href(page - 1)} aria-label="Previous page"><ChevronLeft size={18}/></Link>}
-    {numbers.map((number, index) => <span className="catalog-page-number" key={number}>
-      {index > 0 && number - numbers[index - 1] > 1 && <span aria-hidden="true">…</span>}
-      {number === page ? <span aria-current="page" aria-label={`Page ${number}`}>{number}</span> : <Link href={href(number)} aria-label={`Page ${number}`}>{number}</Link>}
+    {page > 1 && control(page - 1, 'Previous page', <ChevronLeft size={18}/>)}
+    {paginationItems(page, pages).map(({number, ellipsis}) => <span className="catalog-page-number" key={number}>
+      {number === page ? <span aria-current="page" aria-label={`Page ${number}`}>{number}</span>
+        : control(number, ellipsis ? `Jump to page ${number}` : `Page ${number}`, ellipsis ? '…' : number)}
     </span>)}
-    {page < pages && <Link href={href(page + 1)} aria-label="Next page"><ChevronRight size={18}/></Link>}
+    {page < pages && control(page + 1, 'Next page', <ChevronRight size={18}/>)}
   </nav>;
 }

@@ -5,18 +5,28 @@ import {ArrowRight, BookOpen, Download, PackageCheck} from 'lucide-react';
 import {currentUser} from '@/lib/server/identity/current-user';
 import {database} from '@/lib/server/database';
 import {money} from '@/lib/money';
+import {CatalogPagination} from '@/components/catalog-pagination';
+import {pageWindow, requestedPage} from '@/lib/pagination';
 import {AccountTable} from '@/components/account-table';
 import styles from '../account.module.css';
 
 export const metadata: Metadata = {title: 'Purchases | Your account', robots: {index: false, follow: false}};
 export const dynamic = 'force-dynamic';
 
-export default async function PurchasesPage() {
+export default async function PurchasesPage({searchParams}: {searchParams: Promise<{page?: string}>}) {
   const user = await currentUser();
   if (!user) redirect(`/signin?next=${encodeURIComponent('/account/purchases')}`);
-  const rows = await database().purchase.findMany({where: {userId: user.id, status: 'PAID'}, orderBy: {paidAt: 'desc'}, take: 100, select: {id: true, amountMinor: true, currency: true, paidAt: true, resource: {select: {title: true}}, resourceMedia: {select: {title: true, mediaAsset: {select: {originalName: true}}}}}});
+  const size = 24;
+  const requested = requestedPage((await searchParams).page);
+  const where = {userId: user.id, status: 'PAID' as const};
+  const {rows, total, page, pages} = await database().$transaction(async tx => {
+    const total = await tx.purchase.count({where});
+    const {page, pages, skip} = pageWindow(total, size, requested);
+    const rows = await tx.purchase.findMany({where, orderBy: [{paidAt: 'desc'}, {id: 'asc'}], skip, take: size, select: {id: true, amountMinor: true, currency: true, paidAt: true, resource: {select: {title: true}}, resourceMedia: {select: {title: true, mediaAsset: {select: {originalName: true}}}}}});
+    return {rows, total, page, pages};
+  }, {isolationLevel: 'RepeatableRead'});
   return <>
-    <header className={styles.pageHeading}><span className="maker-kicker">YOUR UNLOCKED MATERIALS</span><h1>Purchases</h1><p>Open a resource bundle or find a confirmed download.</p><span className={styles.headingCount}>{rows.length} purchases</span></header>
+    <header className={styles.pageHeading}><span className="maker-kicker">YOUR UNLOCKED MATERIALS</span><h1>Purchases</h1><p>Open a resource bundle or find a confirmed download.</p><span className={styles.headingCount}>{total} {total === 1 ? 'purchase' : 'purchases'}</span></header>
     {rows.length ? <AccountTable label="Purchases" columns={['Item', 'Type', 'Amount', 'Paid on']}>
       {rows.map(item => <tr key={item.id}>
         <th scope="row"><div className={styles.tableItem}>
@@ -29,5 +39,6 @@ export default async function PurchasesPage() {
         <td>{item.paidAt ? <time dateTime={item.paidAt.toISOString()}>{item.paidAt.toISOString().slice(0, 10)}</time> : 'Paid'}</td>
       </tr>)}
     </AccountTable> : <div className={styles.empty}><PackageCheck size={25}/><h2>Your purchases will be kept here.</h2><p>Once you unlock a resource, you can return here to open it again.</p><Link href="/resources" className="button button-dark">Explore resources <ArrowRight size={15}/></Link></div>}
+    <CatalogPagination page={page} pages={pages} href={number => `/account/purchases?page=${number}`} label="Purchase pages"/>
   </>;
 }

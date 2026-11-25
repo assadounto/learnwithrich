@@ -15,7 +15,7 @@
 .libraryHeading { padding: 16px 18px 0; }
 .libraryHeading h2, .editorForm h2 { font-size: 17px; margin: 0; }
 .libraryHeading > span, .pagination > span, .editorForm small { font-size: 13px; color: var(--muted); }
-.filters { display: grid; grid-template-columns: minmax(160px, 2fr) minmax(115px, 1fr) minmax(105px, 1fr) auto; align-items: end; gap: 12px; padding: 14px 18px 16px; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 122px), 1fr)); align-items: end; gap: 12px; padding: 14px 18px 16px; }
 .filters label, .editorForm label { min-width: 0; display: grid; gap: 6px; font-size: 13px; font-weight: 650; }
 .filters input, .editorForm input:not([type="hidden"]), .editorForm textarea {
   width: 100%; min-width: 0; padding: 9px 11px; min-height: 44px; border: 1px solid var(--idea-line);

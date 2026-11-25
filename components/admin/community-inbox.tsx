@@ -1,9 +1,12 @@
 'use client';
 import {serviceLabel} from '@/lib/service-offerings';
+import {CatalogPagination} from '@/components/catalog-pagination';
+import {StudioPageSize} from '@/components/admin/studio-page-size';
+import Link from '@/components/navigation-link';
 import {SelectMenu} from '@/components/selection-dialog';
 import {Fragment, useState, useTransition} from 'react';
 import {useRouter} from 'next/navigation';
-import {Check, ChevronLeft, ChevronRight, Clock3, Inbox, Mail, MessageSquareQuote, Save, Search, UserRound, X, FileText, Paperclip, Send} from 'lucide-react';
+import {Check, ChevronRight, Clock3, Inbox, Mail, MessageSquareQuote, Save, Search, UserRound, X, FileText, Paperclip, Send} from 'lucide-react';
 import {MediaLibraryModal} from '@/components/admin/media-library-modal';
 import styles from './community-inbox.module.css';
 
@@ -21,49 +24,23 @@ const inboxCopy = {
   reviews: {title: 'Community reviews', description: 'Review ratings and feedback before they appear on the public site.', item: 'reviews'},
   'service-requests': {title: 'Service requests', description: 'Review briefs, send quotes, and manage delivery and revisions.', item: 'requests'},
 };
-const moderationFilters = [
-  {id: 'ALL', label: 'All', statuses: []},
-  {id: 'PENDING', label: 'Pending', statuses: ['PENDING']},
-  {id: 'APPROVED', label: 'Approved', statuses: ['APPROVED']},
-  {id: 'HIDDEN', label: 'Hidden', statuses: ['HIDDEN']},
-];
-const serviceFilters = [
-  {id: 'ALL', label: 'All', statuses: []},
-  {id: 'NEEDS_REPLY', label: 'Needs review', statuses: ['NEW', 'REVIEWING']},
-  {id: 'WAITING', label: 'Waiting on learner', statuses: ['QUOTED', 'PAYMENT_PENDING']},
-  {id: 'IN_PROGRESS', label: 'In progress', statuses: ['ACCEPTED']},
-  {id: 'CLOSED', label: 'Closed', statuses: ['DECLINED', 'COMPLETED']},
-];
-
 function Status({value}: {value: string}) {
   return <span className={`admin-status admin-status-${value.toLowerCase()}`}>{statusLabels[value] ?? pretty(value)}</span>;
 }
 
-export function CommunityInbox({kind, initialRows, initialSelection = ''}: {kind: Kind; initialRows: Row[]; initialSelection?: string}) {
+export function CommunityInbox({kind, rows, initialSelection = '', q, status, filters, request, size, total, page, pages}: {
+  kind: Kind; rows: Row[]; initialSelection?: string; q: string; status: string; filters: {id: string; label: string}[];
+  request: string; size: number; total: number; page: number; pages: number;
+}) {
   const router = useRouter();
-  const [changes, setChanges] = useState<Record<string, Partial<Row>>>({});
   const [busy, setBusy] = useState('');
   const [feedback, setFeedback] = useState<{error: boolean; text: string} | null>(null);
   const [selected, setSelected] = useState(initialSelection);
-  const [requestedPage, setPage] = useState(1);
-  const [filter, setFilter] = useState('ALL');
-  const [query, setQuery] = useState('');
   const [pending, startTransition] = useTransition();
   const service = kind === 'service-requests';
-  const filters = service ? serviceFilters : moderationFilters;
   const copy = inboxCopy[kind];
-  const rows = initialRows.map(row => ({...row, ...changes[row.id]}));
-  const search = query.trim().toLowerCase();
-  const matching = rows.filter(row => !search || [
-    row.name, row.email, row.title, row.country, row.message, row.description,
-    row.serviceType ? serviceLabel(row.serviceType) : undefined, row.id,
-  ].some(value => value?.toLowerCase().includes(search)));
-  const activeFilter = filters.find(item => item.id === filter) ?? filters[0];
-  const visibleRows = matching.filter(row => !activeFilter.statuses.length || activeFilter.statuses.includes(row.status));
-  const pageSize = 15;
-  const pages = Math.max(1, Math.ceil(visibleRows.length / pageSize));
-  const page = Math.min(requestedPage, pages);
-  const pageRows = visibleRows.slice((page - 1) * pageSize, page * pageSize);
+  const path = `/admin/community/${kind}`;
+  const href = (number: number) => `${path}?${new URLSearchParams({q, status, per: String(size), page: String(number), ...(request ? {request} : {})})}`;
 
   function update(id: string, payload: Partial<Row>) {
     setBusy(id);
@@ -75,8 +52,7 @@ export function CommunityInbox({kind, initialRows, initialSelection = ''}: {kind
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Could not save the change.');
-        if (service) router.refresh();
-        else setChanges(current => ({...current, [id]: {...current[id], ...payload}}));
+        router.refresh();
         setFeedback({error: false, text: service ? 'Request updated.' : 'Moderation status updated.'});
       } catch (error) {
         setFeedback({error: true, text: error instanceof Error ? error.message : 'Could not save the change.'});
@@ -87,30 +63,30 @@ export function CommunityInbox({kind, initialRows, initialSelection = ''}: {kind
   return <div className={styles.root}>
     <header className={styles.pageHeader}>
       <div><h1>{copy.title}</h1><p>{copy.description}</p></div>
-      <span className={styles.total}><Inbox size={16}/>{rows.length} recent {copy.item}</span>
+      <span className={styles.total}><Inbox size={16}/>{total} {copy.item}</span>
     </header>
     <section className={styles.inbox} aria-label={`${copy.title} inbox`}>
-      <div className={styles.toolbar}>
-        <div className={styles.filters} role="group" aria-label="Filter by status">
-          {filters.map(item => <button type="button" key={item.id} aria-pressed={filter === item.id} onClick={() => {
-            setFilter(item.id);
-            setSelected('');
-            setPage(1);
-          }}>{item.label}<span>{matching.filter(row => !item.statuses.length || item.statuses.includes(row.status)).length}</span></button>)}
-        </div>
+      <form action={path} className={styles.toolbar}>
         <label className={styles.search}><Search size={16}/><span className="sr-only">{`Search ${copy.item}`}</span>
-          <input type="search" placeholder={`Search ${copy.item}…`} value={query} onChange={event => {setQuery(event.target.value); setSelected(''); setPage(1);}}/>
+          <input name="q" type="search" maxLength={160} placeholder={`Search ${copy.item}…`} defaultValue={q}/>
         </label>
-      </div>
+        <label className="studio-page-size"><span>Status</span><SelectMenu name="status" defaultValue={status}>
+          <option value="">All statuses</option>
+          {filters.map(({id, label}) => <option key={id} value={id}>{label}</option>)}
+        </SelectMenu></label>
+        <StudioPageSize value={size}/>
+        <button type="submit" className="button button-outline">Filter</button>
+        {request && <Link href={path} className="button button-outline">View all requests</Link>}
+      </form>
       {feedback && <p className={feedback.error ? 'admin-alert' : 'admin-success'} role={feedback.error ? 'alert' : 'status'}>{feedback.text}</p>}
-      {!visibleRows.length ? <div className={styles.empty}>
-        <Inbox size={24}/><h2>{rows.length ? 'No matching results' : `No ${copy.item} yet`}</h2>
-        {rows.length > 0 && <button type="button" className="button button-outline" onClick={() => {setQuery(''); setFilter('ALL'); setSelected(''); setPage(1);}}>Clear filters</button>}
+      {!rows.length ? <div className={styles.empty}>
+        <Inbox size={24}/><h2>{q || status || request ? 'No matching results' : `No ${copy.item} yet`}</h2>
+        {(q || status || request) && <Link href={path} className="button button-outline">Clear filters</Link>}
       </div> : <>
         <table className={styles.table}>
           <caption className="sr-only">{copy.title}</caption>
           <thead><tr><th scope="col">{service ? 'Request' : 'Submission'}</th><th scope="col">Status</th><th scope="col" className={styles.dateColumn}>Received</th><th scope="col" className={styles.openColumn}>Details</th></tr></thead>
-          <tbody>{pageRows.map(row => {
+          <tbody>{rows.map(row => {
             const open = selected === row.id;
             const detailId = `inbox-entry-${row.id}`;
             return <Fragment key={row.id}>
@@ -146,11 +122,7 @@ export function CommunityInbox({kind, initialRows, initialSelection = ''}: {kind
             </Fragment>;
           })}</tbody>
         </table>
-        {pages > 1 && <nav className={styles.pagination} aria-label={`${copy.title} pages`}>
-          <span>Page {page} of {pages}</span>
-          <button type="button" className="button button-outline" disabled={page === 1} onClick={() => {setSelected(''); setPage(page - 1);}}><ChevronLeft size={16}/>Previous</button>
-          <button type="button" className="button button-outline" disabled={page === pages} onClick={() => {setSelected(''); setPage(page + 1);}}>Next<ChevronRight size={16}/></button>
-        </nav>}
+        <CatalogPagination page={page} pages={pages} href={href} label={`${copy.title} pages`}/>
       </>}
     </section>
   </div>;

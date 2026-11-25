@@ -1,4 +1,6 @@
 import {ChartNoAxesCombined, Globe, Laptop, MousePointer2} from 'lucide-react';
+import {StudioPageSize} from '@/components/admin/studio-page-size';
+import {studioPageSize} from '@/lib/pagination';
 import Link from '@/components/navigation-link';
 import {database} from '@/lib/server/database';
 import {requireOwner} from '@/lib/server/identity/access';
@@ -20,9 +22,11 @@ function Breakdown({title, rows, total}: {title: string; rows: {name: string; co
   </section>;
 }
 
-export default async function AnalyticsPage({searchParams}: {searchParams: Promise<{days?: string}>}) {
+export default async function AnalyticsPage({searchParams}: {searchParams: Promise<{days?: string; per?: string}>}) {
   await requireOwner();
-  const requested = Number((await searchParams).days);
+  const params = await searchParams;
+  const requested = Number(params.days);
+  const size = studioPageSize(params.per);
   const days = ranges.includes(requested) ? requested : 30;
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
@@ -31,9 +35,9 @@ export default async function AnalyticsPage({searchParams}: {searchParams: Promi
   const db = database().pageAnalytics;
   const [daily, pages, countries, sources, screens] = await Promise.all([
     db.groupBy({by: ['day'], where, _sum: {views: true, visits: true}, orderBy: {day: 'asc'}}),
-    db.groupBy({by: ['path'], where, _sum: {views: true}, orderBy: [{_sum: {views: 'desc'}}, {path: 'asc'}], take: 15}),
+    db.groupBy({by: ['path'], where, _sum: {views: true}, orderBy: [{_sum: {views: 'desc'}}, {path: 'asc'}], take: size}),
     db.groupBy({by: ['country'], where, _sum: {views: true}, orderBy: [{_sum: {views: 'desc'}}, {country: 'asc'}]}),
-    db.groupBy({by: ['source'], where, _sum: {views: true}, orderBy: [{_sum: {views: 'desc'}}, {source: 'asc'}], take: 12}),
+    db.groupBy({by: ['source'], where, _sum: {views: true}, orderBy: [{_sum: {views: 'desc'}}, {source: 'asc'}], take: size}),
     db.groupBy({by: ['screen'], where, _sum: {views: true}, orderBy: {screen: 'desc'}}),
   ]);
   const total = daily.reduce((sum, row) => sum + (row._sum.views ?? 0), 0);
@@ -49,8 +53,9 @@ export default async function AnalyticsPage({searchParams}: {searchParams: Promi
     <header className="admin-page-heading">
       <div><h1>Site analytics</h1><p>Public page activity, where readers come from, and how they browse.</p></div>
       <nav className={styles.ranges} aria-label="Analytics date range">
-        {ranges.map(range => <Link key={range} href={`/admin/analytics?days=${range}`} aria-current={range === days ? 'page' : undefined}>{range} days</Link>)}
+        {ranges.map(range => <Link key={range} href={`/admin/analytics?days=${range}&per=${size}`} aria-current={range === days ? 'page' : undefined}>{range} days</Link>)}
       </nav>
+      <form action="/admin/analytics" key={size}><input type="hidden" name="days" value={days}/><StudioPageSize value={size}/></form>
     </header>
     <dl className={styles.stats}>
       <div><dt><ChartNoAxesCombined size={17}/>Page views</dt><dd>{numbers.format(total)}</dd></div>
@@ -72,7 +77,7 @@ export default async function AnalyticsPage({searchParams}: {searchParams: Promi
     </section>
     <div className={styles.breakdowns}>
       <Breakdown title="Top pages" total={total} rows={pages.map(row => ({name: row.path, count: row._sum.views ?? 0}))}/>
-      <Breakdown title="Countries" total={total} rows={countries.map(row => ({name: row.country ? countryNames.of(row.country) ?? row.country : 'Unknown country', count: row._sum.views ?? 0}))}/>
+      <Breakdown title="Countries" total={total} rows={countries.slice(0, size).map(row => ({name: row.country ? countryNames.of(row.country) ?? row.country : 'Unknown country', count: row._sum.views ?? 0}))}/>
       <Breakdown title="Referring websites" total={total} rows={sources.map(row => ({name: row.source || 'Direct or internal', count: row._sum.views ?? 0}))}/>
       <Breakdown title="Screen sizes" total={total} rows={screens.map(row => ({name: row.screen === 'small' ? 'Small (under 768px)' : 'Large (768px and up)', count: row._sum.views ?? 0}))}/>
     </div>

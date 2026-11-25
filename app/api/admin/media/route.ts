@@ -1,3 +1,4 @@
+import {pageWindow, requestedPage, studioPageSize} from '@/lib/pagination';
 import {requireOwner} from '@/lib/server/identity/access';
 import {database} from '@/lib/server/database';
 import {MAX_MEDIA_BYTES, saveMedia} from '@/lib/server/media/library';
@@ -11,11 +12,22 @@ export async function GET(request: Request) {
   const query = params.get('q')?.trim().slice(0, 180);
   try {
     const db = database();
-    const [folders, assets] = await Promise.all([
+    const where = {...(folderId === 'all' ? {} : {folderId: folderId || null}), ...(query ? {originalName: {contains: query, mode: 'insensitive' as const}} : {})};
+    const select = {createdAt: true, folderId: true, id: true, mimeType: true, originalName: true, sizeBytes: true} as const;
+    const orderBy = [{createdAt: 'desc' as const}, {id: 'asc' as const}];
+    const list = params.has('per') ? db.$transaction(async tx => {
+      const total = await tx.mediaAsset.count({where});
+      const size = studioPageSize(params.get('per'));
+      const {page, pages, skip} = pageWindow(total, size, requestedPage(params.get('page')));
+      const assets = await tx.mediaAsset.findMany({where, orderBy, skip, take: size, select});
+      return {assets, page, pages};
+    }, {isolationLevel: 'RepeatableRead'})
+      : db.mediaAsset.findMany({where, orderBy, take: 120, select}).then(assets => ({assets}));
+    const [folders, result] = await Promise.all([
       db.mediaFolder.findMany({orderBy: {name: 'asc'}, select: {_count: {select: {assets: true}}, createdAt: true, id: true, name: true}}),
-      db.mediaAsset.findMany({where: {...(folderId === 'all' ? {} : {folderId: folderId || null}), ...(query ? {originalName: {contains: query, mode: 'insensitive'}} : {})}, orderBy: {createdAt: 'desc'}, take: 120, select: {createdAt: true, folderId: true, id: true, mimeType: true, originalName: true, sizeBytes: true}}),
+      list,
     ]);
-    return Response.json({folders, assets}, {headers: {'Cache-Control': 'no-store'}});
+    return Response.json({folders, ...result}, {headers: {'Cache-Control': 'no-store'}});
   } catch { return Response.json({error: 'Could not load the media library.'}, {status: 500}); }
 }
 

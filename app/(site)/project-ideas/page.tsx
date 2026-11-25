@@ -4,6 +4,8 @@ import {ArrowRight, Layers, LayoutGrid, Lightbulb} from 'lucide-react';
 import Link from '@/components/navigation-link';
 import {disciplineLabel, disciplines} from '@/lib/project-ideas';
 import {database} from '@/lib/server/database';
+import {CatalogPagination} from '@/components/catalog-pagination';
+import {ProjectCatalogHero} from '@/components/project-catalog-hero';
 import {ProjectIdeaSwipe} from '@/components/project-idea-swipe';
 import styles from './ideas.module.css';
 
@@ -41,15 +43,12 @@ export default async function ProjectIdeas({searchParams}: {searchParams: Params
     return `/project-ideas?${next}#ideas`;
   }
   return <div className={`ref-container ${styles.page}`}>
-    <header className={styles.hero}>
-      <div><span className="maker-kicker">LEARNWITHRICH PROJECT IDEAS</span>
-        <h1>Find a project worth <i>exploring.</i></h1>
-        <p>Start with a final-year project, research topic, or independent build. Each abstract gives you a question to explore and a way to evaluate your work.</p>
-        <Link href="/services/request" className="button button-outline">Discuss your own idea <ArrowRight size={16}/></Link>
-      </div>
-      <Lightbulb aria-hidden="true" strokeWidth={1} className={styles.heroIcon}/>
-    </header>
-    <section id="ideas" aria-label="Browse ideas">
+    <ProjectCatalogHero label="LEARNWITHRICH PROJECT IDEAS" title={<>Find a project worth <i>exploring.</i></>}
+      artwork={<><Lightbulb size={125} strokeWidth={.8}/><span>IDEA<br/>→<br/>RESEARCH</span></>}
+      actions={<><a href="#ideas" className="button button-dark">Explore project ideas <ArrowRight size={16}/></a><Link href="/services/request" className="button button-outline">Discuss your own idea <ArrowRight size={16}/></Link></>}>
+      <p>Start with a final-year project, research topic, or independent build. Each abstract gives you a question to explore and a way to evaluate your work.</p>
+    </ProjectCatalogHero>
+    <section id="ideas" className={styles.collection} aria-label="Browse ideas">
       <form action="/project-ideas#ideas" className={styles.filters}>
         <label>Search ideas<input name="q" type="search" defaultValue={q} maxLength={120} placeholder="Try solar, sensors, or accessibility"/></label>
         <label>Discipline<SelectMenu name="discipline" defaultValue={discipline}><option value="">All disciplines</option>{disciplines.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</SelectMenu></label>
@@ -66,11 +65,7 @@ export default async function ProjectIdeas({searchParams}: {searchParams: Params
         <ul className={styles.tags} aria-label="Tags">{idea.tags.map(item => <li key={item}><Link href={destination(1, item)}>{item}</Link></li>)}</ul>
         <Link className="text-link" href={`/services/request?idea=${idea.slug}`} aria-label={`Request help with ${idea.title}`}>Request help with this idea <ArrowRight size={16}/></Link>
       </article>)}</div> : <p>No ideas match these filters. <Link className="text-link" href="/project-ideas#ideas">Clear filters</Link></p>}
-      {pages > 1 && <nav className={styles.pagination} aria-label="Idea pages">
-        {page > 1 && <Link href={destination(page - 1)} className="button button-outline">Previous</Link>}
-        <span>Page {page} of {pages}</span>
-        {page < pages && <Link href={destination(page + 1)} className="button button-outline">Next</Link>}
-      </nav>}
+      <CatalogPagination page={page} pages={pages} href={destination} label="Idea pages"/>
     </section>
   </div>;
 }
