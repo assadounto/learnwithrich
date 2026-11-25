@@ -7,6 +7,7 @@ import {assertSessionMfa} from '../identity/mfa';
 import {adminDraft, editToken} from './input';
 import {ResourceInputError, resourceId, text, enumValue, resourceTypes, validateDraft, type ResourceDraft, type ResourceKind} from '../resources/validation';
 import {defaultHomepageSections, heroMediaMatches, homepageHeroSelect, loadHomepageHero, validateHomepageHero, validateHomepageSections} from './homepage';
+import {pageWindow, type studioPageSizes} from '../../pagination';
 import {homepageHeroMedia} from '../../home-hero';
 export class EditConflictError extends Error {}
 export type PackageMediaAssetInput = {id: string; originalName: string; storageKey: string; mimeType: string; sizeBytes: number};
@@ -23,6 +24,17 @@ export function packageSlugConflictMessage(conflicts: {slug: string}[]) {
   const shown = conflicts.slice(0, 10).map(resource => resource.slug).join(', ');
   const remaining = conflicts.length > 10 ? ` and ${conflicts.length - 10} more` : '';
   return `Import blocked because these resource slugs already exist: ${shown}${remaining}. Use new slugs to import a separate copy.`;
+}
+
+type ResourceFilters = {type?: string; status?: string};
+const resourceListSelect = {id: true, title: true, type: true, slug: true, status: true, access: true, updatedAt: true, version: true, _count: {select: {items: true}}} satisfies Prisma.ResourceSelect;
+const resourceListOrder = [{updatedAt: 'desc'}, {id: 'asc'}] satisfies Prisma.ResourceOrderByWithRelationInput[];
+
+function resourceListWhere(query: string, filters: ResourceFilters): Prisma.ResourceWhereInput {
+  const q = text(query, 'search', 200, false);
+  const type = filters.type ? enumValue(filters.type, resourceTypes, 'resource type') : undefined;
+  const status = filters.status ? enumValue(filters.status, ['DRAFT', 'PUBLISHED', 'ARCHIVED'], 'status') : undefined;
+  return {type, status, ...(q ? {OR: [{title: {contains: q, mode: 'insensitive'}}, {slug: {contains: q, mode: 'insensitive'}}]} : {})};
 }
 
 const fullResource = {
@@ -77,12 +89,21 @@ export function adminRepository(db: Database, actorId: string, sessionId?: strin
       const groups = await db.resource.groupBy({by: ['status'], _count: true});
       return {total: groups.reduce((total, group) => total + group._count, 0), drafts: groups.find(group => group.status === 'DRAFT')?._count ?? 0, published: groups.find(group => group.status === 'PUBLISHED')?._count ?? 0};
     },
-    async list(query = '', filters: {type?: string; status?: string} = {}) {
+    async list(query = '', filters: ResourceFilters = {}) {
       await authorize(db);
-      const q = text(query, 'search', 200, false);
-      const type = filters.type ? enumValue(filters.type, resourceTypes, 'resource type') : undefined;
-      const status = filters.status ? enumValue(filters.status, ['DRAFT', 'PUBLISHED', 'ARCHIVED'], 'status') : undefined;
-      return db.resource.findMany({where: {type, status, ...(q ? {OR: [{title: {contains: q, mode: 'insensitive' as const}}, {slug: {contains: q, mode: 'insensitive' as const}}]} : {})}, select: {id: true, title: true, type: true, slug: true, status: true, access: true, updatedAt: true, version: true, _count: {select: {items: true}}}, orderBy: {updatedAt: 'desc'}, take: 100});
+      return db.resource.findMany({
+        where: resourceListWhere(query, filters), select: resourceListSelect, orderBy: resourceListOrder, take: 100,
+      });
+    },
+    async listPage(query: string, filters: ResourceFilters, requested: number, size: (typeof studioPageSizes)[number]) {
+      await authorize(db);
+      const where = resourceListWhere(query, filters);
+      return db.$transaction(async tx => {
+        const total = await tx.resource.count({where});
+        const {page, pages, skip} = pageWindow(total, size, requested);
+        const rows = await tx.resource.findMany({where, select: resourceListSelect, orderBy: resourceListOrder, skip, take: size});
+        return {rows, page, pages, total};
+      }, {isolationLevel: 'RepeatableRead'});
     },
     async get(id: string) {
       await authorize(db);

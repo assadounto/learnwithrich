@@ -1,5 +1,8 @@
+import {CatalogPagination} from '@/components/catalog-pagination';
+import {StudioPageSize} from '@/components/admin/studio-page-size';
+import {requestedPage, studioPageSize} from '@/lib/pagination';
 import type {ResourceStatus} from '@/lib/generated/prisma/client';
-import {ArrowLeft, ArrowRight, ArrowUpRight, Lightbulb, Plus, Search} from 'lucide-react';
+import {ArrowRight, ArrowUpRight, Lightbulb, Plus, Search} from 'lucide-react';
 import {redirect} from 'next/navigation';
 import Link from '@/components/navigation-link';
 import {SelectMenu} from '@/components/selection-dialog';
@@ -11,8 +14,7 @@ import {IdeaJsonUpload} from '@/components/admin/idea-json-upload';
 import {bulkIdeaStatus, deleteIdeas} from './actions';
 import styles from './ideas.module.css';
 
-type Params = Promise<{edit?: string; q?: string; status?: string; discipline?: string; page?: string; saved?: string}>;
-const pageSize = 20;
+type Params = Promise<{edit?: string; q?: string; status?: string; discipline?: string; page?: string; per?: string; saved?: string}>;
 const formatDate = new Intl.DateTimeFormat('en-GH', {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Accra'});
 
 export default async function ProjectIdeasAdmin({searchParams}: {searchParams: Params}) {
@@ -25,7 +27,8 @@ export default async function ProjectIdeasAdmin({searchParams}: {searchParams: P
   const rawStatus = params.status;
   const status: ResourceStatus | undefined = rawStatus === 'PUBLISHED' || rawStatus === 'DRAFT' || rawStatus === 'ARCHIVED' ? rawStatus : undefined;
   const discipline = disciplines.find(item => item.id === params.discipline)?.id;
-  const requested = typeof params.page === 'string' && /^\d{1,6}$/.test(params.page) ? Math.max(1, Number(params.page)) : 1;
+  const requested = requestedPage(params.page);
+  const pageSize = studioPageSize(params.per);
   const where = {status, discipline, ...(q ? {OR: [
     {title: {contains: q, mode: 'insensitive' as const}},
     {abstract: {contains: q, mode: 'insensitive' as const}},
@@ -49,6 +52,7 @@ export default async function ProjectIdeasAdmin({searchParams}: {searchParams: P
     if (q) query.set('q', q);
     if (status) query.set('status', status);
     if (discipline) query.set('discipline', discipline);
+    if (pageSize !== 20) query.set('per', String(pageSize));
     if (number > 1) query.set('page', String(number));
     return `/admin/project-ideas${query.size ? `?${query}` : ''}`;
   }
@@ -70,6 +74,7 @@ export default async function ProjectIdeasAdmin({searchParams}: {searchParams: P
         <label>Discipline<SelectMenu name="discipline" defaultValue={discipline ?? ''}><option value="">All disciplines</option>
           {disciplines.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</SelectMenu></label>
         <label>Status<SelectMenu name="status" defaultValue={status ?? ''}><option value="">All statuses</option><option value="DRAFT">Draft</option><option value="PUBLISHED">Published</option><option value="ARCHIVED">Archived</option></SelectMenu></label>
+        <StudioPageSize value={pageSize}/>
         <button className="button button-outline"><Search size={16}/> Filter</button>
       </form>
       {ideas.length ? <BulkStatus key={href(page)} entries={ideas.map(idea => ({id: idea.slug, title: idea.title, updatedAt: idea.updatedAt.toISOString()}))} noun="ideas" update={bulkIdeaStatus} remove={deleteIdeas}>
@@ -90,11 +95,7 @@ export default async function ProjectIdeasAdmin({searchParams}: {searchParams: P
         <Lightbulb size={25} aria-hidden="true"/><h3>{filtered ? 'No ideas match these filters' : 'Add your first project idea'}</h3>
         <Link className="button button-outline" href={filtered ? '/admin/project-ideas' : '/admin/project-ideas/new'}>{filtered ? 'Clear filters' : 'New idea'}</Link>
       </div>}
-      {pages > 1 && <nav className={styles.pagination} aria-label="Idea pages">
-        <span>Page {page} of {pages}</span>
-        {page > 1 && <Link href={href(page - 1)} className="button button-outline"><ArrowLeft size={15}/> Previous</Link>}
-        {page < pages && <Link href={href(page + 1)} className="button button-outline">Next <ArrowRight size={15}/></Link>}
-      </nav>}
+      <CatalogPagination page={page} pages={pages} href={href} label="Idea pages"/>
     </section>
     <Link className={styles.api} href="/admin/resource-api">Add ideas with the Resource API <ArrowUpRight size={15}/></Link>
   </div>;

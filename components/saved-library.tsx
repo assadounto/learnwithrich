@@ -8,6 +8,7 @@ import {bookmarkEvent, readBrowserBookmarks, writeBrowserBookmarks} from '@/lib/
 import {CompactResource} from './compact-resource';
 import {OwnedResourceCard, type ResourceCardData} from './owned-resource-card';
 import {DrawnUnderline} from './decorative-marks';
+import {CatalogPagination} from '@/components/catalog-pagination';
 import {useSiteAccount} from './site-account';
 
 const pageSize = 12;
@@ -64,11 +65,7 @@ export function SavedLibrary() {
         const legacy = resources.find(resource => resource.slug === slug);
         return legacy ? <CompactResource key={slug} resource={legacy}/> : <div key={slug} className="owned-catalog-empty"><p>This resource is currently unavailable.</p><button className="button button-outline" type="button" onClick={() => writeBrowserBookmarks(readBrowserBookmarks().filter(value => value !== slug))}>Remove bookmark</button></div>;
       })}</div>
-      {pages > 1 && <nav className="catalog-pagination" aria-label="Device bookmark pages">
-        {currentPage > 1 && <button className="button button-outline" onClick={() => setPage(currentPage - 1)}>Previous</button>}
-        <span>Page {currentPage} of {pages}</span>
-        {currentPage < pages && <button className="button button-outline" onClick={() => setPage(currentPage + 1)}>Next</button>}
-      </nav>}
+      <CatalogPagination page={currentPage} pages={pages} onPage={setPage} label="Device bookmark pages"/>
     </> : <div className="owned-catalog-empty"><Bookmark size={28}/><h2>Your collection starts with a spark.</h2><p>Save a resource to find it here again.</p><Link className="button button-dark" href="/resources">Explore resources <ArrowRight size={16}/></Link></div>}
   </div>;
 }

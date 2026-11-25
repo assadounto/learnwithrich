@@ -20,6 +20,11 @@ export function AccountWorkspace({children}: {children: ReactNode}) {
   const [explorerOpen, setExplorerOpen] = useState(true);
   const pathname = usePathname();
   const current = items.find(({href}) => href === '/account' ? pathname === href : pathname === href || pathname.startsWith(href + '/')) ?? items[0];
+  const shortcuts = <>
+    <Link href="/resources">Browse resources <ArrowUpRight size={15}/></Link>
+    <Link href="/">Back to LearnWithRich</Link>
+    <SignOutButton/>
+  </>;
   return <div className={`${styles.account} ${styles.workspace}`} data-account-workspace="" data-explorer-open={explorerOpen}>
     <header className={styles.workspaceHeader}>
       <div className={styles.workspaceBrand}>
@@ -39,12 +44,12 @@ export function AccountWorkspace({children}: {children: ReactNode}) {
           aria-current={current.href === href ? (pathname === href ? 'page' : 'location') : undefined}
           className={current.href === href ? styles.navigationActive : ''}><Icon size={17}/><span>{label}</span></Link>)}
       </nav>
-      <div className={styles.workspaceShortcuts}><Link href="/resources">Browse resources <ArrowUpRight size={15}/></Link></div>
+      <div className={styles.workspaceShortcuts}>{shortcuts}</div>
     </aside>
     <div className={styles.workspaceBody}>
       <div className={styles.activeStrip}><Link href={current.href}><current.Icon size={15}/>{current.label}</Link></div>
       <main id="main-content" className={styles.accountMain}>{children}</main>
-      <footer className={styles.workspaceFooter}><Link href="/">Back to LearnWithRich</Link><SignOutButton/></footer>
+      <footer className={styles.workspaceFooter}>{shortcuts}</footer>
     </div>
   </div>;
 }

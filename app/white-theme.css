@@ -69,14 +69,16 @@ h1 i, h2 i, h3 i { font-style: normal; font-weight: inherit; }
 .live-product-cover, .live-project-cover, .dashboard-resource-cover,
 .dashboard-resource-cover.resource-course, .dashboard-resource-cover.resource-article { background-color: var(--surface-soft); color: var(--dark-muted, #686b70); }
 /* Bring the homepage's section surfaces into the same white palette. */
-.ref-about, .ref-library, .maker-spotlight, .maker-testimonials,
+.ref-library, .maker-spotlight, .maker-testimonials,
 .reference-newsletter, .ref-manifesto { background: var(--dark-surface, #fff); color: var(--ink); border-color: var(--line); }
 .ref-library { border-block: 1px solid var(--line); }
 .ref-library-copy p, .ref-newsletter-form > p, .ref-about-copy p { color: var(--dark-muted, #686b70); }
 .ref-library-copy .button { background: #202124; border-color: #202124; color: #fff; }
 .ref-manifesto { border-block: 1px solid var(--line); font-weight: 600; }
 .ref-manifesto::before, .ref-manifesto::after { display: none; }
-.ref-about::after { background: var(--surface-soft); }
+.ref-about { background: var(--paper); }
+.ref-about::after { background: var(--paper); }
+.site-content:has(.reference-home) .reference-footer { background: var(--surface-soft); }
 .ref-newsletter-form { border-color: var(--line); }
 .ref-newsletter-inner > h2 .white-scribble { color: var(--olive); }
 .maker-kicker, .tiny-label { color: var(--dark-muted, #686b70); }

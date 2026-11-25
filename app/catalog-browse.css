@@ -28,8 +28,9 @@
 .browse-toolbar a:not(.button) { text-decoration: underline; text-underline-offset: 3px; }
 .catalog-pagination { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px; margin-top: 24px; }
 .catalog-page-number { display: inline-flex; align-items: center; gap: 5px; }
-.catalog-pagination :is(a, [aria-current="page"]) { display: inline-grid; place-items: center; min-width: 40px; min-height: 44px; padding-inline: 6px; border: 1px solid var(--line); border-radius: 7px; }
-.catalog-pagination [aria-current="page"] { background: var(--ink); color: white; }
+.catalog-pagination :is(a, button, [aria-current="page"]) { display: inline-grid; place-items: center; min-width: 40px; min-height: 44px; padding: 0 6px; border: 1px solid var(--line); border-radius: 7px; font: inherit; background: var(--surface); color: var(--ink); }
+.catalog-pagination :is(a, button):hover { border-color: var(--primary); }
+.catalog-pagination [aria-current="page"] { background: var(--ink); color: var(--paper); font-weight: 700; }
 
 .swipe-deck { max-width: 620px; margin: 0 auto; padding: clamp(12px, 3vw, 24px); border: 1px solid var(--line); border-radius: 16px; background: var(--surface-soft); }
 .swipe-deck > header, .swipe-status { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px; }
