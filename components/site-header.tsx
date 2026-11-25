@@ -13,7 +13,6 @@ const links = [['Discover','/'], ['Projects','/projects'], ['Project Ideas','/pr
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const header = useRef<HTMLElement>(null);
   const drawer = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const path = usePathname();
@@ -42,20 +41,6 @@ export function Header() {
     };
   }, []);
 
-  useEffect(() => {
-    const bar = header.current;
-    const main = bar?.nextElementSibling;
-    if (!bar || !(main instanceof HTMLElement) || main.id !== 'main-content') return;
-
-    const measure = () => main.style.setProperty('--hero-header-height', `${bar.getBoundingClientRect().height}px`);
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(bar);
-    return () => {
-      observer.disconnect();
-      main.style.removeProperty('--hero-header-height');
-    };
-  }, []);
 
   function close() { drawer.current?.close(); }
   function openMenu() {
@@ -64,7 +49,7 @@ export function Header() {
     setOpen(true);
   }
 
-  return <header ref={header} className={`site-header${scrolled ? ' is-scrolled' : ''}`}>
+  return <header className={`site-header${scrolled ? ' is-scrolled' : ''}`}>
     <div className="header-inner">
       <div className="header-brand-group"><Brand emblem/></div>
       <nav className="desktop-nav" aria-label="Main navigation">{links.map(([label, href]) => <Link key={href} href={href}

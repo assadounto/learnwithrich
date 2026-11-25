@@ -3,7 +3,7 @@ import {SelectMenu} from '@/components/selection-dialog';
 
 import {useState, useTransition} from 'react';
 import {Clock3, Image, Layers3, Save, Sparkles, Trash2, Video} from 'lucide-react';
-import {homepageHeroMedia, type HomepageHeroEditor, type HomepageHeroPreset} from '@/lib/home-hero';
+import {homepageHeroMedia, homepageHeroSupportsVideo, type HomepageHeroEditor, type HomepageHeroPreset} from '@/lib/home-hero';
 import {saveHomepageHero} from '@/app/admin/actions';
 import {MediaLibraryModal} from './media-library-modal';
 import {useAdminDirty} from './workspace-shell';
@@ -12,9 +12,9 @@ type MediaSlot = (typeof homepageHeroMedia)[number];
 const presets = [
   {id: 'CLASSIC', title: 'Maker collage', text: 'Copy on the left with artwork alongside.', icon: Image},
   {id: 'CENTERED', title: 'Centered focus', text: 'Centered text over full-width media.', icon: Sparkles},
-  {id: 'CINEMATIC', title: 'Cinematic reveal', text: 'Open with artwork, then center the message over video.', icon: Video},
+  {id: 'CINEMATIC', title: 'Cinematic reveal', text: 'Start with the maker collage, then reveal a framed video.', icon: Video},
   {id: 'SPOTLIGHT', title: 'Spotlight', text: 'Left-aligned copy over full-width media.', icon: Sparkles},
-  {id: 'EDITORIAL', title: 'Editorial split', text: 'Framed media on the left, with copy on the right.', icon: Layers3},
+  {id: 'EDITORIAL', title: 'Editorial split', text: 'Copy on the left, with images and optional video on the right.', icon: Layers3},
 ] satisfies {id: HomepageHeroPreset; title: string; text: string; icon: typeof Image}[];
 
 export function HomepageHeroSettings({initialHero}: {initialHero: HomepageHeroEditor}) {
@@ -25,6 +25,7 @@ export function HomepageHeroSettings({initialHero}: {initialHero: HomepageHeroEd
   const [pending, startTransition] = useTransition();
   const dirty = JSON.stringify(hero) !== JSON.stringify(baseline);
   const hasVideo = Boolean(hero.videoAssetId || hero.mobileVideoAssetId);
+  const supportsVideo = homepageHeroSupportsVideo(hero.preset);
   const requiresVideo = hero.preset === 'CINEMATIC' && !hasVideo;
   useAdminDirty(dirty);
 
@@ -58,8 +59,8 @@ export function HomepageHeroSettings({initialHero}: {initialHero: HomepageHeroEd
       </button>)}
     </div>
     <div className="homepage-hero-video-settings">
-      <p className="homepage-hero-note">Mobile uses desktop media when its own slot is empty. With no image selected, the maker collage is used. Images stay visible while video loads and when reduced motion or data saver is enabled.</p>
-      {homepageHeroMedia.map(slot => {
+      <p className="homepage-hero-note">{hero.preset === 'CINEMATIC' ? 'This layout always opens with the maker collage.' : 'With no image selected, the maker collage is used.'} Mobile uses desktop media when its own slot is empty. Only Cinematic reveal and Editorial split play video.</p>
+      {homepageHeroMedia.filter(slot => slot.kind === 'video' ? supportsVideo : hero.preset !== 'CINEMATIC').map(slot => {
         const Icon = slot.kind === 'image' ? Image : Video;
         return <div key={slot.field} className="homepage-hero-video-choice">
           <div className="homepage-hero-video-icon"><Icon size={19}/></div>
@@ -72,11 +73,11 @@ export function HomepageHeroSettings({initialHero}: {initialHero: HomepageHeroEd
           </div>
         </div>;
       })}
-      {hero.preset !== 'CINEMATIC' && hasVideo && <label className="homepage-hero-delay">
+      {hero.preset === 'EDITORIAL' && hasVideo && <label className="homepage-hero-delay">
         <span>Play video when available</span>
         <input type="checkbox" checked={hero.videoEnabled} onChange={event => update({videoEnabled: event.target.checked})}/>
       </label>}
-      {hasVideo && (hero.videoEnabled || hero.preset === 'CINEMATIC') && <label className="homepage-hero-delay"><span><Clock3 size={16}/>Delay before video</span>
+      {supportsVideo && hasVideo && (hero.videoEnabled || hero.preset === 'CINEMATIC') && <label className="homepage-hero-delay"><span><Clock3 size={16}/>Delay before video</span>
         <SelectMenu value={hero.delaySeconds} onChange={event => update({delaySeconds: Number(event.target.value)})}>
           {Array.from({length: 10}, (_, index) => index + 3).map(seconds => <option key={seconds} value={seconds}>{seconds} seconds</option>)}
         </SelectMenu>

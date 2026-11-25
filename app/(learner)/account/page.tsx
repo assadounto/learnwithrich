@@ -5,7 +5,7 @@ import Link from '@/components/navigation-link';
 import {ArrowRight, Bookmark, BookOpen, CircleCheck, Clock3, PackageCheck, Sparkles, Wrench} from 'lucide-react';
 import {currentUser} from '@/lib/server/identity/current-user';
 import {database} from '@/lib/server/database';
-import {PaymentVerification, SignOutButton} from '@/components/account-actions';
+import {PaymentVerification} from '@/components/account-actions';
 import styles from './account.module.css';
 
 export const metadata: Metadata = {title: 'Your learning account', robots: {index: false, follow: false}};
@@ -26,7 +26,7 @@ export default async function AccountPage({searchParams}: {searchParams: Promise
   ]);
   const firstName = user.name.trim().split(/\s+/)[0] || 'learner';
   return <>
-    <header className={styles.welcome}><div><span className="maker-kicker">YOUR LEARNWITHRICH ACCOUNT</span><h1>Good to have you back,<br/><i>{firstName}.</i></h1><p>Your saved ideas, purchases and projects are gathered here.</p></div><div className={styles.profile}><div className={styles.avatar}>{user.image ? <img src={user.image} alt=""/> : user.name.slice(0,1).toUpperCase()}</div><div><strong>{user.name}</strong><small>{user.email}</small></div><SignOutButton/></div></header>
+    <header className={styles.welcome}><div><span className="maker-kicker">YOUR LEARNWITHRICH ACCOUNT</span><h1>Good to have you back,<br/><i>{firstName}.</i></h1><p>Your saved ideas, purchases and projects are gathered here.</p></div><div className={styles.profile}><div className={styles.avatar}>{user.image ? <img src={user.image} alt=""/> : user.name.slice(0,1).toUpperCase()}</div><div><strong>{user.name}</strong><small>{user.email}</small></div></div></header>
     {payment === 'return' && reference && <PaymentVerification reference={reference}/>}
     <section className={styles.dashboardSection}><header className={styles.sectionHeading}><div><span className="maker-kicker">YOUR LEARNING SPACE</span><h2>A quick overview</h2></div><span className={styles.lastUpdated}><Clock3 size={14}/>Always here when you need it</span></header>
       <div className={styles.summaryGrid}>

@@ -37,7 +37,7 @@
     height: auto;
     min-height: 0;
   }
-  .home-hero-preset-classic .ref-hero-art {
+  .home-hero-collage .ref-hero-art {
     position: relative;
     inset: auto;
     width: 100%;
@@ -103,78 +103,31 @@
   .home-hero-preset-editorial .ref-hero-art { grid-column: auto; grid-row: auto; }
 }
 
-/* Extend playback behind the sticky bar without moving the hero actions or the next section. */
-.site-header + #main-content:has(> .reference-home > .reference-hero:not(.home-hero-contained)[data-hero-phase="video"]) {
-  margin-block-start: calc(-1 * var(--hero-header-height, 0px));
-}
-
-#main-content > .reference-home > .reference-hero:not(.home-hero-contained)[data-hero-phase="video"] {
-  padding-block-start: var(--hero-header-height, 0px);
-  max-width: none;
-}
-
-.site-header:not(.is-scrolled):has(+ #main-content > .reference-home > .reference-hero:not(.home-hero-contained)[data-hero-phase="video"]) {
-  background-color: rgb(16 18 22 / 72%);
-  border-bottom-color: rgb(255 255 255 / 24%);
-  color: #fff;
-}
-
-.site-header:not(.is-scrolled):has(+ #main-content > .reference-home > .reference-hero:not(.home-hero-contained)[data-hero-phase="video"])
-.header-inner :is(.brand, .brand-emblem svg, .desktop-nav a, .header-account-link, .mobile-bookmarks, .mobile-menu) {
-  color: #fff;
-}
-
-.site-header:not(.is-scrolled):has(+ #main-content > .reference-home > .reference-hero:not(.home-hero-contained)[data-hero-phase="video"])
-.header-inner :is(.header-cta, .header-account-link, .mobile-bookmarks, .mobile-menu) {
-  background: rgb(0 0 0 / 22%);
-  border-color: rgb(255 255 255 / 46%);
-}
-
-.site-header:not(.is-scrolled):has(+ #main-content > .reference-home > .reference-hero:not(.home-hero-contained)[data-hero-phase="video"])
-.header-inner :is(.header-cta, .header-account-link, .mobile-bookmarks, .mobile-menu):hover {
-  background: rgb(0 0 0 / 48%);
-}
-
-.site-header:not(.is-scrolled):has(+ #main-content > .reference-home > .reference-hero:not(.home-hero-contained)[data-hero-phase="video"])
-.header-inner :focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 4px;
-}
-
-/* Framed presets keep the same dimensions while the video crossfades over the poster. */
+/* Both cinematic states occupy the space set by the regular maker collage. */
 .home-hero-preset-editorial .home-hero-video::after { content: none; }
-.home-hero-preset-cinematic { padding-block: clamp(16px, 3vw, 38px); }
+.home-cinematic-intro { isolation: isolate; transition: opacity .55s ease; }
 .home-cinematic-frame {
-  position: relative;
+  position: absolute;
+  inset: clamp(12px, 2vw, 30px) 0;
+  z-index: 3;
   isolation: isolate;
-  display: grid;
-  align-items: center;
-  min-height: clamp(420px, 50vw, 650px);
   overflow: hidden;
-  padding: clamp(22px, 6vw, 82px);
-  padding-bottom: clamp(124px, 16vw, 176px);
   border: 1px solid var(--line);
   border-radius: clamp(14px, 2vw, 25px);
   background: #141820;
   color: #fff;
+  opacity: 0;
+  transition: opacity .55s ease;
 }
-.home-cinematic-frame .home-hero-image::after {
-  background: linear-gradient(90deg, #111622f2, #11162244), linear-gradient(0deg, #111622df, transparent 45%);
-}
+.home-cinematic-frame .home-hero-video { opacity: 1; }
 .home-cinematic-frame .home-hero-video::after { background: linear-gradient(0deg, #111622e6, transparent 44%); }
-.home-cinematic-frame .home-cinematic-copy {
-  width: min(100%, 690px);
-  transition: opacity .5s ease;
-}
-.home-cinematic-copy[aria-hidden="true"] { opacity: 0; }
-.home-cinematic-copy :is(h1, h1 i, p, .ref-eyebrow) { color: #fff; }
-.home-cinematic-copy h1 { white-space: normal; transform: none; }
-.home-cinematic-copy .hero-rays { display: none; }
 .home-cinematic-frame .hero-video-actions { animation: none; }
+.home-hero-preset-cinematic[data-hero-phase="video"] .home-cinematic-intro { opacity: 0; }
+.home-hero-preset-cinematic[data-hero-phase="video"] .home-cinematic-frame { opacity: 1; }
 @media (max-width: 680px) {
   .home-hero-preset-editorial .ref-hero-inner { grid-template-columns: minmax(0, 1fr); }
   .home-hero-preset-editorial :is(.ref-hero-copy, .ref-hero-art) { grid-column: auto; grid-row: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .home-cinematic-frame .home-cinematic-copy { transition: none; }
+  .home-cinematic-frame, .home-cinematic-intro { transition: none; }
 }
