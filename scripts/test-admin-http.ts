@@ -185,6 +185,22 @@ try {
   assert.equal((await subscribe(newsletterEmail.toUpperCase())).status, 202);
   assert.equal(await db.newsletterSignup.count({where: {email: newsletterEmail}}), 1);
   await expectRedirect(await request(newsletter, learnerCookie), '/admin/access-denied');
+  await db.guestbookEntry.createMany({data: Array.from({length: 21}, (_, index) => ({
+    name: `${prefix} guest ${index}`, message: 'Pagination fixture',
+    createdAt: new Date(1_700_000_000_000 + index * 1000),
+  }))});
+  const guestbook = `/admin/community/guestbook?q=${encodeURIComponent(prefix)}&status=PENDING`;
+  const firstGuestPage = await request(`${guestbook}&per=20`, ownerCookie);
+  assert.equal(firstGuestPage.status, 200);
+  const firstGuestHtml = await firstGuestPage.text();
+  assert.ok(firstGuestHtml.includes(`${prefix} guest 20`));
+  assert.ok(!firstGuestHtml.includes(`${prefix} guest 0`));
+  assert.match(firstGuestHtml, /aria-label="Page 2"/);
+  const lastGuestHtml = await (await request(`${guestbook}&per=20&page=2`, ownerCookie)).text();
+  assert.ok(lastGuestHtml.includes(`${prefix} guest 0`));
+  assert.ok(!lastGuestHtml.includes(`${prefix} guest 20`));
+  const largerGuestHtml = await (await request(`${guestbook}&per=50`, ownerCookie)).text();
+  assert.ok(largerGuestHtml.includes(`${prefix} guest 0`) && largerGuestHtml.includes(`${prefix} guest 20`));
   const newsletterPage = await request(newsletter, ownerCookie);
   assert.equal(newsletterPage.status, 200);
   assert.ok((await newsletterPage.text()).includes(newsletterEmail));
@@ -341,6 +357,7 @@ try {
   await db.resource.deleteMany({where: {id: {in: resourceIds}}});
   await db.user.deleteMany({where: {id: {in: [ownerId, learnerId]}}});
   await db.projectIdea.deleteMany({where: {slug: {startsWith: prefix}}});
+  await db.guestbookEntry.deleteMany({where: {name: {startsWith: prefix}}});
   await db.newsletterSignup.deleteMany({where: {email: newsletterEmail}});
   await db.pageAnalytics.deleteMany({where: {path: analyticsPath}});
   await db.$disconnect();

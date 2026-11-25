@@ -67,6 +67,7 @@ export function CommunityInbox({kind, rows, initialSelection = '', q, status, fi
     </header>
     <section className={styles.inbox} aria-label={`${copy.title} inbox`}>
       <form action={path} className={styles.toolbar}>
+        {request && <input type="hidden" name="request" value={request}/>}
         <label className={styles.search}><Search size={16}/><span className="sr-only">{`Search ${copy.item}`}</span>
           <input name="q" type="search" maxLength={160} placeholder={`Search ${copy.item}…`} defaultValue={q}/>
         </label>
